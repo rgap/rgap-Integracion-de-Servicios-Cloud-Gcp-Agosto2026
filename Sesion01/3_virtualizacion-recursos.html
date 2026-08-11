@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asignación de recursos virtuales — PC-JUAN</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --texto: #1f2430;
+    --suave: #6b7280;
+    --borde: #d9dce3;
+    --acento: #2563eb;
+    --vm1: #2563eb;
+    --vm2: #7c3aed;
+    --libre: #e5e7eb;
+    --ok-bg: #e7f6ec;
+    --ok-borde: #2e7d47;
+    --no-bg: #fdeceb;
+    --no-borde: #c0392b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .tarjeta {
+    width: 100%;
+    max-width: 760px;
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  .subtitulo { margin: 0 0 22px; color: var(--suave); font-size: .875rem; }
+  h2 {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--suave);
+    margin: 26px 0 10px;
+  }
+
+  /* Servidor físico */
+  .servidor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #fafbfc;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    align-items: center;
+  }
+  .servidor .nombre { font-weight: 700; font-size: .95rem; margin-right: auto; }
+  .chip {
+    font-size: .8rem;
+    padding: 4px 10px;
+    border: 1px solid var(--borde);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--suave);
+  }
+  .chip b { color: var(--texto); }
+
+  /* Tabla de máquinas virtuales */
+  table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--borde);
+    vertical-align: middle;
+  }
+  th {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--suave);
+  }
+  th.num, td.num { text-align: right; width: 116px; }
+  td .vm { font-weight: 600; display: block; }
+  td .rol { color: var(--suave); font-size: .8rem; }
+  .punto {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin-right: 7px;
+  }
+  .punto.a { background: var(--vm1); }
+  .punto.b { background: var(--vm2); }
+  input[type="number"] {
+    width: 84px;
+    padding: 7px 8px;
+    font-size: .9rem;
+    font-family: inherit;
+    color: inherit;
+    text-align: right;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+  }
+  input:focus, button:focus { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+  .botones { display: flex; gap: 10px; margin-top: 18px; }
+  button {
+    padding: 11px 18px;
+    font-size: .95rem;
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--borde);
+    background: #fff;
+    color: var(--texto);
+    cursor: pointer;
+  }
+  button.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+  button:hover { filter: brightness(.96); }
+
+  #mensaje {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--borde);
+    border-left-width: 4px;
+    border-radius: 8px;
+    background: #fafbfc;
+    font-size: .875rem;
+  }
+  #mensaje.ok { background: var(--ok-bg); border-color: var(--ok-borde); }
+  #mensaje.error { background: var(--no-bg); border-color: var(--no-borde); }
+  #mensaje .estado { font-weight: 700; display: block; margin-bottom: 4px; }
+  #mensaje.ok .estado { color: var(--ok-borde); }
+  #mensaje.error .estado { color: var(--no-borde); }
+  #mensaje ul { margin: 6px 0 0; padding-left: 18px; }
+  #mensaje li { margin-bottom: 2px; }
+
+  /* Barras de uso */
+  .recurso { margin-bottom: 14px; }
+  .recurso .cabecera {
+    display: flex;
+    justify-content: space-between;
+    font-size: .8rem;
+    margin-bottom: 5px;
+  }
+  .recurso .cabecera .titulo { font-weight: 600; }
+  .recurso .cabecera .cifras { color: var(--suave); }
+  .barra {
+    display: flex;
+    height: 16px;
+    background: var(--libre);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .barra span { height: 100%; }
+  .barra .s1 { background: var(--vm1); }
+  .barra .s2 { background: var(--vm2); }
+  .leyenda {
+    display: flex;
+    gap: 16px;
+    font-size: .78rem;
+    color: var(--suave);
+    margin-top: 12px;
+  }
+  .leyenda .caja {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+  }
+  .leyenda .c1 { background: var(--vm1); }
+  .leyenda .c2 { background: var(--vm2); }
+  .leyenda .c3 { background: var(--libre); border: 1px solid var(--borde); }
+
+  /* Diagrama */
+  .diagrama {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #fafbfc;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+  .caja-d {
+    flex: 1 1 150px;
+    min-width: 140px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: .8rem;
+  }
+  .caja-d .t { font-weight: 700; font-size: .85rem; display: block; }
+  .caja-d .d { color: var(--suave); }
+  .caja-d.vm-a { border-left: 3px solid var(--vm1); }
+  .caja-d.vm-b { border-left: 3px solid var(--vm2); }
+  .flecha { color: var(--suave); font-size: 1.1rem; }
+  .pila { flex: 1 1 170px; display: flex; flex-direction: column; gap: 8px; }
+  .pila .caja-d { flex: none; }
+</style>
+</head>
+<body>
+
+<main class="tarjeta">
+  <h1>Asignación de recursos virtuales</h1>
+  <p class="subtitulo">Reparte la capacidad del servidor físico entre las máquinas virtuales del e-commerce.</p>
+
+  <h2>Equipo físico</h2>
+  <div class="servidor">
+    <span class="nombre">PC-JUAN</span>
+    <span class="chip">Memoria <b>8 GB</b></span>
+    <span class="chip">Núcleos <b>4</b></span>
+    <span class="chip">Almacenamiento <b>100 GB</b></span>
+  </div>
+
+  <h2>Máquinas virtuales</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Máquina virtual</th>
+        <th class="num">Memoria (GB)</th>
+        <th class="num">Núcleos</th>
+        <th class="num">Almacenam. (GB)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="vm"><span class="punto a"></span>Kali Linux</span>
+          <span class="rol">Pruebas de seguridad</span>
+        </td>
+        <td class="num"><input type="number" id="web-memoria" min="1" max="8" step="1" value="4"></td>
+        <td class="num"><input type="number" id="web-nucleos" min="1" max="4" step="1" value="2"></td>
+        <td class="num"><input type="number" id="web-almacenamiento" min="1" max="100" step="1" value="50"></td>
+      </tr>
+      <tr>
+        <td>
+          <span class="vm"><span class="punto b"></span>Lubuntu</span>
+          <span class="rol">Escritorio ligero</span>
+        </td>
+        <td class="num"><input type="number" id="pedidos-memoria" min="1" max="8" step="1" value="2"></td>
+        <td class="num"><input type="number" id="pedidos-nucleos" min="1" max="4" step="1" value="1"></td>
+        <td class="num"><input type="number" id="pedidos-almacenamiento" min="1" max="100" step="1" value="30"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="botones">
+    <button id="btnAplicar" class="primario" type="button">Aplicar configuración</button>
+    <button id="btnRestablecer" type="button">Restablecer</button>
+  </div>
+
+  <div id="mensaje" role="status" aria-live="polite">
+    <span class="estado">Sin cambios</span>
+    <span class="detalle">Edita los valores y pulsa Aplicar configuración.</span>
+  </div>
+
+  <h2>Uso de la capacidad física</h2>
+  <div id="barras"></div>
+  <div class="leyenda">
+    <span><span class="caja c1"></span>Kali Linux</span>
+    <span><span class="caja c2"></span>Lubuntu</span>
+    <span><span class="caja c3"></span>Disponible</span>
+  </div>
+
+  <h2>Esquema de virtualización</h2>
+  <div class="diagrama">
+    <div class="caja-d">
+      <span class="t">Equipo físico</span>
+      <span class="d">PC-JUAN · 8 GB · 4 núcleos · 100 GB</span>
+    </div>
+    <span class="flecha" aria-hidden="true">→</span>
+    <div class="caja-d">
+      <span class="t">Hipervisor</span>
+      <span class="d">Reparte y aísla los recursos</span>
+    </div>
+    <span class="flecha" aria-hidden="true">→</span>
+    <div class="pila">
+      <div class="caja-d vm-a">
+        <span class="t">Kali Linux</span>
+        <span class="d" id="d-web">4 GB · 2 núcleos · 50 GB</span>
+      </div>
+      <div class="caja-d vm-b">
+        <span class="t">Lubuntu</span>
+        <span class="d" id="d-pedidos">2 GB · 1 núcleo · 30 GB</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ====== CAPACIDAD DEL EQUIPO FÍSICO PC-JUAN (editar aquí) ====== */
+const SERVIDOR = {
+  memoria:         { total: 8,   etiqueta: "Memoria",        unidad: "GB" },
+  nucleos:         { total: 4,   etiqueta: "Núcleos",        unidad: "núcleos" },
+  almacenamiento:  { total: 100, etiqueta: "Almacenamiento", unidad: "GB" }
+};
+
+const POR_DEFECTO = {
+  web:     { memoria: 4, nucleos: 2, almacenamiento: 50 },
+  pedidos: { memoria: 2, nucleos: 1, almacenamiento: 30 }
+};
+
+const CLAVE = "pc-juan-asignacion";
+/* ========================================================= */
+
+const RECURSOS = ["memoria", "nucleos", "almacenamiento"];
+const VMS = [
+  { id: "web",     nombre: "Kali Linux", clase: "s1", diagrama: "d-web" },
+  { id: "pedidos", nombre: "Lubuntu",    clase: "s2", diagrama: "d-pedidos" }
+];
+
+const caja = document.getElementById("mensaje");
+const contBarras = document.getElementById("barras");
+
+function copia(config) {
+  return {
+    web:     { memoria: config.web.memoria,     nucleos: config.web.nucleos,     almacenamiento: config.web.almacenamiento },
+    pedidos: { memoria: config.pedidos.memoria, nucleos: config.pedidos.nucleos, almacenamiento: config.pedidos.almacenamiento }
+  };
+}
+
+function campo(vm, recurso) {
+  return document.getElementById(vm + "-" + recurso);
+}
+
+/* Lee los campos del formulario; devuelve null en cada valor no válido. */
+function leerFormulario() {
+  const config = { web: {}, pedidos: {} };
+  VMS.forEach(function (vm) {
+    RECURSOS.forEach(function (recurso) {
+      const bruto = campo(vm.id, recurso).value.trim();
+      const valor = Number(bruto);
+      config[vm.id][recurso] =
+        (bruto !== "" && Number.isInteger(valor) && valor >= 1) ? valor : null;
+    });
+  });
+  return config;
+}
+
+function escribirFormulario(config) {
+  VMS.forEach(function (vm) {
+    RECURSOS.forEach(function (recurso) {
+      campo(vm.id, recurso).value = config[vm.id][recurso];
+    });
+  });
+}
+
+/* Comprueba enteros válidos y que ningún recurso supere la capacidad física. */
+function validar(config) {
+  const errores = [];
+
+  VMS.forEach(function (vm) {
+    RECURSOS.forEach(function (recurso) {
+      if (config[vm.id][recurso] === null) {
+        errores.push(SERVIDOR[recurso].etiqueta + " de " + vm.nombre +
+          ": indica un número entero de 1 o más.");
+      }
+    });
+  });
+
+  if (errores.length > 0) return errores;
+
+  RECURSOS.forEach(function (recurso) {
+    const total = SERVIDOR[recurso].total;
+    const usado = config.web[recurso] + config.pedidos[recurso];
+    if (usado > total) {
+      errores.push(SERVIDOR[recurso].etiqueta + ": se solicitan " + usado + " " +
+        SERVIDOR[recurso].unidad + " y el servidor solo tiene " + total + " " +
+        SERVIDOR[recurso].unidad + " (exceso de " + (usado - total) + ").");
+    }
+  });
+
+  return errores;
+}
+
+function textoVM(config, id) {
+  const c = config[id];
+  return c.memoria + " GB · " + c.nucleos + (c.nucleos === 1 ? " núcleo · " : " núcleos · ") +
+    c.almacenamiento + " GB";
+}
+
+function pintar(config) {
+  contBarras.innerHTML = "";
+
+  RECURSOS.forEach(function (recurso) {
+    const total = SERVIDOR[recurso].total;
+    const usado = config.web[recurso] + config.pedidos[recurso];
+    const unidad = SERVIDOR[recurso].unidad;
+
+    const bloque = document.createElement("div");
+    bloque.className = "recurso";
+
+    const cabecera = document.createElement("div");
+    cabecera.className = "cabecera";
+    const titulo = document.createElement("span");
+    titulo.className = "titulo";
+    titulo.textContent = SERVIDOR[recurso].etiqueta;
+    const cifras = document.createElement("span");
+    cifras.className = "cifras";
+    cifras.textContent = usado + " de " + total + " " + unidad + " usados · " +
+      (total - usado) + " " + unidad + " disponibles";
+    cabecera.appendChild(titulo);
+    cabecera.appendChild(cifras);
+
+    const barra = document.createElement("div");
+    barra.className = "barra";
+    VMS.forEach(function (vm) {
+      const seg = document.createElement("span");
+      seg.className = vm.clase;
+      seg.style.width = (config[vm.id][recurso] / total * 100) + "%";
+      seg.title = vm.nombre + ": " + config[vm.id][recurso] + " " + unidad;
+      barra.appendChild(seg);
+    });
+
+    bloque.appendChild(cabecera);
+    bloque.appendChild(barra);
+    contBarras.appendChild(bloque);
+  });
+
+  VMS.forEach(function (vm) {
+    document.getElementById(vm.diagrama).textContent = textoVM(config, vm.id);
+  });
+}
+
+function mostrar(clase, estado, detalle, lista) {
+  caja.className = clase;
+  caja.innerHTML = "";
+
+  const spanEstado = document.createElement("span");
+  spanEstado.className = "estado";
+  spanEstado.textContent = estado;
+  caja.appendChild(spanEstado);
+
+  const spanDetalle = document.createElement("span");
+  spanDetalle.className = "detalle";
+  spanDetalle.textContent = detalle;
+  caja.appendChild(spanDetalle);
+
+  if (lista && lista.length > 0) {
+    const ul = document.createElement("ul");
+    lista.forEach(function (texto) {
+      const li = document.createElement("li");
+      li.textContent = texto;
+      ul.appendChild(li);
+    });
+    caja.appendChild(ul);
+  }
+}
+
+function guardar(config) {
+  try {
+    localStorage.setItem(CLAVE, JSON.stringify(config));
+  } catch (e) {
+    /* Si el navegador bloquea el almacenamiento, la consola sigue funcionando. */
+  }
+}
+
+/* Recupera la última configuración aplicada; ignora datos corruptos o inválidos. */
+function cargar() {
+  try {
+    const guardado = localStorage.getItem(CLAVE);
+    if (!guardado) return null;
+    const datos = JSON.parse(guardado);
+    const config = { web: {}, pedidos: {} };
+    VMS.forEach(function (vm) {
+      RECURSOS.forEach(function (recurso) {
+        const valor = datos[vm.id][recurso];
+        if (!Number.isInteger(valor) || valor < 1) throw new Error("valor inválido");
+        config[vm.id][recurso] = valor;
+      });
+    });
+    if (validar(config).length > 0) return null;
+    return config;
+  } catch (e) {
+    return null;
+  }
+}
+
+document.getElementById("btnAplicar").addEventListener("click", function () {
+  const config = leerFormulario();
+  const errores = validar(config);
+
+  if (errores.length > 0) {
+    mostrar("error", "Configuración rechazada",
+      "No se aplicó ningún cambio. Se supera el límite en:", errores);
+    return;
+  }
+
+  guardar(config);
+  pintar(config);
+  mostrar("ok", "Configuración aplicada",
+    "Kali Linux: " + textoVM(config, "web") + ". Lubuntu: " + textoVM(config, "pedidos") + ".");
+});
+
+document.getElementById("btnRestablecer").addEventListener("click", function () {
+  const config = copia(POR_DEFECTO);
+  try {
+    localStorage.removeItem(CLAVE);
+  } catch (e) { /* sin almacenamiento disponible */ }
+  escribirFormulario(config);
+  pintar(config);
+  mostrar("", "Valores restablecidos",
+    "Se recuperó la asignación inicial de Kali Linux y Lubuntu.");
+});
+
+/* Arranque: usa lo guardado si existe, si no los valores por defecto. */
+(function inicio() {
+  const config = cargar() || copia(POR_DEFECTO);
+  escribirFormulario(config);
+  pintar(config);
+})();
+</script>
+
+</body>
+</html>

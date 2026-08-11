@@ -1,0 +1,56 @@
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Arial}
+    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
+    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
+\fi
+
+\graphicspath{{assets/}}
+
+\definecolor{utpBlack}{HTML}{000000}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\setbeamercolor{normal text}{fg=utpBlack,bg=white}
+\setbeamercolor{title}{fg=utpBlack}
+\setbeamercolor{subtitle}{fg=utpBlack}
+\setbeamercolor{author}{fg=utpBlack}
+\setbeamercolor{date}{fg=utpBlack}
+
+\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
+\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
+
+\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
+
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=center,inner sep=0pt] at (current page.center) {%
+      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
+    };
+    \node[anchor=north,align=center,text=utpBlack,inner sep=0pt,
+      text width=145mm,font=\usebeamerfont{title}]
+      at ([yshift=-25.2mm]current page.north) {\inserttitle};
+    \node[anchor=north,align=center,text=utpBlack,inner sep=0pt,
+      text width=142mm,font=\usebeamerfont{subtitle}]
+      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
+    \node[anchor=north,align=center,text=utpBlack,inner sep=0pt,
+      font=\usebeamerfont{date}]
+      at ([yshift=-50.4mm]current page.north) {\insertdate};
+    \node[anchor=north,align=center,text=utpBlack,inner sep=0pt,
+      font=\usebeamerfont{author}]
+      at ([yshift=-58.4mm]current page.north) {\insertauthor};
+  \end{tikzpicture}%
+}

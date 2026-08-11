@@ -1,0 +1,30 @@
+# Respuestas del docente
+respuestas.md
+
+# Archivos y carpetas temporales
+.tmp*/
+tmp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Archivos auxiliares de LaTeX / Beamer
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# Archivos del sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+

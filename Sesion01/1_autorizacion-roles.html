@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autorización por roles — E-commerce</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --texto: #1f2430;
+    --suave: #6b7280;
+    --borde: #d9dce3;
+    --acento: #2563eb;
+    --ok-bg: #e7f6ec;
+    --ok-borde: #2e7d47;
+    --no-bg: #fdeceb;
+    --no-borde: #c0392b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .tarjeta {
+    width: 100%;
+    max-width: 460px;
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  .subtitulo { margin: 0 0 22px; color: var(--suave); font-size: .875rem; }
+  label { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 6px; }
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: .95rem;
+    font-family: inherit;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  select:focus, button:focus { outline: 2px solid var(--acento); outline-offset: 2px; }
+  .botones { display: flex; gap: 10px; margin-top: 4px; }
+  button {
+    flex: 1;
+    padding: 11px 14px;
+    font-size: .95rem;
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--borde);
+    background: #fff;
+    color: var(--texto);
+    cursor: pointer;
+  }
+  button.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+  button:hover { filter: brightness(.96); }
+  #resultado {
+    margin-top: 22px;
+    padding: 14px 16px;
+    border: 1px solid var(--borde);
+    border-left-width: 4px;
+    border-radius: 8px;
+    background: #fafbfc;
+    font-size: .9rem;
+  }
+  #resultado.permitido { background: var(--ok-bg); border-color: var(--ok-borde); }
+  #resultado.rechazado { background: var(--no-bg); border-color: var(--no-borde); }
+  #resultado .estado { font-weight: 700; font-size: 1rem; display: block; margin-bottom: 4px; }
+  #resultado.permitido .estado { color: var(--ok-borde); }
+  #resultado.rechazado .estado { color: var(--no-borde); }
+  #resultado .regla { color: var(--suave); }
+</style>
+</head>
+<body>
+
+<main class="tarjeta">
+  <h1>Autorización por roles</h1>
+  <p class="subtitulo">Verifica si un usuario puede ejecutar una acción del e-commerce.</p>
+
+  <label for="usuario">Usuario</label>
+  <select id="usuario">
+    <option value="cliente">Ana — Cliente</option>
+    <option value="vendedor">Luis — Vendedor</option>
+    <option value="admin">Sofía — Administrador</option>
+  </select>
+
+  <label for="accion">Acción</label>
+  <select id="accion">
+    <option value="registrar_pedido">Registrar pedido</option>
+    <option value="actualizar_stock">Actualizar el stock</option>
+    <option value="gestionar_usuarios">Gestionar usuarios</option>
+  </select>
+
+  <div class="botones">
+    <button id="btnEjecutar" class="primario" type="button">Ejecutar</button>
+    <button id="btnRestablecer" type="button">Restablecer</button>
+  </div>
+
+  <div id="resultado" role="status" aria-live="polite">
+    <span class="estado">Sin resultado</span>
+    <span class="regla">Elige un usuario y una acción, luego pulsa Ejecutar.</span>
+  </div>
+</main>
+
+<script>
+/* ====== REGLAS DE AUTORIZACIÓN (editar aquí) ====== */
+const PERMISOS = {
+  cliente:  ["registrar_pedido"],
+  vendedor: ["actualizar_stock"],
+  admin:    ["registrar_pedido", "actualizar_stock", "gestionar_usuarios"]
+};
+
+const ROLES = {
+  cliente:  "Cliente",
+  vendedor: "Vendedor",
+  admin:    "Administrador"
+};
+
+const ACCIONES = {
+  registrar_pedido:       "Registrar pedido",
+  actualizar_stock:       "Actualizar el stock",
+  gestionar_usuarios:     "Gestionar usuarios"
+};
+/* ================================================== */
+
+const selUsuario = document.getElementById("usuario");
+const selAccion  = document.getElementById("accion");
+const caja       = document.getElementById("resultado");
+
+function autorizar(rol, accion) {
+  return (PERMISOS[rol] || []).includes(accion);
+}
+
+function mostrar(clase, estado, regla) {
+  caja.className = clase;
+  caja.innerHTML =
+    '<span class="estado"></span><span class="regla"></span>';
+  caja.querySelector(".estado").textContent = estado;
+  caja.querySelector(".regla").textContent = regla;
+}
+
+document.getElementById("btnEjecutar").addEventListener("click", function () {
+  const rol    = selUsuario.value;
+  const accion = selAccion.value;
+  const ok     = autorizar(rol, accion);
+
+  const regla = ok
+    ? "Regla aplicada: el rol " + ROLES[rol] + " tiene permiso sobre «" + ACCIONES[accion] + "»."
+    : "Regla aplicada: el rol " + ROLES[rol] + " no tiene permiso sobre «" + ACCIONES[accion] + "». Permitido para este rol: " +
+      PERMISOS[rol].map(function (a) { return ACCIONES[a]; }).join(", ") + ".";
+
+  mostrar(ok ? "permitido" : "rechazado", ok ? "Permitido" : "Rechazado", regla);
+});
+
+document.getElementById("btnRestablecer").addEventListener("click", function () {
+  selUsuario.selectedIndex = 0;
+  selAccion.selectedIndex = 0;
+  mostrar("", "Sin resultado", "Elige un usuario y una acción, luego pulsa Ejecutar.");
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,493 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}          % tipografia escalable para el respaldo con pdflatex
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Arial}
+    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
+    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
+\fi
+
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+
+\graphicspath{{assets/}}
+
+% ---------- Identidad visual UTP ----------
+\definecolor{utpRojo}{HTML}{C42B35}
+\definecolor{utpNegro}{HTML}{111111}
+\definecolor{utpGris}{HTML}{5F5F5F}
+\definecolor{utpGrisMedio}{HTML}{9A9A9A}
+\definecolor{utpGrisClaro}{HTML}{F1F1F1}
+
+\usetheme{default}
+\setbeamercolor{normal text}{fg=utpNegro,bg=white}
+\setbeamercolor{structure}{fg=utpRojo}
+\setbeamercolor{frametitle}{fg=utpNegro,bg=white}
+\setbeamercolor{title}{fg=utpNegro}
+\setbeamercolor{subtitle}{fg=utpNegro}
+\setbeamercolor{author}{fg=utpNegro}
+\setbeamercolor{date}{fg=utpNegro}
+\setbeamercolor{block title}{fg=white,bg=utpNegro}
+\setbeamercolor{block body}{fg=utpNegro,bg=utpGrisClaro}
+\setbeamercolor{alertblock title}{fg=white,bg=utpRojo}
+\setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
+\setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
+\setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
+
+\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
+\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{block title}{series=\bfseries,size=\small}
+\setbeamerfont{block body}{size=\normalsize}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{itemize item}{\color{utpRojo}\small\raise.15ex\hbox{$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\color{utpGris}\scriptsize$\bullet$}
+\setbeamertemplate{enumerate item}{\color{utpRojo}\insertenumlabel.}
+\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
+
+% Título de diapositiva: negrita negra a la izquierda, logo UTP a la derecha
+\setbeamertemplate{frametitle}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-7mm,yshift=-5.5mm]current page.north east)
+      {\includegraphics[width=17mm]{utp-logo.png}};
+  \end{tikzpicture}%
+  \vspace{1.2mm}%
+  \begin{minipage}[t]{.80\textwidth}\raggedright\insertframetitle\end{minipage}\par
+  \vspace{1.1mm}{\color{utpRojo}\rule{\textwidth}{1.1pt}}
+}
+
+% Solo numeración discreta; la plantilla UTP no lleva pie de página
+\setbeamertemplate{footline}{%
+  \hfill{\color{utpGrisMedio}\scriptsize\insertframenumber}\hspace{6mm}\vspace{2.5mm}%
+}
+
+% Portada UTP
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=center,inner sep=0pt] at (current page.center) {%
+      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
+    };
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=145mm,font=\usebeamerfont{title}]
+      at ([yshift=-25.2mm]current page.north) {\inserttitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=142mm,font=\usebeamerfont{subtitle}]
+      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{date}]
+      at ([yshift=-50.4mm]current page.north) {\insertdate};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{author}]
+      at ([yshift=-58.4mm]current page.north) {\insertauthor};
+  \end{tikzpicture}%
+}
+
+% ---------- Comandos de apoyo didáctico ----------
+\newcommand{\concepto}[2]{%
+  \begin{block}{#1}\large #2\end{block}}
+\newcommand{\pregunta}[1]{%
+  \begin{alertblock}{Decide y explica}#1\end{alertblock}}
+\newcommand{\analogia}[1]{%
+  \begin{exampleblock}{En palabras simples}\small #1\end{exampleblock}}
+\newcommand{\enlarealidad}[1]{%
+  \begin{block}{Cómo se ve en la realidad}\small #1\end{block}}
+\newcommand{\ojo}[1]{%
+  \begin{alertblock}{Ojo con esto}\small #1\end{alertblock}}
+\newcommand{\apoyo}{{\normalfont\footnotesize\color{utpGris}~· material de apoyo}}
+\newcommand{\marca}[1]{\tikz[baseline=(m.base)]{%
+  \node[rounded corners=1.5pt,fill=utpGrisClaro,draw=utpGrisMedio,inner xsep=3pt,inner ysep=1.5pt,
+        font=\footnotesize] (m) {#1};}}
+
+\tikzset{
+  caja/.style={draw=utpNegro, very thick, rounded corners=1.5pt, fill=white,
+    align=center, minimum height=0.72cm, inner sep=5pt, font=\small},
+  cajaazul/.style={caja, draw=utpGris, fill=white},
+  cajaverde/.style={caja, draw=utpNegro, fill=utpGrisClaro},
+  cajanaranja/.style={caja, draw=utpRojo!75, fill=utpRojo!7},
+  flecha/.style={-{Stealth[length=2.3mm]}, very thick, draw=utpNegro},
+  flechavuelta/.style={{Stealth[length=2.3mm]}-{Stealth[length=2.3mm]}, very thick, draw=utpNegro}
+}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Tipos de hipervisor y diseño de una arquitectura virtualizada}
+\date{Semana 02 - Sesión 02}
+\author{Rel Guzman Apaza}
+
+\begin{document}
+
+% 1 ---------------------------------------------------------------------
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2 ---------------------------------------------------------------------
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás diferenciar los hipervisores de \textbf{tipo 1} y \textbf{tipo 2} según el entorno y el propósito, y \textbf{representar con un diagrama} una solución sencilla basada en máquinas virtuales.
+\end{block}
+\end{frame}
+
+% 3 ---------------------------------------------------------------------
+\begin{frame}{Revisamos la tarea de la sesión anterior}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{1. Sistemas operativos}
+\small ¿Qué versión encontraste y de qué fecha es?\\[3pt]
+\marca{Windows Server} \marca{Ubuntu Server} \marca{Lubuntu} \marca{Red Hat Enterprise Linux} \marca{Kali Linux}
+\end{block}
+\column{.49\textwidth}
+\begin{block}{2. Plataformas de nube}
+\small ¿Cómo se llama el servicio de máquinas virtuales de cada proveedor?\\[3pt]
+\marca{Google Cloud} \marca{AWS} \marca{Microsoft Azure} \marca{Oracle Cloud}
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\begin{exampleblock}{Dos comprobaciones antes de seguir}
+\small ¿El dato salió del \textbf{sitio oficial}? En Ubuntu, ¿anotaste la última versión o la última \textbf{LTS}? No suelen ser la misma, y un servidor casi siempre usa la LTS.
+\end{exampleblock}
+\vspace{0.15cm}
+\small Guarda tu lista de proveedores: la usaremos en un momento.
+\end{frame}
+
+% 4 ---------------------------------------------------------------------
+\begin{frame}{El tipo de hipervisor indica dónde se ejecuta}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Hipervisor tipo 1}
+\small Se ejecuta directamente sobre el equipo físico. Habitual en servidores empresariales.\\[2pt]
+\marca{VMware ESXi} \marca{Proxmox VE} \marca{Hyper-V} \marca{KVM}
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Hipervisor tipo 2}
+\small Se ejecuta como programa dentro de un sistema operativo anfitrión (host). Habitual en aprendizaje y pruebas.\\[2pt]
+\marca{VMware Workstation} \marca{VirtualBox} \marca{UTM}
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\begin{alertblock}{Criterio de comparación}
+La diferencia principal no está en la VM, que se ve igual en ambos casos: está en la capa que existe \textbf{entre el hardware y el hipervisor}.
+\end{alertblock}
+\end{frame}
+
+% 5 ---------------------------------------------------------------------
+\begin{frame}{Tipo 1: el hipervisor se instala sobre el hardware}
+\begin{center}
+\begin{tikzpicture}[node distance=4mm]
+  \node[cajanaranja,text width=7.4cm] (vms) {ecommerce-web \hspace{1.2cm} fileserver};
+  \node[cajaverde,text width=7.4cm,below=of vms] (hyp) {Hipervisor tipo 1};
+  \node[cajaazul,text width=7.4cm,below=of hyp] (hw) {Servidor físico};
+  \draw[flecha] (hw)--(hyp); \draw[flecha] (hyp)--(vms);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{Lectura de abajo hacia arriba}
+\small El hardware entrega recursos directamente al hipervisor; el hipervisor los distribuye entre las VM.
+\end{block}
+\column{.47\textwidth}
+\begin{exampleblock}{Detalle que sorprende}
+\small No tiene escritorio ni navegador: se administra a distancia, desde otra computadora, por la red.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 6 ---------------------------------------------------------------------
+\begin{frame}{Tipo 2: un sistema operativo anfitrión (host) agrega una capa}
+\begin{center}
+\begin{tikzpicture}[node distance=3.5mm]
+  \node[cajanaranja,text width=7.4cm] (vms) {Kali Linux \hspace{1.2cm} Lubuntu};
+  \node[cajaverde,text width=7.4cm,below=of vms] (hyp) {Hipervisor tipo 2};
+  \node[caja,text width=7.4cm,below=of hyp] (so) {Sistema operativo anfitrión (host)};
+  \node[cajaazul,text width=7.4cm,below=of so] (hw) {Equipo físico: PC-JUAN};
+  \draw[flecha] (hw)--(so); \draw[flecha] (so)--(hyp); \draw[flecha] (hyp)--(vms);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{Ventaja}
+\small Sigues usando tu laptop con normalidad mientras la VM se ejecuta en una ventana. Instalarlo toma minutos.
+\end{block}
+\column{.47\textwidth}
+\begin{exampleblock}{Costo}
+\small El hipervisor depende del sistema operativo anfitrión (host): comparte sus recursos y hereda sus problemas.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 7 ---------------------------------------------------------------------
+\begin{frame}{La elección depende del entorno y del propósito}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.0cm}p{3.4cm}p{5.0cm}}
+\toprule
+Criterio & Tipo 1 & Tipo 2 \\
+\midrule
+Ubicación & Sobre el hardware & Dentro de un sistema operativo \\
+Entorno habitual & Servidor dedicado & Computadora personal \\
+Propósito habitual & Servicio permanente & Aprendizaje y pruebas \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.25cm}
+\begin{block}{¿Y los proveedores de nube? Todos usan tipo 1}
+\small Sus servidores ejecutan un hipervisor de tipo 1 directamente sobre el hardware, sin sistema operativo anfitrión (host) debajo:
+\begin{center}
+\marca{Google Cloud · KVM} \marca{AWS · Nitro, basado en KVM} \marca{Microsoft Azure · Hyper-V}
+\end{center}
+\vspace{-0.15cm}
+Con miles de servidores dedicados a servicios permanentes, cada capa intermedia costaría rendimiento. Cuando creas una VM en la nube, el hipervisor ya está en marcha: tú solo eliges el tamaño de la máquina.
+\end{block}
+\end{frame}
+
+% 8 ---------------------------------------------------------------------
+\begin{frame}{Dónde encaja la nube: adelanto del curso\apoyo}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{4.2cm}p{6.4cm}}
+\toprule
+Hoy, en tu servidor & Más adelante, en Google Cloud \\
+\midrule
+Servidor físico & Los centros de datos de Google \\
+Hipervisor & Lo administra Google; tú no lo instalas \\
+Tus máquinas virtuales & Instancias de Compute Engine \\
+Asignar 3 GB y 2 núcleos & Elegir el tipo de máquina \\
+Usuarios, roles y permisos & IAM: roles y permisos del proyecto \\
+Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{block}{Idea que conviene retener}
+\small La nube no reemplaza estos conceptos: los mismos elementos siguen ahí, solo que el hardware y el hipervisor los opera otra empresa.
+\end{block}
+\end{frame}
+
+% 9 ---------------------------------------------------------------------
+\begin{frame}{Diseñar un sistema es representar componentes y relaciones}
+\concepto{Diseño de sistemas}{Representación de los componentes de una solución y de las relaciones entre ellos.}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Componente}
+\small Parte con una responsabilidad definida: navegador, hipervisor o máquina virtual. Se dibuja como una caja con nombre.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Relación}
+\small Conexión que indica contención, dependencia o dirección de comunicación. Se dibuja como una flecha o como una caja dentro de otra.
+\end{block}
+\end{columns}
+\vspace{0.2cm}
+\analogia{Es el plano de una casa: no dice de qué color pintarla, pero sí qué ambientes existen, dónde están y por dónde se pasa de uno a otro.}
+\end{frame}
+
+% 10 ---------------------------------------------------------------------
+\begin{frame}{Reto: dibuja la arquitectura mínima del e-commerce \textnormal{\small(17 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\textbf{\small Usa únicamente:}
+\begin{itemize}\setlength\itemsep{3pt}\small
+  \item cliente y navegador;
+  \item servidor físico e hipervisor;
+  \item ecommerce-web: catálogo, carrito y pedidos;
+  \item fileserver: comprobantes y backups.
+\end{itemize}
+\column{.48\textwidth}
+\textbf{\small El dibujo debe mostrar:}
+\begin{enumerate}\setlength\itemsep{3pt}\small
+  \item hipervisor y VM dentro del servidor;
+  \item cliente llegando mediante el navegador;
+  \item flechas con dirección de comunicación.
+\end{enumerate}
+\end{columns}
+\vspace{0.2cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{alertblock}{Alcance}
+\small No agregues bases de datos, servicios cloud, balanceadores ni componentes todavía no estudiados.
+\end{alertblock}
+\column{.47\textwidth}
+\begin{exampleblock}{Tiempo sugerido}
+\small 3 min para revisar los elementos · 10 min para dibujar · 4 min para comparar dos dibujos. Papel, pizarra o herramienta digital.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 11 ---------------------------------------------------------------------
+\begin{frame}{Una solución posible separa la web y los archivos en dos VM}
+\begin{center}
+\begin{tikzpicture}[node distance=4mm]
+  \node[cajaazul,text width=1.8cm] (c) {Cliente};
+  \node[cajaazul,text width=2.0cm,right=of c] (n) {Navegador};
+  \node[cajaverde,text width=5.8cm,right=9mm of n,minimum height=4.2cm] (srv) {};
+  \node[font=\small\bfseries,anchor=north] at ($(srv.north)+(0,-2mm)$) {Servidor físico};
+  \node[cajaverde,text width=4.8cm,anchor=south] (hyp) at ($(srv.south)+(0,4mm)$) {Hipervisor};
+  \node[cajanaranja,text width=2.15cm,font=\footnotesize,above left=5mm and -2.25cm of hyp] (web) {ecommerce-web\\catálogo y pedidos};
+  \node[cajanaranja,text width=2.15cm,font=\footnotesize,above right=5mm and -2.25cm of hyp] (ped) {fileserver\\comprobantes y backups};
+  \draw[flecha] (c)--(n);
+  \draw[flecha] (n)--(web);
+  \draw[flechavuelta] (web)--(ped);
+  \draw[flecha] (hyp)--(web); \draw[flecha] (hyp)--(ped);
+\end{tikzpicture}
+\end{center}
+\vspace{0.1cm}
+\small \textbf{Cómo se lee:} el cliente solo habla con el navegador; el navegador solo habla con ecommerce-web; ecommerce-web guarda en fileserver el comprobante de cada pedido y sus copias de seguridad; el hipervisor sostiene a ambas. Compara este ejemplo con tu dibujo: puede cambiar la disposición, pero no las relaciones esenciales.
+\end{frame}
+
+% 12 ---------------------------------------------------------------------
+\begin{frame}{Comprueba si tu arquitectura cuenta la historia completa}
+\begin{enumerate}\setlength\itemsep{6pt}\small
+  \item ¿Se distingue el equipo físico de los componentes virtuales?
+  \item ¿Las dos VM están dentro del servidor y conectadas al hipervisor?
+  \item ¿El cliente usa el navegador antes de llegar al servicio web?
+  \item ¿La comunicación entre ecommerce-web y fileserver tiene dirección?
+  \item ¿Cada caja tiene un nombre y una responsabilidad escrita?
+  \item ¿Puedes explicar cada elemento sin introducir conceptos nuevos?
+\end{enumerate}
+\vspace{0.2cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{Evidencia}
+\small Entrega una fotografía, captura o archivo legible del diagrama terminado.
+\end{exampleblock}
+\column{.47\textwidth}
+\begin{alertblock}{Criterio}
+\small Seis respuestas afirmativas: el diagrama está completo. Con menos, revisa cuál falta antes de entregar.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 13 ---------------------------------------------------------------------
+\begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar\apoyo}
+\begin{center}
+\small
+\begin{tabular}{p{5.1cm}p{5.6cm}}
+\toprule
+\bfseries Lo que suele pensarse & \bfseries Lo correcto \\
+\midrule
+«Servidor es una computadora grande» & Es un rol: atender solicitudes. El tamaño no lo define \\
+«Una VM es un programa más» & Es una computadora completa por software, con su propio sistema operativo \\
+«Virtualizar da más recursos» & Reparte los mismos recursos físicos \\
+«El tipo 1 siempre es mejor» & Depende del entorno y del propósito \\
+«El navegador decide qué se puede hacer» & El servicio valida y autoriza; el navegador solo pide y muestra \\
+«Rol y usuario son lo mismo» & Un rol agrupa permisos; varios usuarios pueden tener el mismo rol \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+% 14 ---------------------------------------------------------------------
+\begin{frame}{La solución responde al problema inicial}
+\begin{center}
+\begin{tikzpicture}[node distance=4mm]
+  \node[cajaazul,text width=2.7cm] (a) {Usuarios y roles\\controlan acceso};
+  \node[cajaazul,text width=2.7cm,right=of a] (b) {Servicios atienden\\solicitudes};
+  \node[cajaverde,text width=2.7cm,right=of b] (c) {VM separan\\responsabilidades};
+  \node[cajanaranja,text width=2.7cm,below=6mm of b] (d) {El hipervisor administra recursos físicos};
+  \draw[flecha](a)--(b); \draw[flecha](b)--(c); \draw[flecha](c)--(d); \draw[flecha](d)--(a);
+\end{tikzpicture}
+\end{center}
+\vspace{0.1cm}
+\begin{block}{Idea central}
+Un solo servidor físico puede alojar servicios separados en máquinas virtuales, siempre que el acceso y los recursos se administren con reglas claras.
+\end{block}
+\vspace{0.05cm}
+\small Vuelve a la propuesta que escribiste en la sesión anterior: ¿qué cambiarías ahora y por qué?
+\end{frame}
+
+% 15 ---------------------------------------------------------------------
+\begin{frame}{Cierre: completa las tres ideas con tus palabras}
+\begin{enumerate}\setlength\itemsep{9pt}
+  \item Un sistema operativo de red sirve para \rule{6.4cm}{0.4pt}
+  \item Una máquina virtual necesita \rule{7.1cm}{0.4pt}
+  \item Elegiría un hipervisor de tipo 1 cuando \rule{5.0cm}{0.4pt}
+\end{enumerate}
+\vspace{0.3cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{alertblock}{Última comprobación}
+\small En cada respuesta, incluye al menos una relación causal: \emph{sirve para..., porque...}
+\end{alertblock}
+\column{.47\textwidth}
+\begin{exampleblock}{Cómo empezar}
+\small «...sirve para controlar quién accede a cada recurso, porque compara la acción con los permisos del rol.»
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 16 ---------------------------------------------------------------------
+\begin{frame}{Glosario de la sesión\apoyo}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\footnotesize
+\textbf{Sistema operativo} · administra el hardware y ejecuta programas.\\[2pt]
+\textbf{Red} · equipos conectados que intercambian información.\\[2pt]
+\textbf{Sistema operativo de red} · administra usuarios, recursos y comunicaciones.\\[2pt]
+\textbf{Usuario / grupo / permiso} · quién · quiénes · qué puede hacer.\\[2pt]
+\textbf{Rol} · conjunto de permisos de una responsabilidad.\\[2pt]
+\textbf{Cliente / servidor} · quien pide · quien responde.\\[2pt]
+\textbf{Servicio} · programa en segundo plano que espera peticiones.\\[2pt]
+\textbf{Servicio de red} · servicio que atiende a otros equipos.
+\column{.48\textwidth}
+\footnotesize
+\textbf{Puerto} · número que identifica al servicio destinatario.\\[2pt]
+\textbf{Virtualización} · representar un recurso mediante software.\\[2pt]
+\textbf{Anfitrión (host)} · equipo físico que aporta los recursos.\\[2pt]
+\textbf{Hipervisor} · software que crea y administra las VM.\\[2pt]
+\textbf{Máquina virtual} · computadora por software con recursos asignados.\\[2pt]
+\textbf{Sistema operativo invitado (guest)} · el instalado dentro de la VM.\\[2pt]
+\textbf{Tipo 1 / tipo 2} · sobre el hardware · dentro de un sistema operativo.
+\end{columns}
+\end{frame}
+
+% 17 ---------------------------------------------------------------------
+\begin{frame}{Lo que ya puedes explicar y representar}
+\begin{itemize}\setlength\itemsep{6pt}\small
+  \item Cómo usuarios, roles y permisos controlan el acceso.
+  \item Cómo una solicitud viaja del navegador a un servicio y vuelve como respuesta.
+  \item Cómo un hipervisor reparte recursos físicos entre máquinas virtuales.
+  \item Por qué los hipervisores tipo 1 y tipo 2 corresponden a entornos diferentes.
+  \item Cómo dibujar la arquitectura mínima del e-commerce estudiado.
+\end{itemize}
+\vspace{0.15cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{Próximo paso}
+\small Más adelante crearás una máquina virtual GNU/Linux; hoy estableciste el modelo conceptual necesario para comprenderla.
+\end{exampleblock}
+\column{.47\textwidth}
+\begin{block}{Para practicar por tu cuenta}
+\small Vuelve a abrir los tres archivos HTML de la sesión 1 y explícale a alguien, en voz alta, qué ocurre en cada uno.
+\end{block}
+\end{columns}
+\end{frame}
+
+
+% ---------------------------------------------------------------------
+% Cierre UTP
+{
+  \setbeamertemplate{background canvas}{%
+    \includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}%
+  }
+  \setbeamertemplate{footline}{}
+  \begin{frame}[plain]
+  \end{frame}
+}
+
+\end{document}

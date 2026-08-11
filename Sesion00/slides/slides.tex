@@ -1,0 +1,250 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Arial}
+    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
+    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
+\fi
+
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+
+% Permite compilar desde la raíz del curso o desde Sesion00/slides.
+\graphicspath{{Sesion01/slides/assets/}{../../Sesion01/slides/assets/}}
+
+% ---------- Identidad visual UTP (igual a Sesion01) ----------
+\definecolor{utpRojo}{HTML}{C42B35}
+\definecolor{utpNegro}{HTML}{111111}
+\definecolor{utpGris}{HTML}{5F5F5F}
+\definecolor{utpGrisMedio}{HTML}{9A9A9A}
+\definecolor{utpGrisClaro}{HTML}{F1F1F1}
+
+\usetheme{default}
+\setbeamercolor{normal text}{fg=utpNegro,bg=white}
+\setbeamercolor{structure}{fg=utpRojo}
+\setbeamercolor{frametitle}{fg=utpNegro,bg=white}
+\setbeamercolor{title}{fg=utpNegro}
+\setbeamercolor{subtitle}{fg=utpNegro}
+\setbeamercolor{author}{fg=utpNegro}
+\setbeamercolor{date}{fg=utpNegro}
+\setbeamercolor{block title}{fg=white,bg=utpNegro}
+\setbeamercolor{block body}{fg=utpNegro,bg=utpGrisClaro}
+\setbeamercolor{alertblock title}{fg=white,bg=utpRojo}
+\setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
+\setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
+\setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
+
+\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
+\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{block title}{series=\bfseries,size=\small}
+\setbeamerfont{block body}{size=\normalsize}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{itemize item}{\color{utpRojo}\small\raise.15ex\hbox{$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\color{utpGris}\scriptsize$\bullet$}
+\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
+
+\setbeamertemplate{frametitle}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-7mm,yshift=-5.5mm]current page.north east)
+      {\includegraphics[width=17mm]{utp-logo.png}};
+  \end{tikzpicture}%
+  \vspace{1.2mm}%
+  \begin{minipage}[t]{.80\textwidth}\raggedright\insertframetitle\end{minipage}\par
+  \vspace{1.1mm}{\color{utpRojo}\rule{\textwidth}{1.1pt}}
+}
+
+\setbeamertemplate{footline}{%
+  \hfill{\color{utpGrisMedio}\scriptsize\insertframenumber}\hspace{6mm}\vspace{2.5mm}%
+}
+
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=center,inner sep=0pt] at (current page.center) {%
+      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
+    };
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=145mm,font=\usebeamerfont{title}]
+      at ([yshift=-25.2mm]current page.north) {\inserttitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=142mm,font=\usebeamerfont{subtitle}]
+      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{date}]
+      at ([yshift=-50.4mm]current page.north) {\insertdate};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{author}]
+      at ([yshift=-58.4mm]current page.north) {\insertauthor};
+  \end{tikzpicture}%
+}
+
+\tikzset{
+  caja/.style={draw=utpNegro,very thick,rounded corners=1.5pt,fill=white,
+    align=center,minimum height=.72cm,inner sep=5pt,font=\small},
+  cajaazul/.style={caja,draw=utpGris,fill=white},
+  cajaverde/.style={caja,draw=utpNegro,fill=utpGrisClaro},
+  cajanaranja/.style={caja,draw=utpRojo!75,fill=utpRojo!7},
+  flecha/.style={-{Stealth[length=2.3mm]},very thick,draw=utpNegro}
+}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Presentación del curso}
+\date{Sesión 00}
+\author{Rel Guzman Apaza}
+
+\begin{document}
+
+% 1 ---------------------------------------------------------------------
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2 ---------------------------------------------------------------------
+\begin{frame}{El curso prepara para implementar soluciones cloud básicas}
+\begin{columns}[T,onlytextwidth]
+\column{.56\textwidth}
+\begin{block}{Logro general de aprendizaje}
+\small Al finalizar el curso, el estudiante identifica conocimientos sobre tecnologías y servicios cloud para implementar soluciones básicas orientadas al cumplimiento de los requerimientos de una empresa.
+\end{block}
+\begin{exampleblock}{Naturaleza del curso}
+\small El curso es práctico y aborda virtualización, servicios básicos cloud, gestión y automatización para entornos empresariales.
+\end{exampleblock}
+\column{.40\textwidth}
+\small
+\begin{tabular}{>{\bfseries}p{1.65cm}p{3.0cm}}
+\toprule
+Carrera & Ingeniería de Sistemas e Informática\\
+\midrule
+Créditos & 3\\
+Modalidad & Virtual en vivo\\
+Horas & 4 semanales\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 3 ---------------------------------------------------------------------
+\begin{frame}{Tres unidades organizan el recorrido del curso}
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+  \node[cajaazul,text width=3.35cm,minimum height=2.25cm] (u1)
+    {\textbf{Unidad 1}\\Semanas 1--5\\[3pt]Sistemas operativos y virtualización de servicios};
+  \node[cajaverde,text width=3.35cm,minimum height=2.25cm,right=of u1] (u2)
+    {\textbf{Unidad 2}\\Semanas 6--11\\[3pt]Servicios básicos en proveedores cloud};
+  \node[cajanaranja,text width=3.35cm,minimum height=2.25cm,right=of u2] (u3)
+    {\textbf{Unidad 3}\\Semanas 12--18\\[3pt]Gestión de servicios y automatización en cloud};
+  \draw[flecha] (u1)--(u2); \draw[flecha] (u2)--(u3);
+\end{tikzpicture}
+\end{center}
+\vspace{0.3cm}
+\begin{block}{Progresión indicada en el sílabo}
+\small Fundamentos y laboratorios en GNU/Linux $\rightarrow$ servicios de GCP $\rightarrow$ permisos, contenedores, balanceo y automatización.
+\end{block}
+\end{frame}
+
+% 4 ---------------------------------------------------------------------
+\begin{frame}{Los laboratorios recorren sistemas, GCP y automatización}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{Unidad 1}
+\footnotesize
+\begin{itemize}\setlength\itemsep{2pt}
+  \item Máquina virtual GNU/Linux
+  \item Línea de comandos
+  \item Instalación de servicios
+  \item Windows Subsystem for Linux
+\end{itemize}
+\end{block}
+\column{.32\textwidth}
+\begin{exampleblock}{Unidad 2}
+\footnotesize
+\begin{itemize}\setlength\itemsep{2pt}
+  \item GCP y Compute Engine
+  \item Regiones y zonas
+  \item Cloud Shell y \texttt{gcloud}
+  \item VPC, almacenamiento y bases de datos
+\end{itemize}
+\end{exampleblock}
+\column{.32\textwidth}
+\begin{alertblock}{Unidad 3}
+\footnotesize
+\begin{itemize}\setlength\itemsep{2pt}
+  \item IAM
+  \item Contenedores y Kubernetes
+  \item Balanceadores y monitoreo
+  \item Pruebas y Marketplace
+\end{itemize}
+\end{alertblock}
+\end{columns}
+\vspace{0.2cm}
+\small Los laboratorios señalados en el sílabo incluyen actividades guiadas en Google Cloud Skills Boost/Qwiklabs.
+\end{frame}
+
+% 5 ---------------------------------------------------------------------
+\begin{frame}{La evaluación se distribuye durante las 18 semanas}
+\begin{columns}[T,onlytextwidth]
+\column{.58\textwidth}
+\small
+\begin{tabular}{>{\bfseries}p{3.35cm}cc}
+\toprule
+Evaluación & Peso & Semana\\
+\midrule
+Práctica calificada 1 & 20\% & 5\\
+Práctica calificada 2 & 20\% & 10\\
+Práctica calificada 3 & 30\% & 15\\
+Examen final & 30\% & 18\\
+\bottomrule
+\end{tabular}
+\column{.38\textwidth}
+\begin{block}{Fórmula del promedio final}
+\centering\small
+20\% PC1 + 20\% PC2\\
++ 30\% PC3 + 30\% EXFN
+\end{block}
+\begin{alertblock}{Dato del sílabo}
+\small La nota mínima aprobatoria final es 12.
+\end{alertblock}
+\end{columns}
+\vspace{0.25cm}
+\small Las tres prácticas calificadas y el examen final son individuales.
+\end{frame}
+
+% 6 ---------------------------------------------------------------------
+\begin{frame}{La Sesión 1 inicia con sistemas operativos y virtualización}
+\begin{center}
+\begin{tikzpicture}[node distance=6mm]
+  \node[cajaazul,text width=3cm] (a) {Sistemas operativos\\de red};
+  \node[cajaverde,text width=3cm,right=of a] (b) {Introducción a la\\virtualización};
+  \node[cajanaranja,text width=3cm,right=of b] (c) {Tipos de\\virtualización};
+  \draw[flecha] (a)--(b); \draw[flecha] (b)--(c);
+\end{tikzpicture}
+\end{center}
+\vspace{0.45cm}
+\begin{block}{Metodología del curso}
+\small Las sesiones virtuales en vivo se complementan con recursos, materiales, actividades y un foro de consultas en la plataforma virtual de aprendizaje.
+\end{block}
+\begin{exampleblock}{Primera actividad del curso}
+\small Sistemas operativos de red, introducción a la virtualización y tipos de virtualización.
+\end{exampleblock}
+\end{frame}
+
+\end{document}

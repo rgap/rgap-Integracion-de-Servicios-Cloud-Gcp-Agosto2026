@@ -1,0 +1,40 @@
+\input{header.tex}
+
+\begin{document}
+
+\title{Innovación y Transformación Digital}
+\subtitle{Espacios de búsqueda, Reglas, Camino más corto y Machine Learning}
+\date{Semana 12 - Sesión 23}
+\author{Rel Guzman Apaza}
+
+% 1. Portada original de S23.
+\maketitle
+
+% 2. Diapositiva blanca: sin texto, fondo decorativo ni franja inferior.
+\begin{frame}[plain]
+\end{frame}
+
+% 3. Preguntas sobre blanco: sin patrón de fondo ni franja verde inferior.
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north west,font=\bfseries\fontsize{24}{28}\selectfont]
+      at ([xshift=12mm,yshift=-9mm]current page.north west) {Preguntas};
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-10mm,yshift=-8mm]current page.north east)
+      {\includegraphics[width=43mm]{utp-logo.png}};
+    \node[anchor=center,inner sep=0pt]
+      at ([yshift=-5mm]current page.center)
+      {\includegraphics[width=78mm]{preguntas-ilustracion.png}};
+  \end{tikzpicture}
+\end{frame}
+
+% 4. Cierre original de S23.
+{
+  \setbeamertemplate{background canvas}{%
+    \includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}%
+  }
+  \begin{frame}[plain]
+  \end{frame}
+}
+
+\end{document}

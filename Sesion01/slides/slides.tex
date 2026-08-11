@@ -1,0 +1,829 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}          % tipografia escalable para el respaldo con pdflatex
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Arial}
+    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
+    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
+\fi
+
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+
+\graphicspath{{assets/}}
+
+% ---------- Identidad visual UTP ----------
+\definecolor{utpRojo}{HTML}{C42B35}
+\definecolor{utpNegro}{HTML}{111111}
+\definecolor{utpGris}{HTML}{5F5F5F}
+\definecolor{utpGrisMedio}{HTML}{9A9A9A}
+\definecolor{utpGrisClaro}{HTML}{F1F1F1}
+
+\usetheme{default}
+\setbeamercolor{normal text}{fg=utpNegro,bg=white}
+\setbeamercolor{structure}{fg=utpRojo}
+\setbeamercolor{frametitle}{fg=utpNegro,bg=white}
+\setbeamercolor{title}{fg=utpNegro}
+\setbeamercolor{subtitle}{fg=utpNegro}
+\setbeamercolor{author}{fg=utpNegro}
+\setbeamercolor{date}{fg=utpNegro}
+\setbeamercolor{block title}{fg=white,bg=utpNegro}
+\setbeamercolor{block body}{fg=utpNegro,bg=utpGrisClaro}
+\setbeamercolor{alertblock title}{fg=white,bg=utpRojo}
+\setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
+\setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
+\setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
+
+\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
+\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{block title}{series=\bfseries,size=\small}
+\setbeamerfont{block body}{size=\normalsize}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{itemize item}{\color{utpRojo}\small\raise.15ex\hbox{$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\color{utpGris}\scriptsize$\bullet$}
+\setbeamertemplate{enumerate item}{\color{utpRojo}\insertenumlabel.}
+\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
+
+% Título de diapositiva: negrita negra a la izquierda, logo UTP a la derecha
+\setbeamertemplate{frametitle}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-7mm,yshift=-5.5mm]current page.north east)
+      {\includegraphics[width=17mm]{utp-logo.png}};
+  \end{tikzpicture}%
+  \vspace{1.2mm}%
+  \begin{minipage}[t]{.80\textwidth}\raggedright\insertframetitle\end{minipage}\par
+  \vspace{1.1mm}{\color{utpRojo}\rule{\textwidth}{1.1pt}}
+}
+
+% Solo numeración discreta; la plantilla UTP no lleva pie de página
+\setbeamertemplate{footline}{%
+  \hfill{\color{utpGrisMedio}\scriptsize\insertframenumber}\hspace{6mm}\vspace{2.5mm}%
+}
+
+% Portada UTP
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=center,inner sep=0pt] at (current page.center) {%
+      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
+    };
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=145mm,font=\usebeamerfont{title}]
+      at ([yshift=-25.2mm]current page.north) {\inserttitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=142mm,font=\usebeamerfont{subtitle}]
+      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{date}]
+      at ([yshift=-50.4mm]current page.north) {\insertdate};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{author}]
+      at ([yshift=-58.4mm]current page.north) {\insertauthor};
+  \end{tikzpicture}%
+}
+
+% ---------- Comandos de apoyo didáctico ----------
+\newcommand{\concepto}[2]{%
+  \begin{block}{#1}\large #2\end{block}}
+\newcommand{\pregunta}[1]{%
+  \begin{alertblock}{Decide y explica}#1\end{alertblock}}
+\newcommand{\analogia}[1]{%
+  \begin{exampleblock}{En palabras simples}\small #1\end{exampleblock}}
+\newcommand{\enlarealidad}[1]{%
+  \begin{block}{Cómo se ve en la realidad}\small #1\end{block}}
+\newcommand{\ojo}[1]{%
+  \begin{alertblock}{Ojo con esto}\small #1\end{alertblock}}
+\newcommand{\apoyo}{{\normalfont\footnotesize\color{utpGris}~· material de apoyo}}
+\newcommand{\marca}[1]{\tikz[baseline=(m.base)]{%
+  \node[rounded corners=1.5pt,fill=utpGrisClaro,draw=utpGrisMedio,inner xsep=3pt,inner ysep=1.5pt,
+        font=\footnotesize] (m) {#1};}}
+
+\tikzset{
+  caja/.style={draw=utpNegro, very thick, rounded corners=1.5pt, fill=white,
+    align=center, minimum height=0.72cm, inner sep=5pt, font=\small},
+  cajaazul/.style={caja, draw=utpGris, fill=white},
+  cajaverde/.style={caja, draw=utpNegro, fill=utpGrisClaro},
+  cajanaranja/.style={caja, draw=utpRojo!75, fill=utpRojo!7},
+  flecha/.style={-{Stealth[length=2.3mm]}, very thick, draw=utpNegro},
+  flechavuelta/.style={{Stealth[length=2.3mm]}-{Stealth[length=2.3mm]}, very thick, draw=utpNegro}
+}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Sistemas operativos de red e introducción a la virtualización}
+\date{Semana 01 - Sesión 01}
+\author{Rel Guzman Apaza}
+
+\begin{document}
+
+% 1 ---------------------------------------------------------------------
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2 ---------------------------------------------------------------------
+\begin{frame}{Cuatro palabras que usaremos durante toda la sesión}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.9cm}p{5.4cm}p{3.6cm}}
+\toprule
+Palabra & Qué significa aquí & Comparación cotidiana \\
+\midrule
+Servidor & Computadora (o programa) que atiende pedidos de otros & La cocina de un restaurante \\
+Servicio & Programa que resuelve un tipo de pedido & El cocinero de una especialidad \\
+Máquina virtual & Computadora creada con software dentro de una computadora real & Un departamento dentro de un edificio \\
+Hipervisor & Software que crea esas computadoras y les reparte los recursos & El administrador del edificio \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{block}{Cómo usar esta diapositiva}
+\small Si en algún momento pierdes el hilo, regresa aquí. Todo lo demás se construye sobre estas cuatro ideas.
+\end{block}
+\end{frame}
+
+% 3 ---------------------------------------------------------------------
+\begin{frame}{El reto: organizar una tienda en un solo servidor}
+\begin{columns}[T,onlytextwidth]
+  \column{.55\textwidth}
+  \small Una pequeña tienda necesita un sitio web donde:
+  \begin{itemize}\setlength\itemsep{4pt}\small
+    \item el \textbf{visitante} consulte productos;
+    \item el \textbf{cliente} use un carrito y registre pedidos;
+    \item el \textbf{vendedor} actualice el stock;
+    \item el \textbf{administrador} gestione usuarios.
+  \end{itemize}
+  \vspace{0.2cm}
+  \begin{alertblock}{La restricción}
+  \small La tienda dispone de \textbf{un solo servidor físico}: una computadora encendida todo el tiempo y conectada a internet, que debe atender a todos.
+  \end{alertblock}
+  \column{.41\textwidth}
+  \vspace{0.6cm}
+  \pregunta{\small ¿Cómo organizarías la tienda en ese único servidor? Escribe una propuesta breve en el chat.}
+\end{columns}
+\end{frame}
+
+% 4 ---------------------------------------------------------------------
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar para qué sirve un \textbf{sistema operativo de red}, cómo un \textbf{servicio} atiende solicitudes y cómo un \textbf{hipervisor} reparte los recursos de un equipo entre varias \textbf{máquinas virtuales}.
+\end{block}
+\end{frame}
+
+% 5 ---------------------------------------------------------------------
+\begin{frame}{«Servidor» significa tres cosas distintas}
+\begin{columns}[T,onlytextwidth]
+\column{.315\textwidth}
+\begin{block}{1. Un equipo}
+\small Una computadora encendida las 24 horas, casi siempre sin pantalla ni teclado, guardada en un centro de datos.
+\end{block}
+\column{.315\textwidth}
+\begin{block}{2. Un programa}
+\small Software que espera solicitudes y responde. Ejemplos reales: \marca{Apache} \marca{Nginx} \marca{Node.js + Express}
+\end{block}
+\column{.315\textwidth}
+\begin{block}{3. Un rol}
+\small El que responde en una conversación. El mismo equipo puede ser cliente en otra conversación.
+\end{block}
+\end{columns}
+\vspace{0.2cm}
+\analogia{En un restaurante: el local es el \emph{equipo}, el cocinero es el \emph{programa} y «atender pedidos» es la función propia del \emph{rol} de «servidor». Cuando decimos «servidor» casi siempre nos referimos al rol.}
+\vspace{0.1cm}
+\small Por eso tu laptop puede comportarse como servidor: basta que ejecute un programa que atienda solicitudes.
+\end{frame}
+
+% 6 ---------------------------------------------------------------------
+\begin{frame}{Un sistema operativo conecta los programas con el hardware}
+\concepto{Sistema operativo}{Software que administra el hardware de un equipo y permite ejecutar programas.}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\vspace{0.15cm}
+\begin{center}
+\begin{tikzpicture}[node distance=3.5mm]
+  \node[cajaazul,text width=3.4cm] (p) {Programas\\navegador, editor};
+  \node[cajaverde,text width=3.4cm,below=of p] (so) {Sistema operativo};
+  \node[cajanaranja,text width=3.4cm,below=of so] (h) {Hardware\\CPU, memoria, disco};
+  \draw[flechavuelta] (p)--(so); \draw[flechavuelta] (so)--(h);
+\end{tikzpicture}
+\end{center}
+\column{.53\textwidth}
+\begin{block}{Ejemplos que ya conoces}
+\small \marca{Windows} \marca{macOS} \marca{Ubuntu / GNU-Linux} \marca{Android}
+\end{block}
+\analogia{Ningún programa toca el hardware directamente. Cuando el navegador necesita memoria o guardar un archivo, se lo pide al sistema operativo, que asigna recursos, organiza archivos, controla dispositivos y mantiene separados los procesos.}
+\end{columns}
+\end{frame}
+
+% 7 ---------------------------------------------------------------------
+\begin{frame}{Una red permite que varios equipos intercambien información}
+\concepto{Red}{Conjunto de equipos conectados que intercambian información.}
+\begin{center}
+\begin{tikzpicture}[node distance=1.1cm]
+  \node[cajaazul] (laptop) {Laptop};
+  \node[cajaverde,right=of laptop] (red) {Red};
+  \node[cajanaranja,right=of red] (server) {Servidor};
+  \draw[flechavuelta] (laptop)-- node[above,font=\scriptsize]{datos} (red);
+  \draw[flechavuelta] (red)-- node[above,font=\scriptsize]{datos} (server);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Para encontrarse hace falta una dirección}
+\small Cada equipo de la red tiene una \textbf{dirección IP} (por ejemplo \texttt{192.168.1.20}), igual que una dirección postal: sin ella el mensaje no sabría a dónde llegar.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una red puede ser de cualquier tamaño}
+\small La wifi de tu casa es una red; la de tu trabajo también. Internet es la red que conecta a todas las demás. En las tres funciona la misma idea: equipos con dirección que intercambian datos.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 8 ---------------------------------------------------------------------
+\begin{frame}{El sistema operativo de red coordina acceso y recursos}
+\concepto{Sistema operativo de red}{Sistema operativo que administra usuarios, recursos y comunicaciones entre equipos conectados.}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{itemize}\setlength\itemsep{4pt}\small
+  \item Identifica quién solicita acceso.
+  \item Aplica reglas sobre los recursos.
+  \item Facilita servicios compartidos.
+  \item Registra o rechaza acciones.
+\end{itemize}
+\vspace{0.15cm}
+{\small\textbf{Ejemplos:} \marca{Windows Server} \marca{Ubuntu Server}\\
+Tu laptop ya hace una versión pequeña de esto.\par}
+\column{.49\textwidth}
+\vspace{0.1cm}
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+  \node[cajaazul,text width=2.5cm] (u) {Usuario};
+  \node[cajaverde,text width=3.4cm,below=of u] (s) {Sistema operativo\\de red};
+  \node[cajanaranja,text width=3.4cm,below=of s] (r) {Recursos y servicios};
+  \draw[flecha] (u)--node[right,font=\scriptsize]{solicita}(s);
+  \draw[flecha] (s)--node[right,font=\scriptsize]{autoriza}(r);
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% 9 ---------------------------------------------------------------------
+\begin{frame}{Usuarios, grupos y permisos responden tres preguntas}
+\begin{description}[Recurso compartido]\small
+  \item[Usuario] Persona o proceso autorizado para utilizar el sistema operativo. Responde: \emph{¿quién?}
+  \item[Grupo] Conjunto de usuarios que comparte permisos. Responde: \emph{¿quiénes reciben la misma regla?}
+  \item[Permiso] Autorización para leer, modificar o ejecutar un recurso. Responde: \emph{¿qué puede hacer?}
+  \item[Recurso compartido] Archivo, carpeta o dispositivo disponible mediante la red. Responde: \emph{¿sobre qué?}
+\end{description}
+\vspace{0.15cm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Regla de acceso}
+\small Una regla relaciona \textbf{usuario o grupo + acción permitida + recurso}.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una regla concreta}
+\small El grupo \textbf{Vendedores} puede \textbf{modificar} el recurso \texttt{/stock}.
+\end{exampleblock}
+\end{columns}
+\vspace{0.1cm}
+\analogia{Es la tarjeta de un hotel: abre tu habitación y el gimnasio, pero no la oficina de administración.}
+\end{frame}
+
+% 10 ---------------------------------------------------------------------
+\begin{frame}{Un rol agrupa permisos para una responsabilidad}
+\concepto{Rol}{Conjunto de permisos asociado con una función dentro del sistema.}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.7cm}p{7.4cm}}
+\toprule
+Rol & Acciones permitidas \\
+\midrule
+Cliente & Registrar pedidos \\
+Vendedor & Modificar el stock \\
+Administrador & Registrar pedidos, modificar el stock y gestionar usuarios \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{block}{¿Por qué roles y no permisos uno por uno?}
+\small Si mañana entra un nuevo vendedor, solo se le asigna el rol: no hay que volver a escribir sus permisos. Y si el rol cambia, cambian todos a la vez.
+\end{block}
+\vspace{0.05cm}
+\small La \textbf{autorización} ocurre cuando el sistema operativo compara la acción solicitada con los permisos del rol.
+\end{frame}
+
+% 11 ---------------------------------------------------------------------
+\begin{frame}{Práctica 1: ejecuta una política de acceso \textnormal{\small(7 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.55\textwidth}
+\begin{enumerate}\setlength\itemsep{5pt}\small
+  \item Abre \texttt{1\_autorizacion-roles.html} en tu navegador (doble clic: no necesita internet).
+  \item Selecciona un usuario: \textbf{Ana} (Cliente), \textbf{Luis} (Vendedor) o \textbf{Sofía} (Administrador).
+  \item Elige una acción y presiona \textbf{Ejecutar}.
+  \item Lee el resultado y la \textbf{regla aplicada}.
+  \item Repite hasta probar los tres roles.
+\end{enumerate}
+\vspace{0.1cm}
+\small Si algo se desordena, usa \textbf{Restablecer}.
+\column{.41\textwidth}
+\resizebox{.94\linewidth}{!}{\begin{tikzpicture}[node distance=5mm]
+  \node[cajaazul,text width=3.3cm] (sol) {Rol + acción};
+  \node[cajaverde,text width=3.3cm,below=of sol] (reg) {Comparar con regla};
+  \node[cajaverde,text width=1.35cm,below left=6mm and -5mm of reg,font=\scriptsize] (si) {Permitido};
+  \node[caja,draw=utpRojo,fill=utpRojo!10,text width=1.35cm,below right=6mm and -5mm of reg,font=\scriptsize] (no) {Rechazado};
+  \draw[flecha](sol)--(reg); \draw[flecha](reg)--(si); \draw[flecha](reg)--(no);
+\end{tikzpicture}}
+\vspace{0.15cm}
+\begin{exampleblock}{Anota}
+\small La frase exacta de la regla que rechazó una acción.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 12 ---------------------------------------------------------------------
+\begin{frame}{La autorización reduce acciones indebidas}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{Ejemplo}
+\small Un vendedor solicita \emph{actualizar el stock}. El sistema operativo revisa su rol y permite la acción porque posee ese permiso.
+\end{exampleblock}
+\pregunta{\small Predice antes de ejecutar:
+\begin{enumerate}\setlength\itemsep{2pt}
+  \item ¿Qué ocurre si un cliente registra un pedido?
+  \item ¿Podrá un cliente modificar el stock?
+  \item ¿Y si cualquiera gestionara cuentas?
+\end{enumerate}}
+\column{.47\textwidth}
+\begin{block}{Principio de mínimo privilegio}
+\small Cada usuario recibe \textbf{solo} los permisos que necesita para su tarea, y nada más. Así, un error o una cuenta robada causan el menor daño posible.
+\end{block}
+\vspace{0.15cm}
+\begin{exampleblock}{Conclusión del bloque}
+\small El sistema operativo utiliza identidades, grupos y permisos para controlar el acceso a recursos.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 13 ---------------------------------------------------------------------
+\begin{frame}{Cliente y servidor describen cómo se reparte el trabajo}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\concepto{Cliente}{Programa o equipo que inicia una solicitud. En nuestro caso, el navegador cumple este rol.}
+\column{.48\textwidth}
+\concepto{Servidor}{Programa o equipo que recibe la solicitud, realiza una tarea y devuelve una respuesta.}
+\end{columns}
+\vspace{0.2cm}
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+  \node[cajaazul,text width=3cm] (c) {Cliente\\navegador};
+  \node[cajaverde,text width=3cm,right=of c] (s) {Servidor\\servicio web};
+  \draw[flecha,bend left=14] (c) to node[above,font=\small]{solicitud} (s);
+  \draw[flecha,bend left=14] (s) to node[below,font=\small]{respuesta} (c);
+\end{tikzpicture}
+\end{center}
+\vspace{0.1cm}
+\ojo{El navegador \textbf{no} decide qué está permitido: solo pide y muestra lo que el servicio responde.}
+\end{frame}
+
+% 14 ---------------------------------------------------------------------
+\begin{frame}{Antes de seguir: ¿qué es exactamente un «servicio»?}
+\concepto{Servicio}{Programa que se ejecuta en segundo plano, sin que nadie lo abra, esperando peticiones para hacer una tarea concreta.}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.7cm}p{5.4cm}p{4.0cm}}
+\toprule
+& ¿Quién lo inicia? & ¿A quién atiende? \\
+\midrule
+Programa & Tú, cuando lo abres & A ti, en su ventana \\
+Servicio & El sistema operativo, al encender & A su propio equipo \\
+Servicio de red & El sistema operativo, al encender & A otros equipos, por la red \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{Ya tienes servicios funcionando}
+\small En tu laptop, ahora mismo: la cola de impresión, las actualizaciones automáticas y la sincronización de la hora. Nunca los abriste y no los verás en una ventana.
+\end{exampleblock}
+\column{.47\textwidth}
+\analogia{Un programa es el chef que llamas cuando quieres cocinar. Un servicio es el cocinero que ya está en la cocina, listo, aunque nadie haya pedido nada todavía.}
+\end{columns}
+\end{frame}
+
+% 15 ---------------------------------------------------------------------
+\begin{frame}{Un servicio de red atiende una necesidad concreta}
+\concepto{Servicio de red}{Programa que recibe solicitudes de otros equipos y produce una respuesta.}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.8cm}p{5.0cm}p{3.4cm}}
+\toprule
+Servicio & Necesidad que atiende & Nombre técnico \\
+\midrule
+Web & Entrega páginas o aplicaciones & HTTP / HTTPS \\
+Nombres & Relaciona nombres con direcciones de red & DNS \\
+Configuración automática & Entrega configuración de red a los equipos & DHCP \\
+Archivos & Almacena y comparte documentos & SMB / NFS \\
+Acceso remoto & Permite administrar un equipo desde otra ubicación & SSH / RDP \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.1cm}
+\small Verás estas siglas en cualquier panel de administración, incluida la consola de GCP.
+\end{frame}
+
+% 16 ---------------------------------------------------------------------
+\begin{frame}{Cada servicio escucha detrás de una puerta numerada\apoyo}
+\concepto{Puerto}{Número que indica a qué servicio del equipo va dirigida una solicitud.}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\analogia{La dirección IP es la dirección del edificio; el puerto es el número de oficina.}
+\column{.48\textwidth}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{1.6cm}p{3.6cm}}
+\toprule
+Puerto & Servicio habitual \\
+\midrule
+80 / 443 & Web (HTTP / HTTPS) \\
+53 & Nombres (DNS) \\
+22 & Acceso remoto (SSH) \\
+3389 & Escritorio remoto (RDP) \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{columns}
+\vspace{0.1cm}
+\begin{block}{Por qué te lo adelantamos}
+\small En la nube, abrir o cerrar el tráfico de una VM será exactamente esto: reglas de firewall sobre puertos.
+\end{block}
+\end{frame}
+
+% 17 ---------------------------------------------------------------------
+\begin{frame}{Una solicitud recorre componentes hasta producir respuesta}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,
+    pide/.style={-{Stealth[length=2mm]},very thick,draw=utpNegro},
+    responde/.style={-{Stealth[length=2mm]},very thick,draw=utpRojo,dashed},
+    et/.style={midway,above,inner sep=1.5pt}]
+  \node[cajaazul,text width=1.9cm,font=\scriptsize]    (c) at (1.2,0)  {Cliente};
+  \node[cajaazul,text width=1.9cm,font=\scriptsize]    (n) at (4.4,0)  {Navegador};
+  \node[cajaverde,text width=1.9cm,font=\scriptsize]   (w) at (8.0,0)  {Servicio web};
+  \node[cajanaranja,text width=1.9cm,font=\scriptsize] (p) at (11.8,0) {Pedidos e inventario};
+  \foreach \x in {1.2,4.4,8.0,11.8} \draw[utpGrisMedio!70,dashed] (\x,-0.5) -- (\x,-3.3);
+  \draw[pide]     (1.2,-0.85) -- (4.4,-0.85)  node[et]{1. confirma el carrito};
+  \draw[pide]     (4.4,-1.33) -- (8.0,-1.33)  node[et]{2. envía el pedido};
+  \draw[pide]     (8.0,-1.81) -- (11.8,-1.81) node[et]{3. valida y descuenta el stock};
+  \draw[responde] (11.8,-2.29) -- (8.0,-2.29) node[et]{4. pedido creado};
+  \draw[responde] (8.0,-2.77) -- (4.4,-2.77)  node[et]{5. devuelve el código};
+  \draw[responde] (4.4,-3.25) -- (1.2,-3.25)  node[et]{6. muestra el resultado};
+\end{tikzpicture}
+\end{center}
+\vspace{0.05cm}
+\centering{\small El tiempo avanza hacia abajo · \textbf{línea continua} = ida · \textcolor{utpRojo}{\textbf{línea punteada roja}} = vuelta}\par
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{Dos respuestas diferentes}
+\small Consultar solo lee información; registrar cambia el stock y crea un registro nuevo.
+\end{block}
+\column{.47\textwidth}
+\begin{exampleblock}{¿Y si algo falla?}
+\small Si el paso 3 falla, la vuelta trae el motivo del error en lugar del código de pedido.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 18 ---------------------------------------------------------------------
+\begin{frame}{Práctica 2: sigue una solicitud del e-commerce \textnormal{\small(8 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.53\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Abre \texttt{2\_mini-ecommerce.html}.
+  \item Consulta el stock de un producto.
+  \item Intenta agregar una cantidad \textbf{mayor} que la disponible y lee el mensaje.
+  \item Agrega una cantidad válida y registra el pedido; anota el código.
+  \item Vuelve a mirar el stock: cambió.
+  \item Selecciona \textbf{Ver recorrido}.
+\end{enumerate}
+\column{.43\textwidth}
+\begin{exampleblock}{Ejemplo}
+\small Al consultar un producto, el cliente inicia la acción, el servicio web recibe la solicitud y el navegador muestra la información recibida.
+\end{exampleblock}
+\pregunta{\small Identifica en el recorrido:
+\begin{itemize}
+  \item quién inicia la acción;
+  \item qué componente recibe la solicitud;
+  \item qué respuesta regresa.
+\end{itemize}}
+\end{columns}
+\end{frame}
+
+% 19 ---------------------------------------------------------------------
+\begin{frame}{La validación protege la coherencia del sistema}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\vspace{0.1cm}
+\begin{center}
+\resizebox{.98\linewidth}{!}{\begin{tikzpicture}[node distance=6mm]
+  \node[cajaazul,text width=3.4cm] (sol) {Solicitud: agregar\\cantidad al carrito};
+  \node[cajaverde,text width=3.4cm,below=of sol] (val) {Validar: cantidad\\$\leq$ stock};
+  \node[cajaverde,text width=2.2cm,below left=7mm and -3mm of val] (acep) {Aceptar y\\continuar};
+  \node[caja,draw=utpRojo,fill=utpRojo!10,text width=2.2cm,below right=7mm and -3mm of val] (rech) {Rechazar y\\explicar};
+  \draw[flecha](sol)--(val); \draw[flecha](val)--node[left,font=\scriptsize]{sí}(acep); \draw[flecha](val)--node[right,font=\scriptsize]{no}(rech);
+\end{tikzpicture}}
+\end{center}
+\column{.50\textwidth}
+\begin{block}{Validar es decidir antes de cambiar datos}
+\small Sin validación, el sistema vendería productos que no existen y el inventario dejaría de coincidir con la realidad.
+\end{block}
+\ojo{Quien valida es el \textbf{servicio}, no el navegador. Lo que ocurre en el navegador puede modificarse; lo que ocurre en el servidor, no.}
+\begin{exampleblock}{Conclusión del bloque}
+\small Un servicio de red atiende una necesidad mediante solicitudes, validaciones y respuestas.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 20 ---------------------------------------------------------------------
+\begin{frame}{Virtualizar es representar un recurso mediante software}
+\concepto{Virtualización}{Creación mediante software de una representación de un recurso tecnológico.}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Recurso físico}
+\small Existe en el equipo: procesador, memoria y almacenamiento. Se puede tocar.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Representación virtual}
+\small Recibe una porción controlada de esos recursos y se comporta como un equipo separado.
+\end{exampleblock}
+\end{columns}
+\vspace{0.15cm}
+\analogia{Un edificio dividido en departamentos: cada uno tiene su puerta, su llave y sus muebles, pero todos comparten la misma estructura y el mismo terreno.}
+\vspace{0.05cm}
+{\small\textbf{\color{utpRojo}Ojo:} virtualizar \textbf{no} crea recursos nuevos; organiza y reparte los que ya existen. Dividir un edificio no agranda el terreno.\par}
+\end{frame}
+
+% 21 ---------------------------------------------------------------------
+\begin{frame}{Cuatro piezas forman una máquina virtual}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.1cm}p{4.5cm}p{3.6cm}}
+\toprule
+Pieza & Qué es & En tu laptop sería \\
+\midrule
+Equipo anfitrión (host) & Computadora física que proporciona sus recursos & Tu laptop \\
+Hipervisor & Software que crea y administra máquinas virtuales & \marca{VMware} \\
+Máquina virtual (VM) & Computadora hecha con software que recibe parte de los recursos físicos & La ventana que se abre \\
+Sistema operativo invitado (guest) & Sistema operativo instalado dentro de la VM & \marca{Lubuntu} dentro de esa ventana \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{alertblock}{Relación clave}
+El anfitrión (host) aporta recursos; el hipervisor los asigna; la VM los recibe; el sistema operativo invitado (guest) los utiliza.
+\end{alertblock}
+\end{frame}
+
+% 22 ---------------------------------------------------------------------
+\begin{frame}{Memoria, CPU y almacenamiento en palabras simples\apoyo}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.9cm}p{4.3cm}p{4.1cm}}
+\toprule
+Recurso & Para qué sirve & Comparación \\
+\midrule
+Memoria (RAM) & Guarda lo que se está usando en este momento & El escritorio donde trabajas: si es chico, no cabe todo \\
+CPU (núcleos) & Ejecuta las instrucciones & Las manos que hacen el trabajo: más núcleos, más tareas a la vez \\
+Almacenamiento (disco) & Conserva los datos aunque se apague & El archivador donde guardas los documentos \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{block}{Diferencia que suele confundir}
+\small La memoria se borra al apagar el equipo; el almacenamiento no. Por eso los pedidos se guardan en disco y no en memoria.
+\end{block}
+\end{frame}
+
+% 23 ---------------------------------------------------------------------
+\begin{frame}{¿Por qué separar en dos VM y no instalar todo junto?}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Todo en un mismo sistema operativo}
+\small
+\begin{itemize}\setlength\itemsep{2pt}
+  \item Una falla afecta a todo el sitio.
+  \item Actualizar la tienda obliga a tocar los archivos.
+  \item Quien entra a la web alcanza los archivos.
+  \item Los programas se pelean por la memoria.
+\end{itemize}
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Separado en dos VM}
+\small
+\begin{itemize}\setlength\itemsep{2pt}
+  \item Si una VM falla, la otra sigue.
+  \item Cada VM se actualiza por su cuenta.
+  \item Los permisos se definen por VM.
+  \item Cada VM tiene un límite de recursos.
+\end{itemize}
+\end{exampleblock}
+\end{columns}
+\vspace{0.2cm}
+\ojo{Separar también cuesta: cada VM necesita su propio sistema operativo, su memoria y su mantenimiento. Se separa cuando el beneficio supera ese costo, no por costumbre.}
+\end{frame}
+
+% 24 ---------------------------------------------------------------------
+\begin{frame}{El hipervisor separa las VM y comparte el hardware}
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+  \node[cajaazul,text width=8.7cm] (host) {PC-JUAN, equipo anfitrión (host): CPU + memoria + almacenamiento};
+  \node[cajaverde,text width=8.7cm,above=of host] (hyp) {Hipervisor: crea, separa y asigna recursos};
+  \node[cajanaranja,text width=4.05cm,above left=5mm and -4.2cm of hyp] (vm1) {Kali Linux\\pruebas de seguridad};
+  \node[cajanaranja,text width=4.05cm,above right=5mm and -4.2cm of hyp] (vm2) {Lubuntu\\escritorio ligero};
+  \draw[flecha] (host)--(hyp); \draw[flecha] (hyp)--(vm1); \draw[flecha] (hyp)--(vm2);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{Aislamiento}
+\small Cada VM es un equipo independiente: su sistema operativo, su disco y su IP.
+\end{block}
+\column{.47\textwidth}
+\begin{exampleblock}{En la práctica}
+\small Reinicias Kali Linux y Lubuntu sigue funcionando. Pero si apagas PC-JUAN, se apagan las dos.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 25 ---------------------------------------------------------------------
+\begin{frame}{Asignar a una VM significa reservar capacidad física}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.6cm}ccc}
+\toprule
+Anfitrión (host) disponible & Memoria & CPU & Almacenamiento \\
+\midrule
+PC-JUAN & 8 GB & 4 núcleos & 100 GB \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.25cm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Asignado}
+\small Suma de los recursos entregados a Kali Linux y Lubuntu. Quedan reservados aunque la VM esté ociosa.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Sin asignar}
+\small Capacidad restante que el hipervisor todavía puede entregar a otra VM.
+\end{block}
+\end{columns}
+\vspace{0.2cm}
+\centering\large Sin asignar = Capacidad total $-$ Total asignado
+\end{frame}
+
+% 26 ---------------------------------------------------------------------
+\begin{frame}{Una configuración válida respeta los tres límites}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.1cm}ccc}
+\toprule
+Máquina virtual & Memoria & CPU & Almacenamiento \\
+\midrule
+Kali Linux & 3 GB & 2 núcleos & 35 GB \\
+Lubuntu & 3 GB & 1 núcleo & 45 GB \\
+\midrule
+Total asignado & 6 GB & 3 núcleos & 80 GB \\
+Sin asignar & 2 GB & 1 núcleo & 20 GB \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{La cuenta, recurso por recurso}
+\small Memoria: $3+3=6 \leq 8$ GB\\
+CPU: $2+1=3 \leq 4$ núcleos\\
+Almacenamiento: $35+45=80 \leq 100$ GB
+\end{exampleblock}
+\column{.47\textwidth}
+\begin{alertblock}{Basta con que uno falle}
+\small Si el almacenamiento sumara 120 GB, la configuración se rechaza aunque memoria y CPU estén bien.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 27 ---------------------------------------------------------------------
+\begin{frame}{Práctica 3: distribuye recursos y corrige límites \textnormal{\small(10 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.56\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Abre \texttt{3\_virtualizacion-recursos.html}.
+  \item Prueba primero una configuración \textbf{imposible}: 6 GB para Kali Linux y 4 GB para Lubuntu.
+  \item Presiona \textbf{Aplicar configuración} y lee qué recurso se pasó del límite.
+  \item Corrige la distribución y vuelve a aplicar.
+  \item Deja al menos un recurso sin asignar y explica por qué conviene.
+\end{enumerate}
+\column{.40\textwidth}
+\begin{exampleblock}{Ejemplo}
+\small Si Kali Linux recibe los 8 GB, no queda memoria para Lubuntu: no podrías encenderla.
+\end{exampleblock}
+\pregunta{\small ¿Por qué una VM debe considerar las necesidades de la otra?}
+\end{columns}
+\end{frame}
+
+% 28 ---------------------------------------------------------------------
+\begin{frame}{La virtualización se aplica a distintos recursos}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.9cm}p{4.4cm}p{3.7cm}}
+\toprule
+Tipo & Qué separa mediante software & Dónde lo has visto \\
+\midrule
+Servidores & Varias máquinas virtuales en un equipo físico & El caso de esta sesión \\
+Escritorios & Un escritorio ejecutado en otra ubicación & Laboratorios remotos \\
+Aplicaciones & Una aplicación separada del sistema operativo donde se usa & Apps portables \\
+Almacenamiento & Varios discos presentados como una unidad lógica & Una «unidad de red» \\
+Red & Componentes y conexiones de red & Redes privadas en la nube \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+\small En esta sesión nos concentramos en la \textbf{virtualización de servidores}; los demás tipos aparecerán más adelante en el curso.
+\end{frame}
+
+% 29 ---------------------------------------------------------------------
+\begin{frame}{El tipo de hipervisor indica dónde se ejecuta}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Hipervisor tipo 1}
+\small Se ejecuta directamente sobre el equipo físico. Habitual en servidores empresariales.\\[2pt]
+\marca{VMware ESXi} \marca{Proxmox VE} \marca{Hyper-V} \marca{KVM}
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Hipervisor tipo 2}
+\small Se ejecuta como programa dentro de un sistema operativo anfitrión (host). Habitual en aprendizaje y pruebas.\\[2pt]
+\marca{VMware Workstation} \marca{VirtualBox} \marca{UTM}
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\begin{alertblock}{Criterio de comparación}
+La diferencia principal no está en la VM, que se ve igual en ambos casos: está en la capa que existe \textbf{entre el hardware y el hipervisor}.
+\end{alertblock}
+\end{frame}
+
+% 30 ---------------------------------------------------------------------
+\begin{frame}{Preguntas para la próxima sesión}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{1. Sistemas operativos}
+\small ¿Cuál es la versión más reciente de cada uno y de qué fecha es?
+\begin{itemize}\setlength\itemsep{2pt}\small
+  \item Windows Server
+  \item Ubuntu Server y Lubuntu
+  \item Red Hat Enterprise Linux
+  \item Kali Linux
+\end{itemize}
+\end{block}
+\column{.49\textwidth}
+\begin{block}{2. Plataformas de servicios en la nube}
+\small ¿Qué proveedores existen hoy y cómo se llama el servicio con el que cada uno ofrece máquinas virtuales?
+\begin{itemize}\setlength\itemsep{2pt}\small
+  \item Google Cloud · Amazon Web Services
+  \item Microsoft Azure · Oracle Cloud
+  \item ¿Alguno más que encuentres?
+\end{itemize}
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\pregunta{\small Anota la versión, la fecha y el \textbf{enlace oficial} de donde la obtuviste: las versiones cambian y la fuente importa tanto como el dato. Lo revisamos al inicio de la próxima sesión.}
+\end{frame}
+
+% ---------------------------------------------------------------------
+% Cierre UTP
+{
+  \setbeamertemplate{background canvas}{%
+    \includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}%
+  }
+  \setbeamertemplate{footline}{}
+  \begin{frame}[plain]
+  \end{frame}
+}
+
+\end{document}
