@@ -1,237 +1,284 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Índice de actividades HTML del curso Integración de Servicios Cloud GCP.">
-  <title>Actividades del curso | Integración de Servicios Cloud GCP</title>
-  <style>
-    :root {
-      --utp-red: #c42b35;
-      --black: #111111;
-      --gray: #626262;
-      --line: #dedede;
-      --surface: #f5f5f5;
-      --white: #ffffff;
-    }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Índice de actividades HTML del curso Integración de Servicios Cloud GCP."
+    />
+    <title>Actividades del curso | Integración de Servicios Cloud GCP</title>
+    <style>
+      :root {
+        --utp-red: #c42b35;
+        --black: #111111;
+        --gray: #626262;
+        --line: #dedede;
+        --surface: #f5f5f5;
+        --white: #ffffff;
+      }
 
-    * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--black);
-      background: var(--white);
-      font-family: Arial, Helvetica, sans-serif;
-    }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--black);
+        background: var(--white);
+        font-family: Arial, Helvetica, sans-serif;
+      }
 
-    .topbar {
-      height: 8px;
-      background: var(--utp-red);
-    }
+      .topbar {
+        height: 8px;
+        background: var(--utp-red);
+      }
 
-    header,
-    main,
-    footer {
-      width: min(1080px, calc(100% - 40px));
-      margin-inline: auto;
-    }
-
-    header {
-      padding: 54px 0 34px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      display: inline-grid;
-      grid-template-columns: repeat(3, 34px);
-      gap: 3px;
-      margin-bottom: 28px;
-      color: var(--white);
-      font-size: 1.25rem;
-      font-weight: 800;
-      line-height: 34px;
-      text-align: center;
-    }
-
-    .brand span:nth-child(odd) { background: var(--utp-red); }
-    .brand span:nth-child(even) { background: var(--black); }
-
-    h1 {
-      max-width: 760px;
-      margin: 0;
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      line-height: 1.05;
-      letter-spacing: -0.035em;
-    }
-
-    .subtitle {
-      max-width: 700px;
-      margin: 18px 0 0;
-      color: var(--gray);
-      font-size: 1.05rem;
-      line-height: 1.6;
-    }
-
-    main { padding: 42px 0 60px; }
-
-    .session-heading {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 18px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 1.45rem;
-    }
-
-    .count {
-      color: var(--gray);
-      font-size: 0.9rem;
-    }
-
-    .links {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .resource {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      padding: 22px;
-      color: inherit;
-      background: var(--surface);
-      border: 1px solid transparent;
-      border-top: 4px solid var(--utp-red);
-      text-decoration: none;
-      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
-    }
-
-    .resource:hover {
-      transform: translateY(-3px);
-      background: var(--white);
-      border-color: var(--line);
-      border-top-color: var(--utp-red);
-    }
-
-    .resource:focus-visible {
-      outline: 3px solid var(--utp-red);
-      outline-offset: 3px;
-    }
-
-    .number {
-      color: var(--utp-red);
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .resource strong {
-      margin: 14px 0 8px;
-      font-size: 1.08rem;
-      line-height: 1.3;
-    }
-
-    .resource p {
-      flex: 1;
-      margin: 0 0 22px;
-      color: var(--gray);
-      font-size: 0.92rem;
-      line-height: 1.5;
-    }
-
-    .open {
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-
-    .open::after {
-      content: " →";
-      color: var(--utp-red);
-    }
-
-    footer {
-      padding: 22px 0 34px;
-      color: var(--gray);
-      border-top: 1px solid var(--line);
-      font-size: 0.85rem;
-    }
-
-    @media (max-width: 760px) {
       header,
       main,
-      footer { width: min(100% - 28px, 1080px); }
-      header { padding-top: 36px; }
-      .links { grid-template-columns: 1fr; }
-      .session-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
-    }
+      footer {
+        width: min(1080px, calc(100% - 40px));
+        margin-inline: auto;
+      }
 
-    @media (prefers-reduced-motion: reduce) {
-      .resource { transition: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="topbar" aria-hidden="true"></div>
+      header {
+        padding: 54px 0 34px;
+        border-bottom: 1px solid var(--line);
+      }
 
-  <header>
-    <div class="brand" aria-label="UTP">
-      <span>U</span><span>T</span><span>P</span>
-    </div>
-    <h1>Actividades del curso</h1>
-    <p class="subtitle">
-      Integración de Servicios Cloud GCP. Selecciona una sesión y abre la actividad
-      que deseas realizar.
-    </p>
-  </header>
+      .brand {
+        display: inline-grid;
+        grid-template-columns: repeat(3, 34px);
+        gap: 3px;
+        margin-bottom: 28px;
+        color: var(--white);
+        font-size: 1.25rem;
+        font-weight: 800;
+        line-height: 34px;
+        text-align: center;
+      }
 
-  <main>
-    <section aria-labelledby="sesion-01">
-      <div class="session-heading">
-        <h2 id="sesion-01">Sesión 01</h2>
-        <span class="count">3 actividades disponibles</span>
+      .brand span:nth-child(odd) {
+        background: var(--utp-red);
+      }
+      .brand span:nth-child(even) {
+        background: var(--black);
+      }
+
+      h1 {
+        max-width: 760px;
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+      }
+
+      .subtitle {
+        max-width: 700px;
+        margin: 18px 0 0;
+        color: var(--gray);
+        font-size: 1.05rem;
+        line-height: 1.6;
+      }
+
+      main {
+        padding: 42px 0 60px;
+      }
+
+      .session-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.45rem;
+      }
+
+      .count {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+
+      .links {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .resource {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 22px;
+        color: inherit;
+        background: var(--surface);
+        border: 1px solid transparent;
+        border-top: 4px solid var(--utp-red);
+        text-decoration: none;
+        transition:
+          transform 150ms ease,
+          border-color 150ms ease,
+          background 150ms ease;
+      }
+
+      .resource:hover {
+        transform: translateY(-3px);
+        background: var(--white);
+        border-color: var(--line);
+        border-top-color: var(--utp-red);
+      }
+
+      .resource:focus-visible {
+        outline: 3px solid var(--utp-red);
+        outline-offset: 3px;
+      }
+
+      .number {
+        color: var(--utp-red);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .resource strong {
+        margin: 14px 0 8px;
+        font-size: 1.08rem;
+        line-height: 1.3;
+      }
+
+      .resource p {
+        flex: 1;
+        margin: 0 0 22px;
+        color: var(--gray);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .open {
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .open::after {
+        content: " →";
+        color: var(--utp-red);
+      }
+
+      footer {
+        padding: 22px 0 34px;
+        color: var(--gray);
+        border-top: 1px solid var(--line);
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 760px) {
+        header,
+        main,
+        footer {
+          width: min(100% - 28px, 1080px);
+        }
+        header {
+          padding-top: 36px;
+        }
+        .links {
+          grid-template-columns: 1fr;
+        }
+        .session-heading {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 5px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .resource {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar" aria-hidden="true"></div>
+
+    <header>
+      <div class="brand" aria-label="UTP">
+        <span>U</span><span>T</span><span>P</span>
       </div>
+      <h1>Actividades del curso</h1>
+      <p class="subtitle">
+        Integración de Servicios Cloud GCP. Selecciona una sesión y abre la
+        actividad que deseas realizar.
+      </p>
+    </header>
 
-      <ul class="links">
-        <li>
-          <a class="resource" href="Sesion01/1_autorizacion-roles.html" target="_blank" rel="noopener">
-            <span class="number">Actividad 01</span>
-            <strong>Autorización por roles</strong>
-            <p>Comprueba qué acciones puede realizar cada usuario según su rol.</p>
-            <span class="open">Abrir actividad</span>
-          </a>
-        </li>
-        <li>
-          <a class="resource" href="Sesion01/2_mini-ecommerce.html" target="_blank" rel="noopener">
-            <span class="number">Actividad 02</span>
-            <strong>Mini e-commerce</strong>
-            <p>Recorre el flujo de catálogo, carrito y registro de un pedido.</p>
-            <span class="open">Abrir actividad</span>
-          </a>
-        </li>
-        <li>
-          <a class="resource" href="Sesion01/3_virtualizacion-recursos.html" target="_blank" rel="noopener">
-            <span class="number">Actividad 03</span>
-            <strong>Recursos de máquinas virtuales</strong>
-            <p>Distribuye memoria, procesamiento y almacenamiento entre máquinas virtuales.</p>
-            <span class="open">Abrir actividad</span>
-          </a>
-        </li>
-      </ul>
-    </section>
-  </main>
+    <main>
+      <section aria-labelledby="sesion-01">
+        <div class="session-heading">
+          <h2 id="sesion-01">Sesión 01</h2>
+          <span class="count">3 actividades disponibles</span>
+        </div>
 
-  <footer>
-    Universidad Tecnológica del Perú · Integración de Servicios Cloud GCP
-  </footer>
-</body>
+        <ul class="links">
+          <li>
+            <a
+              class="resource"
+              href="Sesion01/1_autorizacion-roles.html"
+              target="_blank"
+              rel="noopener"
+            >
+              <span class="number">Actividad 01</span>
+              <strong>Autorización por roles</strong>
+              <p>
+                Comprueba qué acciones puede realizar cada usuario según su rol.
+              </p>
+              <span class="open">Abrir actividad</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="resource"
+              href="Sesion01/2_mini-ecommerce.html"
+              target="_blank"
+              rel="noopener"
+            >
+              <span class="number">Actividad 02</span>
+              <strong>Mini e-commerce</strong>
+              <p>
+                Recorre el flujo de catálogo, carrito y registro de un pedido.
+              </p>
+              <span class="open">Abrir actividad</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="resource"
+              href="Sesion01/3_virtualizacion-recursos.html"
+              target="_blank"
+              rel="noopener"
+            >
+              <span class="number">Actividad 03</span>
+              <strong>Recursos de máquinas virtuales</strong>
+              <p>
+                Distribuye memoria, procesamiento y almacenamiento entre
+                máquinas virtuales.
+              </p>
+              <span class="open">Abrir actividad</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      Universidad Tecnológica del Perú · Integración de Servicios Cloud GCP
+    </footer>
+  </body>
 </html>
