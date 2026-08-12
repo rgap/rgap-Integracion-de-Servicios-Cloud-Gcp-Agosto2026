@@ -1,5 +1,16 @@
 % !TEX program = xelatex
-\documentclass[aspectratio=169,10pt,t]{beamer}
+\documentclass[aspectratio=169,10pt,c]{beamer}
+
+% La opción "c" de beamer reparte el espacio libre 1:1.5 (arriba:abajo), por lo
+% que el contenido queda por encima del centro. Igualamos ambos rellenos.
+\makeatletter
+\define@key{beamerframe}{c}[true]{%
+  \beamer@frametopskip=0pt plus 1fill\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=0pt plus .5\paperheight\relax%
+  \beamer@framebottomskipautobreak=0pt plus .5\paperheight\relax%
+}
+\makeatother
 
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -120,7 +131,7 @@
 
 % 2 ---------------------------------------------------------------------
 \begin{frame}{El curso prepara para implementar soluciones cloud básicas}
-\begin{columns}[T,onlytextwidth]
+\begin{columns}[c,onlytextwidth]
 \column{.56\textwidth}
 \begin{block}{Logro general de aprendizaje}
 \small Al finalizar el curso, el estudiante identifica conocimientos sobre tecnologías y servicios cloud para implementar soluciones básicas orientadas al cumplimiento de los requerimientos de una empresa.
@@ -226,25 +237,6 @@ Examen final & 30\% & 18\\
 \end{columns}
 \vspace{0.25cm}
 \small Las tres prácticas calificadas y el examen final son individuales.
-\end{frame}
-
-% 6 ---------------------------------------------------------------------
-\begin{frame}{La Sesión 1 inicia con sistemas operativos y virtualización}
-\begin{center}
-\begin{tikzpicture}[node distance=6mm]
-  \node[cajaazul,text width=3cm] (a) {Sistemas operativos\\de red};
-  \node[cajaverde,text width=3cm,right=of a] (b) {Introducción a la\\virtualización};
-  \node[cajanaranja,text width=3cm,right=of b] (c) {Tipos de\\virtualización};
-  \draw[flecha] (a)--(b); \draw[flecha] (b)--(c);
-\end{tikzpicture}
-\end{center}
-\vspace{0.45cm}
-\begin{block}{Metodología del curso}
-\small Las sesiones virtuales en vivo se complementan con recursos, materiales, actividades y un foro de consultas en la plataforma virtual de aprendizaje.
-\end{block}
-\begin{exampleblock}{Primera actividad del curso}
-\small Sistemas operativos de red, introducción a la virtualización y tipos de virtualización.
-\end{exampleblock}
 \end{frame}
 
 \end{document}

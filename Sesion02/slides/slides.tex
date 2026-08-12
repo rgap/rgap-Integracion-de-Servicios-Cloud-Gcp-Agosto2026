@@ -1,5 +1,16 @@
 % !TEX program = xelatex
-\documentclass[aspectratio=169,10pt,t]{beamer}
+\documentclass[aspectratio=169,10pt,c]{beamer}
+
+% La opción "c" de beamer reparte el espacio libre 1:1.5 (arriba:abajo), por lo
+% que el contenido queda por encima del centro. Igualamos ambos rellenos.
+\makeatletter
+\define@key{beamerframe}{c}[true]{%
+  \beamer@frametopskip=0pt plus 1fill\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=0pt plus .5\paperheight\relax%
+  \beamer@framebottomskipautobreak=0pt plus .5\paperheight\relax%
+}
+\makeatother
 
 \usepackage{graphicx}
 \usepackage{tikz}
