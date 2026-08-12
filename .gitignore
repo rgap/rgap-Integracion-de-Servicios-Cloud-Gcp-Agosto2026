@@ -21,10 +21,13 @@ tmp/
 *.synctex.gz
 *.toc
 *.vrb
+*.xdv
 
 # Archivos del sistema y editores
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/*
+# ...salvo la receta de compilacion (xelatex -> build/), que es parte del proyecto
+!.vscode/settings.json
 

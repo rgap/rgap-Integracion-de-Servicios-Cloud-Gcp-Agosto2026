@@ -1,0 +1,40 @@
+{
+  // LaTeX: compilar con xelatex y dejar TODO lo generado en <carpeta del tex>/build.
+  // La herramienta se define explicitamente para no depender del .latexmkrc ni del
+  // directorio desde el que la extension invoque latexmk.
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk-build",
+      "command": "latexmk",
+      "args": [
+        "-cd",
+        "-synctex=1",
+        "-interaction=nonstopmode",
+        "-file-line-error",
+        "-xelatex",
+        "-outdir=build",
+        "%DOC%"
+      ],
+      "env": {}
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk build/",
+      "tools": ["latexmk-build"]
+    }
+  ],
+  "latex-workshop.latex.recipe.default": "latexmk build/",
+  "latex-workshop.latex.outDir": "%DIR%/build",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  // Red de seguridad: si algun .tex vuelve a traer "!TEX program", la extension
+  // llama al motor directamente; que al menos escriba dentro de build/.
+  "latex-workshop.latex.build.forceRecipeUsage": true,
+  "latex-workshop.latex.magic.args": [
+    "-synctex=1",
+    "-interaction=nonstopmode",
+    "-file-line-error",
+    "-output-directory=build",
+    "%DOC%"
+  ]
+}

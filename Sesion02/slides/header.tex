@@ -1,0 +1,141 @@
+% !TEX root = slides.tex
+% Preambulo comun: estilo UTP, colores, fuentes, plantillas de beamer y
+% comandos de apoyo didactico. Se carga desde slides.tex tras \documentclass.
+
+% La opción "c" de beamer reparte el espacio libre 1:1.5 (arriba:abajo), por lo
+% que el contenido queda por encima del centro. Igualamos ambos rellenos.
+\makeatletter
+\define@key{beamerframe}{c}[true]{%
+  \beamer@frametopskip=0pt plus 1fill\relax%
+  \beamer@framebottomskip=0pt plus 1fill\relax%
+  \beamer@frametopskipautobreak=0pt plus .5\paperheight\relax%
+  \beamer@framebottomskipautobreak=0pt plus .5\paperheight\relax%
+}
+\makeatother
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}          % tipografia escalable para el respaldo con pdflatex
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  \usepackage{fontspec}
+  \IfFontExistsTF{Arial}
+    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
+    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
+\fi
+
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
+
+\graphicspath{{assets/}}
+
+% ---------- Identidad visual UTP ----------
+\definecolor{utpRojo}{HTML}{C42B35}
+\definecolor{utpNegro}{HTML}{111111}
+\definecolor{utpGris}{HTML}{5F5F5F}
+\definecolor{utpGrisMedio}{HTML}{9A9A9A}
+\definecolor{utpGrisClaro}{HTML}{F1F1F1}
+
+\usetheme{default}
+\setbeamercolor{normal text}{fg=utpNegro,bg=white}
+\setbeamercolor{structure}{fg=utpRojo}
+\setbeamercolor{frametitle}{fg=utpNegro,bg=white}
+\setbeamercolor{title}{fg=utpNegro}
+\setbeamercolor{subtitle}{fg=utpNegro}
+\setbeamercolor{author}{fg=utpNegro}
+\setbeamercolor{date}{fg=utpNegro}
+\setbeamercolor{block title}{fg=white,bg=utpNegro}
+\setbeamercolor{block body}{fg=utpNegro,bg=utpGrisClaro}
+\setbeamercolor{alertblock title}{fg=white,bg=utpRojo}
+\setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
+\setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
+\setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
+
+\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
+\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
+\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamerfont{block title}{series=\bfseries,size=\small}
+\setbeamerfont{block body}{size=\normalsize}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{itemize item}{\color{utpRojo}\small\raise.15ex\hbox{$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\color{utpGris}\scriptsize$\bullet$}
+\setbeamertemplate{enumerate item}{\color{utpRojo}\insertenumlabel.}
+\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
+
+% Título de diapositiva: negrita negra a la izquierda, logo UTP a la derecha
+\setbeamertemplate{frametitle}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-7mm,yshift=-5.5mm]current page.north east)
+      {\includegraphics[width=17mm]{utp-logo.png}};
+  \end{tikzpicture}%
+  \vspace{1.2mm}%
+  \begin{minipage}[t]{.80\textwidth}\raggedright\insertframetitle\end{minipage}\par
+  \vspace{1.1mm}{\color{utpRojo}\rule{\textwidth}{1.1pt}}
+}
+
+% Solo numeración discreta; la plantilla UTP no lleva pie de página
+\setbeamertemplate{footline}{%
+  \hfill{\color{utpGrisMedio}\scriptsize\insertframenumber}\hspace{6mm}\vspace{2.5mm}%
+}
+
+% Portada UTP
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=center,inner sep=0pt] at (current page.center) {%
+      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
+    };
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=145mm,font=\usebeamerfont{title}]
+      at ([yshift=-25.2mm]current page.north) {\inserttitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      text width=142mm,font=\usebeamerfont{subtitle}]
+      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{date}]
+      at ([yshift=-50.4mm]current page.north) {\insertdate};
+    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
+      font=\usebeamerfont{author}]
+      at ([yshift=-58.4mm]current page.north) {\insertauthor};
+  \end{tikzpicture}%
+}
+
+% ---------- Comandos de apoyo didáctico ----------
+\newcommand{\concepto}[2]{%
+  \begin{block}{#1}\large #2\end{block}}
+\newcommand{\pregunta}[1]{%
+  \begin{alertblock}{Decide y explica}#1\end{alertblock}}
+\newcommand{\analogia}[1]{%
+  \begin{exampleblock}{En palabras simples}\small #1\end{exampleblock}}
+\newcommand{\enlarealidad}[1]{%
+  \begin{block}{Cómo se ve en la realidad}\small #1\end{block}}
+\newcommand{\ojo}[1]{%
+  \begin{alertblock}{Ojo con esto}\small #1\end{alertblock}}
+\newcommand{\apoyo}{{\normalfont\footnotesize\color{utpGris}~· material de apoyo}}
+\newcommand{\marca}[1]{\tikz[baseline=(m.base)]{%
+  \node[rounded corners=1.5pt,fill=utpGrisClaro,draw=utpGrisMedio,inner xsep=3pt,inner ysep=1.5pt,
+        font=\footnotesize] (m) {#1};}}
+
+\tikzset{
+  caja/.style={draw=utpNegro, very thick, rounded corners=1.5pt, fill=white,
+    align=center, minimum height=0.72cm, inner sep=5pt, font=\small},
+  cajaazul/.style={caja, draw=utpGris, fill=white},
+  cajaverde/.style={caja, draw=utpNegro, fill=utpGrisClaro},
+  cajanaranja/.style={caja, draw=utpRojo!75, fill=utpRojo!7},
+  flecha/.style={-{Stealth[length=2.3mm]}, very thick, draw=utpNegro},
+  flechavuelta/.style={{Stealth[length=2.3mm]}-{Stealth[length=2.3mm]}, very thick, draw=utpNegro}
+}

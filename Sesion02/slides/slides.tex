@@ -1,148 +1,12 @@
-% !TEX program = xelatex
+% Motor: XeLaTeX, fijado en .latexmkrc y en la receta del editor.
 \documentclass[aspectratio=169,10pt,c]{beamer}
 
-% La opción "c" de beamer reparte el espacio libre 1:1.5 (arriba:abajo), por lo
-% que el contenido queda por encima del centro. Igualamos ambos rellenos.
-\makeatletter
-\define@key{beamerframe}{c}[true]{%
-  \beamer@frametopskip=0pt plus 1fill\relax%
-  \beamer@framebottomskip=0pt plus 1fill\relax%
-  \beamer@frametopskipautobreak=0pt plus .5\paperheight\relax%
-  \beamer@framebottomskipautobreak=0pt plus .5\paperheight\relax%
-}
-\makeatother
-
-\usepackage{graphicx}
-\usepackage{tikz}
-\usepackage{xcolor}
-\usepackage{iftex}
-
-\ifPDFTeX
-  \usepackage[utf8]{inputenc}
-  \usepackage[T1]{fontenc}
-  \usepackage{lmodern}          % tipografia escalable para el respaldo con pdflatex
-  \renewcommand{\familydefault}{\sfdefault}
-\else
-  \usepackage{fontspec}
-  \IfFontExistsTF{Arial}
-    {\setsansfont{Arial}[BoldFont={Arial Bold}]}
-    {\setsansfont{Helvetica}[BoldFont={Helvetica Bold}]}
-\fi
-
-\usepackage[spanish,es-nodecimaldot]{babel}
-\usepackage{microtype}
-\usepackage{booktabs}
-\usepackage{array}
-\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
-
-\graphicspath{{assets/}}
-
-% ---------- Identidad visual UTP ----------
-\definecolor{utpRojo}{HTML}{C42B35}
-\definecolor{utpNegro}{HTML}{111111}
-\definecolor{utpGris}{HTML}{5F5F5F}
-\definecolor{utpGrisMedio}{HTML}{9A9A9A}
-\definecolor{utpGrisClaro}{HTML}{F1F1F1}
-
-\usetheme{default}
-\setbeamercolor{normal text}{fg=utpNegro,bg=white}
-\setbeamercolor{structure}{fg=utpRojo}
-\setbeamercolor{frametitle}{fg=utpNegro,bg=white}
-\setbeamercolor{title}{fg=utpNegro}
-\setbeamercolor{subtitle}{fg=utpNegro}
-\setbeamercolor{author}{fg=utpNegro}
-\setbeamercolor{date}{fg=utpNegro}
-\setbeamercolor{block title}{fg=white,bg=utpNegro}
-\setbeamercolor{block body}{fg=utpNegro,bg=utpGrisClaro}
-\setbeamercolor{alertblock title}{fg=white,bg=utpRojo}
-\setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
-\setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
-\setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
-
-\setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
-\setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
-\setbeamerfont{date}{series=\bfseries,size=\fontsize{11.5}{13.5}\selectfont}
-\setbeamerfont{author}{size=\fontsize{10.5}{12.5}\selectfont}
-\setbeamerfont{frametitle}{series=\bfseries,size=\large}
-\setbeamerfont{block title}{series=\bfseries,size=\small}
-\setbeamerfont{block body}{size=\normalsize}
-
-\setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{headline}{}
-\setbeamertemplate{blocks}[default]
-\setbeamertemplate{itemize item}{\color{utpRojo}\small\raise.15ex\hbox{$\blacktriangleright$}}
-\setbeamertemplate{itemize subitem}{\color{utpGris}\scriptsize$\bullet$}
-\setbeamertemplate{enumerate item}{\color{utpRojo}\insertenumlabel.}
-\setbeamertemplate{background canvas}{\color{white}\rule{\paperwidth}{\paperheight}}
-
-% Título de diapositiva: negrita negra a la izquierda, logo UTP a la derecha
-\setbeamertemplate{frametitle}{%
-  \begin{tikzpicture}[remember picture,overlay]
-    \node[anchor=north east,inner sep=0pt]
-      at ([xshift=-7mm,yshift=-5.5mm]current page.north east)
-      {\includegraphics[width=17mm]{utp-logo.png}};
-  \end{tikzpicture}%
-  \vspace{1.2mm}%
-  \begin{minipage}[t]{.80\textwidth}\raggedright\insertframetitle\end{minipage}\par
-  \vspace{1.1mm}{\color{utpRojo}\rule{\textwidth}{1.1pt}}
-}
-
-% Solo numeración discreta; la plantilla UTP no lleva pie de página
-\setbeamertemplate{footline}{%
-  \hfill{\color{utpGrisMedio}\scriptsize\insertframenumber}\hspace{6mm}\vspace{2.5mm}%
-}
-
-% Portada UTP
-\setbeamertemplate{title page}{%
-  \begin{tikzpicture}[remember picture,overlay]
-    \node[anchor=center,inner sep=0pt] at (current page.center) {%
-      \includegraphics[width=\paperwidth,height=\paperheight]{utp-cover-bg.jpeg}%
-    };
-    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
-      text width=145mm,font=\usebeamerfont{title}]
-      at ([yshift=-25.2mm]current page.north) {\inserttitle};
-    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
-      text width=142mm,font=\usebeamerfont{subtitle}]
-      at ([yshift=-38.2mm]current page.north) {\insertsubtitle};
-    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
-      font=\usebeamerfont{date}]
-      at ([yshift=-50.4mm]current page.north) {\insertdate};
-    \node[anchor=north,align=center,text=utpNegro,inner sep=0pt,
-      font=\usebeamerfont{author}]
-      at ([yshift=-58.4mm]current page.north) {\insertauthor};
-  \end{tikzpicture}%
-}
-
-% ---------- Comandos de apoyo didáctico ----------
-\newcommand{\concepto}[2]{%
-  \begin{block}{#1}\large #2\end{block}}
-\newcommand{\pregunta}[1]{%
-  \begin{alertblock}{Decide y explica}#1\end{alertblock}}
-\newcommand{\analogia}[1]{%
-  \begin{exampleblock}{En palabras simples}\small #1\end{exampleblock}}
-\newcommand{\enlarealidad}[1]{%
-  \begin{block}{Cómo se ve en la realidad}\small #1\end{block}}
-\newcommand{\ojo}[1]{%
-  \begin{alertblock}{Ojo con esto}\small #1\end{alertblock}}
-\newcommand{\apoyo}{{\normalfont\footnotesize\color{utpGris}~· material de apoyo}}
-\newcommand{\marca}[1]{\tikz[baseline=(m.base)]{%
-  \node[rounded corners=1.5pt,fill=utpGrisClaro,draw=utpGrisMedio,inner xsep=3pt,inner ysep=1.5pt,
-        font=\footnotesize] (m) {#1};}}
-
-\tikzset{
-  caja/.style={draw=utpNegro, very thick, rounded corners=1.5pt, fill=white,
-    align=center, minimum height=0.72cm, inner sep=5pt, font=\small},
-  cajaazul/.style={caja, draw=utpGris, fill=white},
-  cajaverde/.style={caja, draw=utpNegro, fill=utpGrisClaro},
-  cajanaranja/.style={caja, draw=utpRojo!75, fill=utpRojo!7},
-  flecha/.style={-{Stealth[length=2.3mm]}, very thick, draw=utpNegro},
-  flechavuelta/.style={{Stealth[length=2.3mm]}-{Stealth[length=2.3mm]}, very thick, draw=utpNegro}
-}
+\input{header.tex}
 
 \title{Integración de Servicios Cloud GCP}
 \subtitle{Tipos de hipervisor y diseño de una arquitectura virtualizada}
 \date{Semana 02 - Sesión 02}
-\author{Rel Guzman Apaza}
+\author{Rel Guzman}
 
 \begin{document}
 
@@ -179,6 +43,26 @@ Al finalizar, podrás diferenciar los hipervisores de \textbf{tipo 1} y \textbf{
 \end{frame}
 
 % 4 ---------------------------------------------------------------------
+\begin{frame}{La virtualización se aplica a distintos recursos}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.9cm}p{4.4cm}p{3.7cm}}
+\toprule
+Tipo & Qué separa mediante software & Dónde lo has visto \\
+\midrule
+Servidores & Varias máquinas virtuales en un equipo físico & El caso de esta sesión \\
+Escritorios & Un escritorio ejecutado en otra ubicación & Laboratorios remotos \\
+Aplicaciones & Una aplicación separada del sistema operativo donde se usa & Apps portables \\
+Almacenamiento & Varios discos presentados como una unidad lógica & Una «unidad de red» \\
+Red & Componentes y conexiones de red & Redes privadas en la nube \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+\small En esta sesión nos concentramos en la \textbf{virtualización de servidores}; los demás tipos aparecerán más adelante en el curso.
+\end{frame}
+
+% 5 ---------------------------------------------------------------------
 \begin{frame}{El tipo de hipervisor indica dónde se ejecuta}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
@@ -198,7 +82,7 @@ La diferencia principal no está en la VM, que se ve igual en ambos casos: está
 \end{alertblock}
 \end{frame}
 
-% 5 ---------------------------------------------------------------------
+% 6 ---------------------------------------------------------------------
 \begin{frame}{Tipo 1: el hipervisor se instala sobre el hardware}
 \begin{center}
 \begin{tikzpicture}[node distance=4mm]
@@ -220,7 +104,7 @@ La diferencia principal no está en la VM, que se ve igual en ambos casos: está
 \end{columns}
 \end{frame}
 
-% 6 ---------------------------------------------------------------------
+% 7 ---------------------------------------------------------------------
 \begin{frame}{Tipo 2: un sistema operativo anfitrión (host) agrega una capa}
 \begin{center}
 \begin{tikzpicture}[node distance=3.5mm]
@@ -243,7 +127,7 @@ La diferencia principal no está en la VM, que se ve igual en ambos casos: está
 \end{columns}
 \end{frame}
 
-% 7 ---------------------------------------------------------------------
+% 8 ---------------------------------------------------------------------
 \begin{frame}{La elección depende del entorno y del propósito}
 \begin{center}
 \small
@@ -268,7 +152,7 @@ Con miles de servidores dedicados a servicios permanentes, cada capa intermedia 
 \end{block}
 \end{frame}
 
-% 8 ---------------------------------------------------------------------
+% 9 ---------------------------------------------------------------------
 \begin{frame}{Dónde encaja la nube: adelanto del curso\apoyo}
 \begin{center}
 \small
@@ -291,7 +175,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{block}
 \end{frame}
 
-% 9 ---------------------------------------------------------------------
+% 10 ---------------------------------------------------------------------
 \begin{frame}{Diseñar un sistema es representar componentes y relaciones}
 \concepto{Diseño de sistemas}{Representación de los componentes de una solución y de las relaciones entre ellos.}
 \begin{columns}[T,onlytextwidth]
@@ -308,7 +192,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \analogia{Es el plano de una casa: no dice de qué color pintarla, pero sí qué ambientes existen, dónde están y por dónde se pasa de uno a otro.}
 \end{frame}
 
-% 10 ---------------------------------------------------------------------
+% 11 ---------------------------------------------------------------------
 \begin{frame}{Reto: dibuja la arquitectura mínima del e-commerce \textnormal{\small(17 min)}}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
@@ -340,7 +224,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{columns}
 \end{frame}
 
-% 11 ---------------------------------------------------------------------
+% 12 ---------------------------------------------------------------------
 \begin{frame}{Una solución posible separa la web y los archivos en dos VM}
 \begin{center}
 \begin{tikzpicture}[node distance=4mm]
@@ -361,7 +245,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \small \textbf{Cómo se lee:} el cliente solo habla con el navegador; el navegador solo habla con ecommerce-web; ecommerce-web guarda en fileserver el comprobante de cada pedido y sus copias de seguridad; el hipervisor sostiene a ambas. Compara este ejemplo con tu dibujo: puede cambiar la disposición, pero no las relaciones esenciales.
 \end{frame}
 
-% 12 ---------------------------------------------------------------------
+% 13 ---------------------------------------------------------------------
 \begin{frame}{Comprueba si tu arquitectura cuenta la historia completa}
 \begin{enumerate}\setlength\itemsep{6pt}\small
   \item ¿Se distingue el equipo físico de los componentes virtuales?
@@ -384,7 +268,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{columns}
 \end{frame}
 
-% 13 ---------------------------------------------------------------------
+% 14 ---------------------------------------------------------------------
 \begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar\apoyo}
 \begin{center}
 \small
@@ -403,7 +287,7 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{center}
 \end{frame}
 
-% 14 ---------------------------------------------------------------------
+% 15 ---------------------------------------------------------------------
 \begin{frame}{La solución responde al problema inicial}
 \begin{center}
 \begin{tikzpicture}[node distance=4mm]
@@ -422,7 +306,7 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \small Vuelve a la propuesta que escribiste en la sesión anterior: ¿qué cambiarías ahora y por qué?
 \end{frame}
 
-% 15 ---------------------------------------------------------------------
+% 16 ---------------------------------------------------------------------
 \begin{frame}{Cierre: completa las tres ideas con tus palabras}
 \begin{enumerate}\setlength\itemsep{9pt}
   \item Un sistema operativo de red sirve para \rule{6.4cm}{0.4pt}
@@ -442,7 +326,7 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{columns}
 \end{frame}
 
-% 16 ---------------------------------------------------------------------
+% 17 ---------------------------------------------------------------------
 \begin{frame}{Glosario de la sesión\apoyo}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
@@ -467,7 +351,7 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{columns}
 \end{frame}
 
-% 17 ---------------------------------------------------------------------
+% 18 ---------------------------------------------------------------------
 \begin{frame}{Lo que ya puedes explicar y representar}
 \begin{itemize}\setlength\itemsep{6pt}\small
   \item Cómo usuarios, roles y permisos controlan el acceso.
@@ -489,6 +373,33 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{columns}
 \end{frame}
 
+
+% 19 ---------------------------------------------------------------------
+\begin{frame}{Preguntas para la próxima sesión}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{block}{1. Sistemas operativos}
+\small ¿Cuál es la versión más reciente de cada uno y de qué fecha es?
+\begin{itemize}\setlength\itemsep{2pt}\small
+  \item Windows Server
+  \item Ubuntu Server y Lubuntu
+  \item Red Hat Enterprise Linux
+  \item Kali Linux
+\end{itemize}
+\end{block}
+\column{.49\textwidth}
+\begin{block}{2. Plataformas de servicios en la nube}
+\small ¿Qué proveedores existen hoy y cómo se llama el servicio con el que cada uno ofrece máquinas virtuales?
+\begin{itemize}\setlength\itemsep{2pt}\small
+  \item Google Cloud · Amazon Web Services
+  \item Microsoft Azure · Oracle Cloud
+  \item ¿Alguno más que encuentres?
+\end{itemize}
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\pregunta{\small Anota la versión, la fecha y el \textbf{enlace oficial} de donde la obtuviste: las versiones cambian y la fuente importa tanto como el dato. Lo revisamos al inicio de la próxima sesión.}
+\end{frame}
 
 % ---------------------------------------------------------------------
 % Cierre UTP
