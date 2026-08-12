@@ -14,35 +14,42 @@
 {\setbeamertemplate{footline}{}\maketitle}
 
 % 2 ---------------------------------------------------------------------
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Cómo controla un sistema operativo de red lo que puede hacer cada usuario?
+  \item ¿Qué función cumple el hipervisor al crear máquinas virtuales?
+  \item ¿Por qué una máquina virtual debe considerar los recursos que necesitan las demás?
+  \item Al usar \texttt{3\_virtualizacion-recursos.html}, ¿cómo gestionarías la memoria, los núcleos y el almacenamiento para que las dos VM puedan funcionar?
+\end{itemize}
+\end{frame}
+
+% 3 ---------------------------------------------------------------------
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
 Al finalizar, podrás diferenciar los hipervisores de \textbf{tipo 1} y \textbf{tipo 2} según el entorno y el propósito, y \textbf{representar con un diagrama} una solución sencilla basada en máquinas virtuales.
 \end{block}
 \end{frame}
 
-% 3 ---------------------------------------------------------------------
-\begin{frame}{Revisamos la tarea de la sesión anterior}
-\begin{columns}[T,onlytextwidth]
-\column{.49\textwidth}
-\begin{block}{1. Sistemas operativos}
-\small ¿Qué versión encontraste y de qué fecha es?\\[3pt]
-\marca{Windows Server} \marca{Ubuntu Server} \marca{Lubuntu} \marca{Red Hat Enterprise Linux} \marca{Kali Linux}
-\end{block}
-\column{.49\textwidth}
-\begin{block}{2. Plataformas de nube}
-\small ¿Cómo se llama el servicio de máquinas virtuales de cada proveedor?\\[3pt]
-\marca{Google Cloud} \marca{AWS} \marca{Microsoft Azure} \marca{Oracle Cloud}
-\end{block}
-\end{columns}
-\vspace{0.25cm}
-\begin{exampleblock}{Dos comprobaciones antes de seguir}
-\small ¿El dato salió del \textbf{sitio oficial}? En Ubuntu, ¿anotaste la última versión o la última \textbf{LTS}? No suelen ser la misma, y un servidor casi siempre usa la LTS.
-\end{exampleblock}
-\vspace{0.15cm}
-\small Guarda tu lista de proveedores: la usaremos en un momento.
+% 4 ---------------------------------------------------------------------
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué función cumple un hipervisor?
+  \item ¿Qué recursos físicos necesita una máquina virtual?
+  \item ¿Qué diferencia hay entre el equipo anfitrión y una VM?
+  \item ¿En qué situación usarías máquinas virtuales?
+\end{itemize}
 \end{frame}
 
-% 4 ---------------------------------------------------------------------
+% 5 ---------------------------------------------------------------------
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Podrás elegir el tipo de hipervisor adecuado para una computadora personal o un servidor dedicado y representar cómo se conectan los componentes de una solución virtualizada.
+\end{block}
+\vspace{0.2cm}
+\small Estas decisiones son necesarias para comprender cómo se organizan y despliegan máquinas virtuales en entornos locales y en la nube.
+\end{frame}
+
+% 6 ---------------------------------------------------------------------
 \begin{frame}{La virtualización se aplica a distintos recursos}
 \begin{center}
 \small
@@ -176,6 +183,20 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{frame}
 
 % 10 ---------------------------------------------------------------------
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north west,font=\bfseries\fontsize{24}{28}\selectfont]
+      at ([xshift=12mm,yshift=-9mm]current page.north west) {Preguntas};
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-10mm,yshift=-8mm]current page.north east)
+      {\includegraphics[width=43mm]{utp-logo.png}};
+    \node[anchor=center,inner sep=0pt]
+      at ([yshift=-5mm]current page.center)
+      {\includegraphics[width=78mm]{preguntas-ilustracion.png}};
+  \end{tikzpicture}
+\end{frame}
+
+% 11 ---------------------------------------------------------------------
 \begin{frame}{Diseñar un sistema es representar componentes y relaciones}
 \concepto{Diseño de sistemas}{Representación de los componentes de una solución y de las relaciones entre ellos.}
 \begin{columns}[T,onlytextwidth]
@@ -269,6 +290,20 @@ Puerto abierto o cerrado & Reglas de firewall de la red VPC \\
 \end{frame}
 
 % 14 ---------------------------------------------------------------------
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north west,font=\bfseries\fontsize{24}{28}\selectfont]
+      at ([xshift=12mm,yshift=-9mm]current page.north west) {Preguntas};
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-10mm,yshift=-8mm]current page.north east)
+      {\includegraphics[width=43mm]{utp-logo.png}};
+    \node[anchor=center,inner sep=0pt]
+      at ([yshift=-5mm]current page.center)
+      {\includegraphics[width=78mm]{preguntas-ilustracion.png}};
+  \end{tikzpicture}
+\end{frame}
+
+% 15 ---------------------------------------------------------------------
 \begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar\apoyo}
 \begin{center}
 \small
@@ -304,26 +339,6 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{block}
 \vspace{0.05cm}
 \small Vuelve a la propuesta que escribiste en la sesión anterior: ¿qué cambiarías ahora y por qué?
-\end{frame}
-
-% 16 ---------------------------------------------------------------------
-\begin{frame}{Cierre: completa las tres ideas con tus palabras}
-\begin{enumerate}\setlength\itemsep{9pt}
-  \item Un sistema operativo de red sirve para \rule{6.4cm}{0.4pt}
-  \item Una máquina virtual necesita \rule{7.1cm}{0.4pt}
-  \item Elegiría un hipervisor de tipo 1 cuando \rule{5.0cm}{0.4pt}
-\end{enumerate}
-\vspace{0.3cm}
-\begin{columns}[T,onlytextwidth]
-\column{.49\textwidth}
-\begin{alertblock}{Última comprobación}
-\small En cada respuesta, incluye al menos una relación causal: \emph{sirve para..., porque...}
-\end{alertblock}
-\column{.47\textwidth}
-\begin{exampleblock}{Cómo empezar}
-\small «...sirve para controlar quién accede a cada recurso, porque compara la acción con los permisos del rol.»
-\end{exampleblock}
-\end{columns}
 \end{frame}
 
 % 17 ---------------------------------------------------------------------
@@ -375,6 +390,20 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 
 
 % 19 ---------------------------------------------------------------------
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north west,font=\bfseries\fontsize{24}{28}\selectfont]
+      at ([xshift=12mm,yshift=-9mm]current page.north west) {Preguntas};
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-10mm,yshift=-8mm]current page.north east)
+      {\includegraphics[width=43mm]{utp-logo.png}};
+    \node[anchor=center,inner sep=0pt]
+      at ([yshift=-5mm]current page.center)
+      {\includegraphics[width=78mm]{preguntas-ilustracion.png}};
+  \end{tikzpicture}
+\end{frame}
+
+% 20 ---------------------------------------------------------------------
 \begin{frame}{Preguntas para la próxima sesión}
 \begin{columns}[T,onlytextwidth]
 \column{.49\textwidth}
@@ -399,6 +428,26 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{columns}
 \vspace{0.25cm}
 \pregunta{\small Anota la versión, la fecha y el \textbf{enlace oficial} de donde la obtuviste: las versiones cambian y la fuente importa tanto como el dato. Lo revisamos al inicio de la próxima sesión.}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Cierre}
+\begin{itemize}\setlength\itemsep{16pt}
+  \item ¿Cuándo conviene usar un hipervisor de tipo 1 y cuándo uno de tipo 2?
+  \item ¿Qué debe mostrar un diagrama para explicar una solución virtualizada?
+\end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}{Referencias}
+\footnotesize
+Tanenbaum, A. S., \& Bos, H. (2023). \textit{Modern operating systems} (5th ed.). Pearson.
+
+\vspace{0.35cm}
+Silberschatz, A., Galvin, P. B., \& Gagne, G. (2018). \textit{Operating system concepts} (10th ed.). Wiley.
+
+\vspace{0.35cm}
+Portnoy, M. (2012). \textit{Virtualization essentials}. Wiley.
 \end{frame}
 
 % ---------------------------------------------------------------------
