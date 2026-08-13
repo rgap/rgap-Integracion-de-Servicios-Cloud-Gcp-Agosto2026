@@ -418,11 +418,9 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \end{block}
 \column{.49\textwidth}
 \begin{block}{2. Plataformas de servicios en la nube}
-\small ¿Qué proveedores existen hoy y cómo se llama el servicio con el que cada uno ofrece máquinas virtuales?
 \begin{itemize}\setlength\itemsep{2pt}\small
   \item Google Cloud · Amazon Web Services
   \item Microsoft Azure · Oracle Cloud
-  \item ¿Alguno más que encuentres?
 \end{itemize}
 \end{block}
 \end{columns}
@@ -430,6 +428,147 @@ Un solo servidor físico puede alojar servicios separados en máquinas virtuales
 \begin{exampleblock}{Conexión con el curso}
 \small Instalar una máquina virtual localmente y hacerlo mediante un proveedor de servicios en la nube tienen varias similitudes: en ambos casos se eligen un sistema operativo, capacidad de procesamiento, memoria y almacenamiento. En este curso utilizaremos \textbf{Google Cloud}.
 \end{exampleblock}
+\end{frame}
+
+% 21 ---------------------------------------------------------------------
+\begin{frame}{Tres hipervisores comunes permiten practicar desde Windows}
+\small
+\begin{tabular}{>{\bfseries}p{3.25cm}p{2.0cm}p{6.3cm}}
+\toprule
+Herramienta & Tipo & Uso habitual\\
+\midrule
+Hyper-V & Tipo 1 & Entornos Windows y laboratorios empresariales\\
+VirtualBox & Tipo 2 & Aprendizaje y pruebas personales\\
+VMware Workstation & Tipo 2 & Laboratorios con varias VM y redes virtuales\\
+\bottomrule
+\end{tabular}
+\vspace{0.45cm}
+\begin{alertblock}{La diferencia principal}
+\small Hyper-V ejecuta el hipervisor directamente sobre el hardware. VirtualBox y VMware Workstation se instalan como aplicaciones alojadas sobre el sistema operativo Windows.
+\end{alertblock}
+\vspace{0.05cm}
+{\tiny Fuentes: \href{https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/overview}{Microsoft Learn} y \href{https://www.virtualbox.org/manual/}{Oracle VirtualBox}.}
+\end{frame}
+
+% 22 ---------------------------------------------------------------------
+\begin{frame}{Cada proveedor ofrece VM con su propia plataforma}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{4.0cm}p{3.35cm}p{4.0cm}}
+\toprule
+Proveedor & Servicio de VM & Tecnología de virtualización\\
+\midrule
+Google Cloud & Compute Engine & Hipervisor basado en KVM\\
+Amazon Web Services & Amazon EC2 & Nitro Hypervisor, basado en KVM\\
+Microsoft Azure & Azure Virtual Machines & Hyper-V\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.4cm}
+\begin{exampleblock}{Responsabilidad del proveedor}
+\small En los tres casos, el proveedor administra el hardware y el hipervisor. El cliente elige la imagen del sistema operativo, el tamaño de la máquina, el almacenamiento y la red.
+\end{exampleblock}
+\vspace{0.05cm}
+{\tiny Fuentes: \href{https://docs.cloud.google.com/compute/docs/instances/nested-virtualization/overview}{Google Cloud}, \href{https://docs.aws.amazon.com/ec2/latest/instancetypes/ec2-nitro-instances.html}{AWS} y \href{https://learn.microsoft.com/en-ie/azure/security/fundamentals/isolation-choices}{Microsoft Azure}.}
+\end{frame}
+
+% 23 ---------------------------------------------------------------------
+\begin{frame}{VMware Workstation permite ensayar arquitecturas locales}
+\begin{columns}[c,onlytextwidth]
+\column{.47\textwidth}
+\begin{block}{En el equipo Windows}
+\small
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Funciona como hipervisor alojado de tipo 2.
+  \item Ejecuta varias VM con diferentes sistemas operativos.
+  \item Permite crear redes virtuales para comunicar o aislar servidores.
+\end{itemize}
+\end{block}
+\column{.47\textwidth}
+\begin{exampleblock}{Equivalencias en GCP}
+\small
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Varias VM $\rightarrow$ varias instancias.
+  \item Red virtual $\rightarrow$ red y subred VPC.
+  \item Control de acceso $\rightarrow$ reglas de firewall.
+  \item Plantilla de VM $\rightarrow$ plantilla de instancia.
+\end{itemize}
+\end{exampleblock}
+\end{columns}
+\vspace{0.25cm}
+\begin{alertblock}{Transferencia del aprendizaje}
+\small Un laboratorio local permite validar la relación entre servidores; Compute Engine permite desplegar esa idea usando infraestructura administrada por Google.
+\end{alertblock}
+\end{frame}
+
+% 24 ---------------------------------------------------------------------
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0pt]
+      at ([xshift=-10mm,yshift=-8mm]current page.north east)
+      {\includegraphics[width=43mm]{utp-logo.png}};
+    \node[anchor=center,align=center,text width=13.5cm,
+      font=\bfseries\fontsize{25}{30}\selectfont]
+      at ([yshift=5mm]current page.center)
+      {Instalando una distribución\\de Linux};
+    \draw[utpRojo,line width=1.4pt]
+      ([xshift=28mm,yshift=-11mm]current page.center) --
+      ([xshift=-28mm,yshift=-11mm]current page.center);
+    \node[anchor=north,align=center,text=utpGris,
+      font=\fontsize{18}{22}\selectfont]
+      at ([yshift=-16mm]current page.center)
+      {Ubuntu Desktop};
+  \end{tikzpicture}
+\end{frame}
+
+% 25 ---------------------------------------------------------------------
+\begin{frame}{Primeros comandos: identifica el sistema y el usuario}
+\small
+\begin{tabular}{>{\ttfamily}p{4.1cm}p{7.65cm}}
+\toprule
+\normalfont\bfseries Comando & \textbf{Qué permite observar}\\
+\midrule
+whoami & Usuario con el que abriste la terminal.\\
+hostname & Nombre asignado a la máquina virtual.\\
+cat /etc/os-release & Distribución y versión de Linux instalada.\\
+uname -r & Versión del kernel de Linux.\\
+id & Identificador, grupo principal y grupos del usuario.\\
+pwd & Carpeta en la que estás trabajando.\\
+\bottomrule
+\end{tabular}
+\vspace{0.35cm}
+\begin{exampleblock}{Relación con la sesión 1}
+\small El sistema operativo identifica la máquina, reconoce usuarios y grupos, y determina el contexto desde el cual se accede a los recursos.
+\end{exampleblock}
+\end{frame}
+
+% 26 ---------------------------------------------------------------------
+\begin{frame}{En Linux, los grupos y permisos cumplen la función de roles}
+\small
+\begin{tabular}{>{\ttfamily}p{4.1cm}p{7.65cm}}
+\toprule
+\normalfont\bfseries Comando & \textbf{Qué permite observar}\\
+\midrule
+id & Identificador, grupo principal y grupos del usuario.\\
+groups & Grupos a los que pertenece la cuenta actual.\\
+getent group & Grupos registrados en el sistema.\\
+sudo -l & Acciones administrativas permitidas al usuario.\\
+ls -l & Propietario, grupo y permisos de archivos y carpetas.\\
+\bottomrule
+\end{tabular}
+\vspace{0.3cm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Usuario}
+\small Cuenta identificada por Linux que inicia procesos y accede a recursos.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Rol práctico}
+\small Responsabilidad representada mediante grupos, permisos y privilegios de \texttt{sudo}.
+\end{exampleblock}
+\end{columns}
+\vspace{0.1cm}
+\centering\small Ejemplo: pertenecer al grupo \texttt{sudo} permite asumir tareas administrativas autorizadas.
 \end{frame}
 
 % ---------------------------------------------------------------------
