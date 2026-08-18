@@ -1,0 +1,401 @@
+% Motor: XeLaTeX. Sesion 03 — material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Linux, interfaces de red y troubleshooting en una máquina virtual}
+\date{Semana 02 - Sesión 03}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{9pt}
+  \item ¿Qué diferencia a un hipervisor tipo 1 de uno tipo 2?
+  \item ¿Qué recursos del equipo físico consume una máquina virtual?
+  \item ¿Por qué una máquina virtual es apropiada para un laboratorio local?
+  \item ¿Qué representa una conexión entre dos componentes de una arquitectura?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Antes de iniciar: prepara el laboratorio}
+\begin{alertblock}{Requisito indispensable}
+Debes tener instalado \textbf{Ubuntu Desktop} (Ubuntu con entorno gráfico). Puede ejecutarse directamente en el equipo o dentro de una máquina virtual creada con el hipervisor disponible.
+\end{alertblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Configuración mínima sugerida}
+\small Instalación nativa o VM funcional. Para una VM: 4 GB de RAM · 2 vCPU · 25 GB de disco · 1 adaptador con salida a internet.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Comprueba antes de clase}
+\small La VM inicia, permite ingresar al escritorio y abre Terminal desde el menú de aplicaciones. Conserva tu contraseña de \texttt{sudo}.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás reconocer Linux y su terminal, configurar \textbf{interfaces de red virtuales}, monitorear recursos del sistema y aplicar un método ordenado de \textbf{troubleshooting} para identificar fallas básicas.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué diferencia hay entre el equipo anfitrión y la máquina virtual?
+  \item ¿Para qué sirve una dirección IP?
+  \item ¿Qué recursos físicos comparte el hipervisor entre las VM?
+  \item Cuando ``no hay internet'', ¿qué revisarías primero?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Podrás preparar una VM Linux para un laboratorio, comprobar si tiene red y observar CPU, memoria, disco y procesos antes de proponer una solución.
+\end{block}
+\vspace{0.2cm}
+\small Es la misma disciplina que usarás después con instancias de Compute Engine: observar el estado, reunir evidencia y corregir la causa sin adivinar.
+\end{frame}
+
+\begin{frame}{Linux es el sistema; una distribución lo deja listo para usar}
+\begin{block}{Unix}
+\small Familia de sistemas operativos creada para que varias personas y programas puedan utilizar un equipo de forma organizada. Introdujo ideas como usuarios, permisos, procesos y un único árbol de archivos.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Linux}
+\small Sistema operativo libre y de código abierto que sigue muchas ideas de Unix. Su kernel administra CPU, memoria, disco, red y dispositivos.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Distribución Linux}
+\small Sistema listo para instalar y usar. Reúne el kernel de Linux, programas, instalador, actualizaciones y herramientas de configuración. Ejemplos: Ubuntu, Debian, Mint y Kali.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Unix y Linux comparten ideas, pero no son lo mismo}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.7cm}p{4.1cm}p{4.1cm}}
+\toprule
+Aspecto & Unix & Linux \\
+\midrule
+Origen & Creado en 1969 en Bell Labs & Creado en 1991 por Linus Torvalds \\
+¿Qué era originalmente? & Un sistema operativo completo & Un kernel \\
+¿Qué es hoy? & Una familia de sistemas operativos & El kernel usado por muchas distribuciones \\
+Código & Depende de cada versión; muchas son comerciales & Libre y de código abierto \\
+Ejemplos & AIX, HP-UX y macOS & Ubuntu, Debian, Mint y Kali \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.25cm}
+\begin{alertblock}{Idea principal}
+Linux no es una versión de Unix. Es un kernel diferente que utiliza muchas de sus ideas y formas de trabajo.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Linux domina servidores porque se administra bien a distancia}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{block}{Servidores}
+\small Estabilidad, bajo consumo, automatización y administración remota.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Nube}
+\small Muchas VM, contenedores y procesos de DevOps se ejecutan sobre Linux.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Operaciones}
+\small Logs, monitoreo, redes y servicios pueden revisarse desde la terminal.
+\end{block}
+\end{columns}
+\vspace{0.25cm}
+\analogia{Aprender Linux no significa memorizar cientos de comandos: significa aprender a observar el sistema y pedirle acciones concretas.}
+\end{frame}
+
+\begin{frame}{Usaremos la familia Debian para hablar el mismo idioma}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.2cm}p{4.2cm}p{3.7cm}}
+\toprule
+Familia & Distribuciones conocidas & Gestor de paquetes \\
+\midrule
+Debian & Debian, Ubuntu, Mint, Kali & \texttt{apt} y \texttt{dpkg} \\
+Red Hat & RHEL, Fedora, Rocky, AlmaLinux & \texttt{dnf} y \texttt{rpm} \\
+Arch / SUSE & Arch, Manjaro, openSUSE & \texttt{pacman} / \texttt{zypper} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+\begin{alertblock}{Regla del laboratorio}
+\small Las instrucciones y paquetes se validarán en una distribución \textbf{basada en Debian}. La demostración se realizará en Ubuntu Desktop; Debian, Mint y Kali comparten la misma familia y utilizan herramientas como \texttt{apt} y \texttt{dpkg}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Terminal, shell y comando no son lo mismo}
+\begin{description}[Comando]\small
+  \item[Terminal] Ventana o consola donde escribes y lees resultados.
+  \item[Shell] Programa que interpreta lo escrito; normalmente \textbf{Bash}.
+  \item[Comando] Instrucción que la shell ejecuta, con opciones y argumentos.
+  \item[Prompt] Línea que indica el usuario, equipo y ubicación antes de escribir.
+\end{description}
+\vspace{0.2cm}
+\begin{exampleblock}{Lee este ejemplo}
+\centering\texttt{ana@linux-lab:\textasciitilde\$ ls -la /etc}
+\end{exampleblock}
+\small Aquí \texttt{ls} es el comando, \texttt{-la} son opciones y \texttt{/etc} es el argumento.
+\end{frame}
+
+\begin{frame}{Bash y Zsh son dos shells}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.7cm}p{4.1cm}p{4.1cm}}
+\toprule
+Aspecto & Bash & Zsh \\
+\midrule
+Qué es & Una shell muy usada en Linux & Otra shell compatible con muchos comandos de Bash \\
+Uso habitual & Predeterminada en Ubuntu & Predeterminada en macOS moderno \\
+Comandos & Ejecuta comandos de Linux & Ejecuta muchos de los mismos comandos \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.3cm}
+\begin{block}{¿Qué shell tiene configurada tu cuenta?}
+\centering\large\texttt{echo \$SHELL}
+\end{block}
+\small El resultado suele ser \texttt{/bin/bash} o \texttt{/bin/zsh}. En Ubuntu normalmente verás \texttt{/bin/bash}.
+\end{frame}
+
+\begin{frame}{Todo parte de una raíz: /}
+\begin{center}
+\small
+\begin{tabular}{>{\ttfamily\bfseries}p{2.2cm}p{8.4cm}}
+\toprule
+Directorio & Uso principal \\
+\midrule
+/ & Raíz: inicio de todo el árbol de archivos \\
+/home & Carpetas personales de los usuarios \\
+/etc & Configuración del sistema y de servicios \\
+/var & Datos que cambian, incluidos logs \\
+/tmp & Archivos temporales \\
+/usr/bin & Muchos comandos y programas instalados \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\small Una ruta absoluta empieza con \texttt{/}; una ruta relativa empieza desde tu ubicación actual. Linux no usa unidades \texttt{C:} o \texttt{D:}.
+\end{frame}
+
+\begin{frame}{Los primeros comandos responden cuatro preguntas}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.2cm}p{3.0cm}p{4.4cm}}
+\toprule
+Pregunta & Comando & Qué debes observar \\
+\midrule
+¿Quién soy? & \texttt{whoami} & Usuario de la sesión \\
+¿En qué equipo estoy? & \texttt{hostname} & Nombre de la VM \\
+¿Dónde estoy? & \texttt{pwd} & Ruta actual \\
+¿Qué hay aquí? & \texttt{ls -la} & Archivos, propietarios y permisos \\
+¿Qué Linux uso? & \texttt{cat /etc/os-release} & Distribución y versión \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{Práctica 1: reconoce tu Linux \textnormal{\small(8 min)}}
+\begin{enumerate}\setlength\itemsep{6pt}\small
+  \item Inicia Ubuntu Desktop, de forma nativa o virtualizada, e ingresa con tu usuario.
+  \item Ejecuta: \texttt{whoami}, \texttt{hostname}, \texttt{pwd} y \texttt{cat /etc/os-release}.
+  \item Crea el directorio del curso: \texttt{mkdir -p \textasciitilde/curso-cloud/sesion03}.
+  \item Ingresa: \texttt{cd \textasciitilde/curso-cloud/sesion03} y confirma con \texttt{pwd}.
+  \item Guarda evidencia: \texttt{uname -a > evidencia.txt} y revísala con \texttt{cat evidencia.txt}.
+\end{enumerate}
+\begin{alertblock}{Antes de copiar un comando}
+\small Lee qué hace, confirma la ruta y nunca uses \texttt{sudo} o \texttt{rm} solo porque apareció en internet.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Una interfaz conecta el sistema operativo con una red}
+\concepto{Interfaz de red}{Punto lógico mediante el cual el sistema envía y recibe tráfico. Puede representar un adaptador físico o uno virtual.}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{block}{Dentro de Linux}
+\small Nombres habituales: \texttt{ens33}, \texttt{eth0}, \texttt{lo}. Cada interfaz tiene estado, direcciones y estadísticas.
+\end{block}
+\column{.49\textwidth}
+\begin{exampleblock}{En una máquina virtual}
+\small El hipervisor conecta el adaptador virtual a una red virtual. Linux lo detecta como si fuera una tarjeta de red real.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Cuántas interfaces puede tener una máquina virtual?}
+\begin{block}{La cantidad no es siempre la misma}
+Depende del programa utilizado para crear la máquina virtual. Cada programa establece su propio límite.
+\end{block}
+\vspace{0.35cm}
+\begin{exampleblock}{En esta sesión}
+Empezaremos con \textbf{una interfaz de red}. Agregaremos otra solamente cuando necesitemos conectar la máquina a una segunda red.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Cinco comandos describen la red antes de probarla}
+\begin{center}
+\small
+\begin{tabular}{>{\ttfamily\bfseries}p{3.5cm}p{7.6cm}}
+\toprule
+Comando & Pregunta que responde \\
+\midrule
+ip -br link & ¿Qué interfaces existen y están UP o DOWN? \\
+ip -br addr & ¿Qué dirección tiene cada interfaz? \\
+ip route & ¿Por dónde sale el tráfico? \\
+resolvectl status & ¿Qué servidor DNS utiliza el sistema? \\
+ss -tulpn & ¿Qué puertos y servicios están escuchando? \\
+\bottomrule
+\end{tabular}
+\end{center}
+\small Si \texttt{resolvectl} no está disponible, revisa \texttt{/etc/resolv.conf}.
+\end{frame}
+
+\begin{frame}{Práctica 2: crea un alias y una función \textnormal{\small(12 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.53\textwidth}
+\begin{enumerate}\setlength\itemsep{5pt}\small
+  \item Confirma tu shell con \texttt{echo \$SHELL}.
+  \item Crea un alias: \texttt{alias listar='ls -la'}.
+  \item Ejecuta \texttt{listar} y observa el resultado.
+  \item Crea una función:\par
+  \texttt{info() \{ whoami; hostname; pwd; \}}
+  \item Ejecuta \texttt{info}.
+\end{enumerate}
+\column{.43\textwidth}
+\begin{block}{Alias}
+\small Nombre corto que representa un comando.
+\end{block}
+\begin{exampleblock}{Función}
+\small Nombre que agrupa uno o varios comandos.
+\end{exampleblock}
+\begin{alertblock}{Duración}
+\small Lo creado estará disponible hasta que cierres la terminal. Más adelante aprenderás a guardarlo.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Monitorear es medir antes de cambiar}
+\concepto{Monitoreo}{Observación del estado y del consumo de recursos para detectar tendencias, límites o comportamientos anómalos.}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Recursos principales}
+\small CPU · memoria · almacenamiento · procesos · red · servicios · logs.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una fotografía y una película}
+\small \texttt{free -h} toma una fotografía. \texttt{top} actualiza datos continuamente y deja ver la evolución.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estos comandos forman un kit inicial de monitoreo}
+\begin{center}
+\scriptsize
+\begin{tabular}{>{\bfseries}p{2.5cm}p{3.4cm}p{5.2cm}}
+\toprule
+Recurso & Comandos & Qué observar \\
+\midrule
+CPU y procesos & \texttt{top}, \texttt{ps aux} & carga, \%CPU, proceso responsable \\
+Memoria & \texttt{free -h}, \texttt{top} & disponible, usada, swap \\
+Disco & \texttt{df -h}, \texttt{du -sh} & partición llena, carpeta grande \\
+Red & \texttt{ip -s link}, \texttt{ss -tulpn} & errores, bytes, puertos \\
+Servicios & \texttt{systemctl --failed} & unidades que fallaron \\
+Logs & \texttt{journalctl -p err -b} & errores del arranque actual \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\small Herramientas opcionales: \texttt{htop}, \texttt{iotop}, \texttt{vmstat}, \texttt{sar}. Primero domina las que suelen venir instaladas.
+\end{frame}
+
+\begin{frame}{Práctica 3: interpreta evidencia, no solo números \textnormal{\small(10 min)}}
+\begin{enumerate}\setlength\itemsep{6pt}\small
+  \item Abre la terminal de tu máquina con Ubuntu.
+  \item Ejecuta \texttt{uptime} y observa la carga del sistema.
+  \item Ejecuta \texttt{free -h} y revisa la memoria disponible.
+  \item Ejecuta \texttt{df -h} y revisa el espacio de la partición principal.
+  \item Ejecuta \texttt{ps aux --sort=-\%cpu | head} e identifica el proceso con mayor uso de CPU.
+  \item Escribe una conclusión: ``Observo..., por eso concluyo...''.
+\end{enumerate}
+\begin{alertblock}{Una cifra aislada no siempre es un problema}
+\small Linux usa memoria libre como caché. En \texttt{free -h}, observa especialmente la columna \textbf{available}; luego relaciona el dato con síntomas y procesos.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Troubleshooting es un método para reducir incertidumbre}
+\concepto{Troubleshooting}{Proceso sistemático para identificar la causa de una falla, comprobarla con evidencia, aplicar una corrección y verificar el resultado.}
+\begin{center}
+\small\bfseries Síntoma $\rightarrow$ alcance $\rightarrow$ hipótesis $\rightarrow$ prueba $\rightarrow$ cambio $\rightarrow$ verificación
+\end{center}
+\begin{exampleblock}{La diferencia clave}
+\small Reiniciar puede ocultar un síntoma; diagnosticar explica la causa. Un cambio sin evidencia puede crear una segunda falla.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Diagnostica la red por capas, desde lo más cercano}
+\begin{alertblock}{Caso}
+\small La máquina con Ubuntu no puede abrir páginas web. Debemos descubrir en qué punto se interrumpe la conexión.
+\end{alertblock}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item \textbf{¿Existe y está activa?} \texttt{ip -br link}
+  \item \textbf{¿Tiene dirección?} \texttt{ip -br addr}
+  \item \textbf{¿Tiene ruta por defecto?} \texttt{ip route}
+  \item \textbf{¿Llega al gateway?} \texttt{ping -c 3 <gateway>}
+  \item \textbf{¿Llega a internet por IP?} \texttt{ping -c 3 8.8.8.8}
+  \item \textbf{¿Resuelve nombres?} \texttt{getent hosts google.com}
+  \item \textbf{¿El servicio responde?} \texttt{curl -I https://example.com}
+\end{enumerate}
+\small La primera prueba que falla delimita la capa donde conviene investigar.
+\end{frame}
+
+\begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar}
+\small
+\begin{tabular}{>{\bfseries}p{4.8cm}p{6.1cm}}
+\toprule
+Confusión & Aclaración \\
+\midrule
+Linux y una distribución son lo mismo & Linux es el kernel; una distribución agrega programas y herramientas. \\
+Terminal y shell son lo mismo & La terminal muestra la interacción; la shell interpreta comandos. \\
+Un alias o una función quedan guardados & En la práctica actual desaparecen al cerrar la terminal. \\
+Memoria ``used'' alta siempre es falla & Revisa \texttt{available}, swap, procesos y síntomas. \\
+Troubleshooting es probar soluciones & Primero reúne evidencia y comprueba una posible causa. \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Ahora puedes responder las cuatro preguntas de salida}
+\begin{enumerate}\setlength\itemsep{7pt}\small
+  \item \textbf{¿Cuántas interfaces?} Depende del programa utilizado para crear la máquina virtual. Cada programa establece su propio límite.
+  \item \textbf{¿Qué opciones de configuración existen?} Automática: la red entrega los datos. Manual: escribimos la dirección IP, la puerta de enlace y el DNS.
+  \item \textbf{¿Qué comandos monitorean Linux?} \texttt{uptime} para carga, \texttt{free -h} para memoria, \texttt{df -h} para disco y \texttt{top} o \texttt{ps} para procesos.
+  \item \textbf{¿Qué es troubleshooting?} Un proceso ordenado para observar una falla, reunir evidencia, comprobar una posible causa, corregirla y verificar el resultado.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Documentación del hipervisor o plataforma utilizada: límites de hardware virtual y modos de red disponibles.
+  \item Debian Administrator's Handbook y páginas de manual: \texttt{ip}, \texttt{ss}, \texttt{free}, \texttt{top}, \texttt{df}, \texttt{systemctl}, \texttt{journalctl}.
+  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}, diapositivas iniciales reorganizadas para esta sesión.
+\end{itemize}
+\end{frame}
+
+\end{document}
