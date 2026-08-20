@@ -1,0 +1,159 @@
+% Motor: XeLaTeX. Sesion 04 — material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Monitoreo y troubleshooting en Linux}
+\date{Semana 02 - Sesión 04}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{9pt}
+  \item ¿Qué diferencia hay entre terminal, shell y comando?
+  \item ¿Qué comandos muestran las interfaces, direcciones y rutas de Linux?
+  \item ¿Para qué sirven un alias y una función?
+  \item ¿Qué sucede con ellos cuando cierras la terminal?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás monitorear \textbf{CPU, memoria, disco y procesos}, y aplicar un método ordenado de \textbf{troubleshooting} para delimitar una falla básica de conectividad mediante evidencia.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item Si una aplicación funciona lentamente, ¿qué recurso revisarías primero?
+  \item ¿Una cifra alta siempre representa una falla?
+  \item Cuando ``no hay internet'', ¿qué prueba realizarías antes de cambiar la configuración?
+  \item ¿Cómo demostrarías que una corrección realmente funcionó?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Podrás observar el estado de una VM Linux, identificar el recurso o la capa de red relacionada con un síntoma y verificar una corrección sin depender de suposiciones.
+\end{block}
+\vspace{0.2cm}
+\small Es la misma disciplina que usarás con instancias de Compute Engine: medir, reunir evidencia, cambiar una sola variable y comprobar el resultado.
+\end{frame}
+
+\begin{frame}{Monitorear es medir antes de cambiar}
+\concepto{Monitoreo}{Observación del estado y del consumo de recursos para detectar tendencias, límites o comportamientos anómalos.}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Recursos principales}
+\small CPU · memoria · almacenamiento · procesos · red · servicios · logs.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una fotografía y una película}
+\small \texttt{free -h} toma una fotografía. \texttt{top} actualiza datos continuamente y deja ver la evolución.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estos comandos forman un kit inicial de monitoreo}
+\begin{center}
+\scriptsize
+\begin{tabular}{>{\bfseries}p{2.5cm}p{3.4cm}p{5.2cm}}
+\toprule
+Recurso & Comandos & Qué observar \\
+\midrule
+CPU y procesos & \texttt{top}, \texttt{ps aux} & carga, \%CPU, proceso responsable \\
+Memoria & \texttt{free -h}, \texttt{top} & disponible, usada, swap \\
+Disco & \texttt{df -h}, \texttt{du -sh} & partición llena, carpeta grande \\
+Red & \texttt{ip -s link}, \texttt{ss -tulpn} & errores, bytes, puertos \\
+Servicios & \texttt{systemctl --failed} & unidades que fallaron \\
+Logs & \texttt{journalctl -p err -b} & errores del arranque actual \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.15cm}
+\small Herramientas opcionales: \texttt{htop}, \texttt{iotop}, \texttt{vmstat}, \texttt{sar}. Primero domina las que suelen venir instaladas.
+\end{frame}
+
+\begin{frame}{Práctica 1: interpreta evidencia, no solo números \textnormal{\small(10 min)}}
+\begin{enumerate}\setlength\itemsep{6pt}\small
+  \item Abre la terminal de tu máquina con Ubuntu.
+  \item Ejecuta \texttt{uptime} y observa la carga del sistema.
+  \item Ejecuta \texttt{free -h} y revisa la memoria disponible.
+  \item Ejecuta \texttt{df -h} y revisa el espacio de la partición principal.
+  \item Ejecuta \texttt{ps aux --sort=-\%cpu | head} e identifica el proceso con mayor uso de CPU.
+  \item Escribe una conclusión: ``Observo..., por eso concluyo...''.
+\end{enumerate}
+\begin{alertblock}{Una cifra aislada no siempre es un problema}
+\small Linux usa memoria libre como caché. En \texttt{free -h}, observa especialmente la columna \textbf{available}; luego relaciona el dato con síntomas y procesos.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Troubleshooting es un método para reducir incertidumbre}
+\concepto{Troubleshooting}{Proceso sistemático para identificar la causa de una falla, comprobarla con evidencia, aplicar una corrección y verificar el resultado.}
+\begin{center}
+\small\bfseries Síntoma $\rightarrow$ alcance $\rightarrow$ hipótesis $\rightarrow$ prueba $\rightarrow$ cambio $\rightarrow$ verificación
+\end{center}
+\begin{exampleblock}{La diferencia clave}
+\small Reiniciar puede ocultar un síntoma; diagnosticar explica la causa. Un cambio sin evidencia puede crear una segunda falla.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Práctica 2: diagnostica la red por capas \textnormal{\small(12 min)}}
+\begin{alertblock}{Caso}
+\small La máquina con Ubuntu no puede abrir páginas web. Descubre en qué punto se interrumpe la conexión.
+\end{alertblock}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item \textbf{¿Existe y está activa?} \texttt{ip -br link}
+  \item \textbf{¿Tiene dirección?} \texttt{ip -br addr}
+  \item \textbf{¿Tiene ruta por defecto?} \texttt{ip route}
+  \item \textbf{¿Llega al gateway?} \texttt{ping -c 3 <gateway>}
+  \item \textbf{¿Llega a internet por IP?} \texttt{ping -c 3 8.8.8.8}
+  \item \textbf{¿Resuelve nombres?} \texttt{getent hosts google.com}
+  \item \textbf{¿El servicio responde?} \texttt{curl -I https://example.com}
+\end{enumerate}
+\small La primera prueba que falla delimita la capa donde conviene investigar.
+\end{frame}
+
+\begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar}
+\small
+\begin{tabular}{>{\bfseries}p{4.8cm}p{6.1cm}}
+\toprule
+Confusión & Aclaración \\
+\midrule
+Una cifra alta siempre es una falla & Relaciona la cifra con el contexto, los procesos y los síntomas. \\
+Memoria ``used'' alta siempre es falla & Revisa \texttt{available}, swap, procesos y síntomas. \\
+Un solo comando explica todo & Contrasta varias mediciones y delimita el alcance. \\
+Troubleshooting es probar soluciones & Primero reúne evidencia y comprueba una posible causa. \\
+Reiniciar demuestra que se corrigió & Repite la prueba inicial y confirma que el síntoma desapareció. \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Ahora puedes responder las preguntas de salida}
+\begin{enumerate}\setlength\itemsep{7pt}\small
+  \item \textbf{¿Qué comandos monitorean Linux?} \texttt{uptime} para carga, \texttt{free -h} para memoria, \texttt{df -h} para disco y \texttt{top} o \texttt{ps} para procesos.
+  \item \textbf{¿Qué es troubleshooting?} Un proceso ordenado para observar una falla, reunir evidencia, comprobar una posible causa, corregirla y verificar el resultado.
+  \item \textbf{¿Cómo se diagnostica la red?} Desde la interfaz y la dirección IP hacia la ruta, el gateway, DNS y el servicio.
+  \item \textbf{¿Cómo se valida una corrección?} Repitiendo la prueba que evidenció la falla y confirmando el resultado esperado.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Debian Administrator's Handbook y páginas de manual: \texttt{ip}, \texttt{ss}, \texttt{free}, \texttt{top}, \texttt{df}, \texttt{systemctl} y \texttt{journalctl}.
+  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}, diapositivas de monitoreo y troubleshooting reorganizadas para esta sesión.
+\end{itemize}
+\end{frame}
+
+\end{document}

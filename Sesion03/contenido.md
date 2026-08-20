@@ -1,35 +1,84 @@
-# Sesión 03 — Linux, interfaces de red y troubleshooting
+# Sesión 03 — Linux, terminal e interfaces de red
 
 ## Requisito previo
 
-Cada estudiante debe tener instalado **Ubuntu Desktop** (Ubuntu con entorno gráfico), ya sea directamente en el equipo o dentro de una máquina virtual. Para una VM se sugieren 4 GB de RAM, 2 vCPU, 25 GB de disco y un adaptador con salida a internet.
+Cada estudiante debe contar con **Ubuntu Desktop** operativo, instalado directamente o dentro de una máquina virtual. Para una MV se sugieren 4 GB de RAM, 2 núcleos asignados, 25 GB de disco y un adaptador con salida a internet.
+
+El laboratorio está listo cuando Ubuntu muestra el escritorio, la aplicación Terminal abre, el estudiante conoce su contraseña y la MV tiene conexión de red.
 
 ## Logro
 
-Al finalizar, el estudiante reconoce Linux y su terminal, configura interfaces de red, monitorea recursos del sistema y aplica un proceso básico de troubleshooting sustentado en evidencia.
+Al finalizar, el estudiante utiliza la aplicación Terminal de Ubuntu para identificar el sistema, desplazarse entre carpetas, consultar la configuración básica de red y reutilizar instrucciones, comprobando el resultado de cada acción.
 
-## Secuencia
+## Criterio didáctico
 
-1. Unix, Linux y distribuciones Linux.
-2. Familia Debian, terminal, Bash, Zsh, rutas y comandos iniciales.
-3. Interfaces de red físicas y virtuales en Linux.
-4. Creación temporal de alias y funciones en la shell.
-5. Verificación de red con `ip`, `ping`, `getent`, `ss` y `curl`.
-6. Monitoreo de CPU, memoria, disco, procesos, red, servicios y logs.
-7. Troubleshooting: síntoma, alcance, hipótesis, prueba, corrección y verificación.
+Cada tema sigue esta secuencia:
 
-## Aplicativos HTML
+1. Definición de todos los términos nuevos.
+2. Ejemplo o ilustración directamente relacionada.
+3. Resultado completo esperado.
+4. Comprobación que permite decidir si la actividad se realizó correctamente.
 
-- `1_interfaces-virtuales.html`: compara el alcance de los modos comunes de una interfaz virtual.
+## Secuencia diapositiva por diapositiva
 
-## Respuestas esperadas al cierre
+1. Relación entre anfitrión, hipervisor y máquina virtual.
+2. Preparación de Ubuntu Desktop y resultado esperado del laboratorio.
+3. Logro expresado mediante acciones observables.
+4. Definición de sistema operativo, kernel, Linux, Unix y distribución.
+5. Ilustración de las capas: hardware, kernel y aplicaciones de Ubuntu.
+6. Comparación entre Unix y Linux.
+7. Definición de paquete y gestor de paquetes; ejemplo de la familia Debian.
+8. Representación visual de un archivo `.deb`: nombre, versión, arquitectura, metadatos, dependencias y contenido.
+9. Inicio de la MV, definición del índice local y presentación de la primera tarea después de arrancar Ubuntu.
+10. Ejemplo inicial en Ubuntu: definición de repositorio y `sudo`; actualización del índice con `apt` y comprobación del resultado.
+11. Explicación de por qué se actualiza el índice primero; instalación de Node.js y npm en una instancia de MV preparada para una API.
+12. Separación visual y definición de prompt, comando, opción y argumento.
+13. Definición de Terminal y shell; ilustración del flujo entrada → interpretación → resultado, con salida de `whoami`.
+14. Definición de sistema de archivos, directorio, raíz y rutas.
+15. Ilustración del árbol de directorios y función de sus ramas principales.
+16. Definición y ejemplo completo de `pwd`, `ls`, `mkdir`, `cd` y `cat`.
+17. Definición y ejemplo de `whoami`, `hostname`, `cat /etc/os-release`, `uname -a` y redirección.
+18. Práctica 1A: identificación del sistema y creación de la ruta del laboratorio.
+19. Práctica 1B: creación y comprobación de `evidencia.txt`.
+20. Definición de interfaz, adaptador virtual, dirección IP, prefijo, estado, loopback y router.
+21. Ilustración del recorrido MV → adaptador → router → internet.
+22. Ejemplos completos de una MV con una y dos interfaces.
+23. Definición de ruta, puerta de enlace y DNS.
+24. Definición de puerto, TCP, servicio en escucha y SSH.
+25. Ejecución e interpretación completa de los cinco comandos de red.
+26. Definición visual de alias y función, incluida su duración temporal.
+27. Definición de variable de entorno y comparación completa entre Bash y Zsh.
+28. Práctica 2: creación, ejecución y comprobación de `listar` e `info`.
 
-1. **¿Cuántas interfaces de red podemos configurar para una MV?** La cantidad depende del programa utilizado para crear la máquina virtual. Cada programa establece su propio límite. En esta sesión comenzaremos con una interfaz.
-2. **¿Qué opciones tenemos para configurar una interfaz de red virtual?** Configuración automática, donde la red entrega los datos, o manual, donde se escriben la dirección IP, la puerta de enlace y el DNS.
-3. **¿Qué comandos podemos utilizar para monitorear los recursos de un SO Linux?** `uptime` para carga, `free -h` para memoria, `df -h` para disco y `top` o `ps` para procesos.
-4. **¿Qué entiendes por Troubleshooting?** Es un proceso ordenado para observar una falla, reunir evidencia, comprobar una posible causa, corregirla y verificar el resultado.
+Las diapositivas restantes corresponden a cierre y referencias. No se incluyen monitoreo ni troubleshooting; esos temas pertenecen a la sesión 04.
+
+## Resultados completos de las prácticas
+
+### Práctica 1
+
+- `whoami` devuelve el usuario actual.
+- `hostname` devuelve el nombre de la MV.
+- `/etc/os-release` identifica Ubuntu y su versión.
+- `~/curso-cloud/sesion03` existe y es la ruta actual.
+- `evidencia.txt` contiene la salida de `uname -a`.
+
+### Práctica 2
+
+- `listar` produce el mismo listado que `ls -a`.
+- `info` devuelve usuario, nombre del equipo y ruta actual, en ese orden.
+- El alias y la función desaparecen al cerrar la terminal porque todavía no se guardan en la configuración de la shell.
+
+## Ilustraciones incorporadas
+
+- `linux-capas.png`: relación entre hardware, kernel y aplicaciones.
+- `terminal-flujo.png`: entrada, interpretación y resultado.
+- `sistema-archivos.png`: árbol de directorios.
+- `mv-red.png`: recorrido de la conexión de una MV.
+- `alias-funcion.png`: agrupación de instrucciones repetidas.
+- `paquete-deb.png`: contenido visual de un paquete de software.
 
 ## Fuentes técnicas
 
-- Documentación del hipervisor o plataforma utilizada.
-- Material proporcionado: *Fundamentos de Linux — Programa completo*, utilizado como base para reorganizar la introducción.
+- Debian Administrator's Handbook y páginas de manual de los comandos utilizados.
+- Documentación del hipervisor utilizado en el laboratorio.
+- Material proporcionado: *Fundamentos de Linux — Programa completo*.
