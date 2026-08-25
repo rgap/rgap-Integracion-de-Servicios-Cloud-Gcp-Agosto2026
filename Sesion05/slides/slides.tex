@@ -1,0 +1,548 @@
+% Motor: XeLaTeX. Sesion 05 — material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Interfaces de red, servicios, alias y herramientas de IA en Linux}
+\date{Semana 03 - Sesión 05}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué diferencia existe entre la aplicación Terminal y la shell?
+  \item ¿Qué información muestran \texttt{whoami}, \texttt{hostname} y \texttt{pwd}?
+  \item ¿Por qué se ejecuta \texttt{sudo apt update} antes de instalar un paquete?
+  \item ¿Cómo crearías una carpeta, entrarías en ella y comprobarías tu ubicación?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás interpretar la red de la MV, publicar y controlar servicios, crear atajos persistentes en Bash e instalar herramientas de IA para solicitar ayuda desde la terminal.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué identifica una dirección IP dentro de una red?
+  \item ¿Qué diferencia imaginas entre ejecutar un programa y mantenerlo como servicio?
+  \item ¿Qué ocurriría si un servidor solo escucha en \texttt{127.0.0.1}?
+  \item ¿Cómo evitarías escribir varias veces el mismo comando?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Podrás comprobar cómo se comunica Ubuntu, publicar el servidor Node de la práctica, controlar el inicio de servicios y reutilizar comandos frecuentes.
+\end{block}
+\vspace{0.2cm}
+\small También podrás instalar Warp y Antigravity CLI para pedir explicaciones y apoyo sobre el proyecto, revisando siempre los comandos y cambios sugeridos.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Interfaces de red}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Una interfaz de red permite que Ubuntu se comunique}
+\begin{block}{Definición inicial}
+\small Una \textbf{interfaz de red} es la parte que Ubuntu usa para comunicarse con otros equipos.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Cómo reconocerla}
+\small Ubuntu le asigna un nombre. En nuestra MV veremos \texttt{enp0s1}.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Qué ocurre por ella}
+\small Por la interfaz salen solicitudes y regresan respuestas.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Ejemplo sencillo}
+\small Al abrir un sitio web, la solicitud sale de Ubuntu por \texttt{enp0s1} y la respuesta regresa por esa misma interfaz.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{La dirección IP identifica una interfaz de la MV}
+\begin{columns}[T,onlytextwidth]
+\column{.53\textwidth}
+\begin{exampleblock}{Resultado simplificado}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ ip -br addr\\
+lo\quad UNKNOWN\quad 127.0.0.1/8\\
+enp0s1\quad UP\quad 192.168.100.158/24
+\end{terminal}
+\end{exampleblock}
+\column{.43\textwidth}
+\begin{block}{Dos direcciones, dos usos}
+\small
+\texttt{127.0.0.1} funciona solo dentro de Ubuntu.\par\medskip
+\texttt{192.168.100.158} identifica a \texttt{enp0s1} en la red virtual.
+\end{block}
+\end{columns}
+\begin{alertblock}{Adaptado a esta máquina virtual}
+\small La MV no usa una interfaz Wi-Fi propia. Solo vemos \texttt{lo} y \texttt{enp0s1}; la Mac gestiona el Wi-Fi fuera de Ubuntu.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Un servidor HTTP mínimo combina dirección y puerto}
+\begin{columns}[T,onlytextwidth]
+\column{.63\textwidth}
+\begin{exampleblock}{Archivo completo: \texttt{server.js}}
+\begin{terminal}\footnotesize
+const http = require('http');\\
+const server = http.createServer((req, res) => \{\\
+\quad res.end('Hola desde Ubuntu');\\
+\});\\
+server.listen(8000, '0.0.0.0', () => \{\\
+\quad console.log('Servidor listo');\\
+\});
+\end{terminal}
+\end{exampleblock}
+\column{.33\textwidth}
+\begin{block}{Qué hace}
+\small
+\texttt{http} crea el servidor.\par\medskip
+\texttt{res.end} envía la respuesta.\par\medskip
+\texttt{8000} es el puerto.\par\medskip
+\texttt{0.0.0.0} permite escuchar por \texttt{lo} y \texttt{enp0s1}.
+\end{block}
+\end{columns}
+\begin{alertblock}{No requiere paquetes adicionales}
+\small El módulo \texttt{http} ya viene incluido con Node.js.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{La dirección de escucha decide quién puede conectarse}
+\begin{description}[\texttt{192.168.100.158}]\small
+  \item[\texttt{127.0.0.1}] Solo acepta conexiones originadas dentro de la propia MV.
+  \item[\texttt{192.168.100.158}] Acepta conexiones dirigidas específicamente a \texttt{enp0s1}.
+  \item[\texttt{0.0.0.0}] Escucha en todas las interfaces disponibles.
+\end{description}
+\begin{columns}[T,onlytextwidth]
+\column{.38\textwidth}
+\begin{exampleblock}{Ejecuta el servidor}
+\begin{terminal}
+\$ node server.js\\
+Servidor listo
+\end{terminal}
+\end{exampleblock}
+\column{.58\textwidth}
+\begin{exampleblock}{Prueba en el navegador}
+\small
+Dentro de la MV:\par
+\texttt{http://127.0.0.1:8000}\par\medskip
+Por \texttt{enp0s1}:\par
+\texttt{http://192.168.100.158:8000}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Si funciona con \texttt{localhost} pero no con la IP}
+\small Revisa primero la dirección de escucha y el firewall. Después comprueba el adaptador virtual y la red.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{El adaptador virtual enlaza la MV con la red externa}
+\begin{columns}[c,onlytextwidth]
+\column{.64\textwidth}
+\includegraphics[width=\linewidth]{mv-red.png}
+\column{.32\textwidth}
+\begin{exampleblock}{}
+\small
+1. La MV usa su interfaz.\par
+2. El adaptador virtual entrega el tráfico al hipervisor.\par
+3. El router permite salir de la red local.\par
+4. La conexión alcanza internet.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El resultado de \texttt{ip a} muestra dos interfaces}
+\begin{columns}[T,onlytextwidth]
+\column{.54\textwidth}
+\begin{exampleblock}{Líneas principales del resultado}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ ip a\\
+1: lo\\
+\quad inet 127.0.0.1/8 scope host lo\\
+2: enp0s1\\
+\quad inet 192.168.100.158/24\\
+\quad scope global dynamic enp0s1
+\end{terminal}
+\end{exampleblock}
+\column{.42\textwidth}
+\begin{description}[\texttt{enp0s1}]\small
+  \item[\texttt{ip a}] Lista interfaces y direcciones.
+  \item[\texttt{lo}] Interfaz interna del propio Ubuntu.
+  \item[\texttt{enp0s1}] Conecta la MV con la red.
+  \item[\texttt{inet}] Presenta una dirección IPv4: cuatro números separados por puntos.
+  \item[\texttt{/24}] Indica la parte que identifica la red local.
+\end{description}
+\end{columns}
+\begin{alertblock}{Lectura rápida}
+\small
+\texttt{UP}: \texttt{enp0s1} está activa.\par
+\texttt{dynamic}: Ubuntu recibió la dirección IP automáticamente.\par
+\texttt{UNKNOWN} en \texttt{lo}: no es un error; \texttt{lo} funciona solo dentro de Ubuntu.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Tu MV muestra dos interfaces: \texttt{lo} y \texttt{enp0s1}}
+\begin{block}{Una es interna y la otra conecta con la red}
+\small El resultado de \texttt{ip a} presenta dos interfaces con funciones diferentes.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{\texttt{lo}: comunicación interna}
+\small
+Dirección: \texttt{127.0.0.1/8}.\par
+Ubuntu la usa para comunicarse consigo mismo. No conecta la MV con otros equipos.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{\texttt{enp0s1}: comunicación con la red}
+\small
+Dirección: \texttt{192.168.100.158/24}.\par
+Es la interfaz que permite que la MV se comunique con la red externa.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Lectura correcta del resultado}
+\small Aunque \texttt{ip a} muestra dos interfaces, solo \texttt{enp0s1} conecta la MV con la red externa. \texttt{lo} funciona únicamente dentro de Ubuntu.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ruta, puerta de enlace y DNS describen el camino}
+\begin{description}[Puerta de enlace]\small
+  \item[Ruta] Regla que indica por dónde debe enviarse el tráfico hacia un destino.
+  \item[Puerta de enlace] Router que permite salir de la red local; también se denomina \emph{gateway}.
+  \item[DNS] Servicio que traduce nombres, como \texttt{example.com}, a direcciones IP.
+\end{description}
+\begin{exampleblock}{Ejemplo completo}
+\small En este laboratorio, la MV usa \texttt{192.168.100.158/24} y la Mac \texttt{192.168.100.140/24}. Ambas están en la misma red local. La puerta de enlace \texttt{192.168.100.1} permite salir hacia internet y el DNS resuelve el nombre del sitio.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{La MV llega a internet mediante el router de la red local}
+\begin{block}{El modo puente ubica la MV en la misma red que la Mac}
+\small La MV conserva su propia dirección, \texttt{192.168.100.158/24}. El adaptador virtual enlaza \texttt{enp0s1} con la red local y el router recibe el tráfico directamente.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[
+  flowbox/.style={draw=utpRojo,fill=utpGris!8,rounded corners=2pt,align=center,minimum height=1.55cm,font=\scriptsize},
+  flowarrow/.style={-{Latex[length=2.5mm]},very thick,draw=utpRojo}
+]
+\node[flowbox,text width=2.55cm] (vm) {\textbf{MV Ubuntu}\\\texttt{enp0s1}\\\texttt{192.168.100.158/24}};
+\node[flowbox,text width=2.65cm,right=8mm of vm] (bridge) {\textbf{Adaptador virtual}\\modo puente\\enlace con la red local};
+\node[flowbox,text width=2.35cm,right=8mm of bridge] (router) {\textbf{Router}\\\texttt{192.168.100.1}};
+\node[flowbox,text width=1.65cm,right=8mm of router] (internet) {\textbf{Internet}};
+\draw[flowarrow] (vm) -- (bridge);
+\draw[flowarrow] (bridge) -- (router);
+\draw[flowarrow] (router) -- (internet);
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Flujo completo}
+\small El DNS convierte el nombre del sitio en una IP. La solicitud sale por \texttt{enp0s1}, cruza el adaptador virtual y llega al router. La respuesta regresa por el mismo camino hasta la MV.
+\end{alertblock}
+\scriptsize La Mac y la MV comparten la red \texttt{192.168.100.0/24}, pero cada una conserva su propia dirección.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Servicios en Linux}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{systemd mantiene activos los servicios de Ubuntu}
+\begin{block}{Qué es un servicio}
+\small Es un programa que funciona en segundo plano para atender una tarea, como publicar una página web.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{\texttt{systemd}}
+\small Es el componente de Ubuntu que inicia, detiene y supervisa los servicios del sistema.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{\texttt{systemctl}}
+\small Es el comando que usamos para consultar y controlar esos servicios desde la terminal.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Ejemplo para esta MV}
+\small En Ubuntu, el servidor web Apache se administra como \texttt{apache2.service}. El nombre \texttt{httpd.service} se utiliza en otras distribuciones.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{systemctl} controla el servicio ahora y al iniciar Ubuntu}
+\begin{columns}[T,onlytextwidth]
+\column{.54\textwidth}
+\begin{exampleblock}{Consulta inicial}
+\begin{terminal}\footnotesize
+\$ systemctl status apache2\\
+apache2.service - The Apache HTTP Server\\
+Loaded: loaded (...; disabled)\\
+Active: inactive (dead)
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Cómo leerlo}
+\small \texttt{inactive}: Apache está detenido. \texttt{disabled}: no arrancará automáticamente al encender la MV.
+\end{alertblock}
+\column{.42\textwidth}
+\begin{description}[\texttt{disable}]
+\small
+  \item[\texttt{status}] Muestra el estado.
+  \item[\texttt{start}] Inicia ahora.
+  \item[\texttt{enable}] Activa el inicio automático.
+  \item[\texttt{stop}] Detiene ahora.
+  \item[\texttt{disable}] Desactiva el inicio automático.
+\end{description}
+\end{columns}
+\small Un comando puede estar bien escrito y aun así fallar si el servicio indicado no existe.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Alias y funciones}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Alias y función reducen instrucciones repetidas}
+\begin{columns}[c,onlytextwidth]
+\column{.56\textwidth}
+\includegraphics[width=\linewidth]{alias-funcion.png}
+\column{.40\textwidth}
+\begin{block}{Alias}
+\small Nombre corto que representa \textbf{un comando} con sus opciones. Ejemplo: \texttt{o} puede representar \texttt{xdg-open .}.
+\end{block}
+\begin{exampleblock}{Función}
+\small Nombre que agrupa \textbf{uno o varios comandos} ejecutados en orden. Forma: \texttt{nombre() \{ comandos; \}}.
+\end{exampleblock}
+\begin{alertblock}{Duración en esta práctica}
+\small Ambos existen solo en la terminal actual. Al cerrarla, desaparecen.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Bash y Zsh son shells; \texttt{\$SHELL} indica la configurada}
+\begin{block}{Variable de entorno}
+\small Dato con nombre que la shell conserva para describir la sesión. \texttt{SHELL} guarda la ubicación completa de la shell configurada. El comando \texttt{echo} muestra un texto o el valor de una variable.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Bash en Ubuntu}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ echo \$SHELL\\
+/bin/bash
+\end{terminal}
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Zsh en otra cuenta}
+\begin{terminal}
+rel@equipo:\textasciitilde\$ echo \$SHELL\\
+/bin/zsh
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\small\textbf{Resultado:} ambas son shells; la salida permite reconocer cuál está configurada.
+\end{frame}
+
+\begin{frame}{\texttt{xdg-open .} abre la carpeta actual en Ubuntu}
+\begin{block}{Dos elementos antes de crear el alias}
+\small \texttt{xdg-open} solicita a Ubuntu abrir un elemento con la aplicación gráfica predeterminada. El punto \texttt{.} representa el directorio actual.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Comando completo}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ pwd\\
+/home/rgap\\
+rgap@ubuntu:\textasciitilde\$ xdg-open .
+\end{terminal}
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{alertblock}{Resultado visible}
+\small Ubuntu abre la aplicación \textbf{Archivos} y muestra el contenido de \texttt{/home/rgap}, que era el directorio actual.
+\end{alertblock}
+\end{columns}
+\vspace{4mm}
+\small\textbf{Idea del alias:} escribir \texttt{o} será más rápido que repetir \texttt{xdg-open .}.
+\end{frame}
+
+\begin{frame}[t]{Práctica 2: integra servicios y atajos \textnormal{\small(20 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.49\textwidth}
+\begin{exampleblock}{Parte A: Apache y Node}
+\scriptsize Si falta Apache: \texttt{sudo apt install apache2 -y}.\par\smallskip
+\begin{enumerate}\setlength\itemsep{2pt}\small
+  \item Consulta: \texttt{systemctl status apache2}.
+  \item Inicia: \texttt{sudo systemctl start apache2}.
+  \item Habilita: \texttt{sudo systemctl enable apache2}; abre \texttt{http://192.168.100.158}.
+  \item Detén: \texttt{sudo systemctl stop apache2}.
+  \item Deshabilita: \texttt{sudo systemctl disable apache2}.
+  \item Ejecuta \texttt{node server.js} y prueba el puerto \texttt{8000}.
+\end{enumerate}
+\end{exampleblock}
+\column{.47\textwidth}
+\begin{exampleblock}{Parte B: alias y función}
+\begin{enumerate}\setlength\itemsep{2pt}\small
+  \item Confirma la shell con \texttt{echo \$SHELL}.
+  \item Crea \texttt{alias o='xdg-open .'} y ejecuta \texttt{o}.
+  \item Crea \texttt{info() \{ whoami; hostname; pwd; \}}.
+  \item Ejecuta \texttt{info} y verifica sus tres datos.
+\end{enumerate}
+\end{exampleblock}
+\end{columns}
+\smallskip
+\scriptsize\textbf{\color{utpRojo}Comprobación final:} \texttt{is-active} e \texttt{is-enabled} muestran \texttt{inactive} y \texttt{disabled}; Node responde en \texttt{192.168.100.158:8000}; \texttt{o} abre la carpeta e \texttt{info} muestra usuario, equipo y ruta.
+\end{frame}
+
+\begin{frame}{\texttt{.bashrc} conserva alias y funciones}
+\begin{block}{Archivo de configuración de Bash}
+\small \texttt{.bashrc} es un archivo oculto ubicado en el directorio personal. Bash lee sus instrucciones cada vez que inicia una terminal interactiva.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Solo en la terminal actual}
+\small Si creas \texttt{o} e \texttt{info} directamente en la terminal, desaparecen cuando la cierras.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Guardados en \texttt{.bashrc}}
+\small Si escribes allí el alias y la función, Bash vuelve a crearlos al abrir cada terminal nueva.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Dos comandos que utilizaremos}
+\small \texttt{nano \textasciitilde/.bashrc} abre el archivo en un editor de texto. \texttt{source \textasciitilde/.bashrc} vuelve a leerlo sin cerrar la terminal actual.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Práctica 3: guarda los atajos en \texttt{.bashrc} \textnormal{\small(12 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.43\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Abre el archivo con \texttt{nano \textasciitilde/.bashrc}.
+  \item Agrega el alias \texttt{o} y la función \texttt{info} al final.
+  \item Guarda con \texttt{Ctrl+O}, confirma con \texttt{Enter} y sal con \texttt{Ctrl+X}.
+  \item Ejecuta \texttt{source \textasciitilde/.bashrc}.
+  \item Prueba \texttt{o} e \texttt{info}.
+\end{enumerate}
+\column{.53\textwidth}
+\begin{exampleblock}{Contenido y resultado esperado}
+\begin{terminal}
+\$ nano \textasciitilde/.bashrc\\
+alias o='xdg-open .'\\
+info() \{ whoami; hostname; pwd; \}\\
+\$ source \textasciitilde/.bashrc\\
+\$ o\\
+Se abre la carpeta actual en Archivos\\
+\$ info\\
+rgap\\
+ubuntu\\
+/home/rgap/curso\_cloud/sesion05
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\small\textbf{Comprobación:} abre una terminal nueva y ejecuta \texttt{o} e \texttt{info}; ambos deben seguir disponibles.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Ayuda con IA en la terminal}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Warp añade ayuda de IA sin cambiar tu shell}
+\begin{block}{Para qué sirve}
+\small Warp es una terminal gráfica que puede explicar comandos, sugerir pasos y ayudar a trabajar con proyectos. En Ubuntu puede seguir utilizando Bash.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.43\textwidth}
+\begin{exampleblock}{1. Comprueba la arquitectura}
+\begin{terminal}
+\$ dpkg --print-architecture\\
+arm64
+\end{terminal}
+\small La salida también puede ser \texttt{amd64}. Descarga el paquete \texttt{.deb} correspondiente.
+\end{exampleblock}
+\column{.53\textwidth}
+\begin{exampleblock}{2. Instala y abre Warp}
+\begin{terminal}\footnotesize
+\$ cd \textasciitilde/Descargas\\
+\$ sudo apt install ./warp-terminal\_*.deb\\
+\$ warp-terminal
+\end{terminal}
+\small Descarga primero el paquete para Debian/Ubuntu desde \texttt{warp.dev/download}.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Úsalo como apoyo}
+\small Puedes pedir una explicación de \texttt{systemctl status apache2} antes de ejecutarlo. Revisa siempre el comando y confirma que corresponda a tu MV.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Antigravity CLI ayuda dentro del proyecto mediante \texttt{agy}}
+\begin{block}{Para qué sirve}
+\small \texttt{agy} abre un agente de IA en la terminal. Puede revisar archivos del proyecto, explicar código y proponer cambios sujetos a tu confirmación.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.57\textwidth}
+\begin{exampleblock}{Instalación oficial en Ubuntu}
+\begin{terminal}\footnotesize
+\$ sudo apt update\\
+\$ sudo apt install curl -y\\
+\$ curl -fsSL \textbackslash\\
+\quad https://antigravity.google/cli/install.sh | bash\\
+\$ source \textasciitilde/.bashrc
+\end{terminal}
+\end{exampleblock}
+\column{.39\textwidth}
+\begin{exampleblock}{Ejemplo en el laboratorio}
+\begin{terminal}\footnotesize
+\$ cd \textasciitilde/curso\_cloud/sesion05\\
+\$ agy
+\end{terminal}
+\small Solicitud de ejemplo:\par
+\texttt{Explica server.js y dime cómo probarlo.}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Primer inicio y ruta del comando}
+\scriptsize El primer inicio puede abrir el navegador para iniciar sesión. Si aparece \texttt{agy: command not found}, agrega \texttt{export PATH="\$HOME/.local/bin:\$PATH"} a \texttt{\textasciitilde/.bashrc} y ejecuta \texttt{source \textasciitilde/.bashrc}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Debian Administrator's Handbook y páginas de manual: \texttt{bash}, \texttt{ip}, \texttt{systemctl}, \texttt{systemd.service}, \texttt{xdg-open} y \texttt{nano}.
+  \item Documentación de Node.js: módulo nativo \texttt{http} y método \texttt{server.listen}.
+  \item Documentación del hipervisor utilizado: adaptadores virtuales y modo de red puente.
+  \item Documentación oficial de Warp: instalación y configuración en Linux, \texttt{docs.warp.dev}.
+  \item Documentación oficial de Google Antigravity CLI: descripción, instalación y autenticación, \texttt{antigravity.google/docs/cli}.
+  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}.
+  \item Capturas proporcionadas en \texttt{Sesion05/diapos-imagenes}, simplificadas para la MV del laboratorio; ilustraciones de red virtual y alias/función.
+\end{itemize}
+\end{frame}
+
+\end{document}

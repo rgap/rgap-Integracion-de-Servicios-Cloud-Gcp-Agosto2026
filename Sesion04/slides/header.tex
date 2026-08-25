@@ -59,6 +59,7 @@
 \setbeamercolor{alertblock body}{fg=utpNegro,bg=utpRojo!7}
 \setbeamercolor{exampleblock title}{fg=white,bg=utpGris}
 \setbeamercolor{exampleblock body}{fg=utpNegro,bg=utpGris!8}
+\setbeamercolor{terminal}{fg=white,bg=utpNegro}
 
 \setbeamerfont{title}{series=\bfseries,size=\fontsize{19.5}{22.5}\selectfont}
 \setbeamerfont{subtitle}{size=\fontsize{11.5}{13.5}\selectfont}
@@ -129,6 +130,10 @@
 \newcommand{\marca}[1]{\tikz[baseline=(m.base)]{%
   \node[rounded corners=1.5pt,fill=utpGrisClaro,draw=utpGrisMedio,inner xsep=3pt,inner ysep=1.5pt,
         font=\footnotesize] (m) {#1};}}
+\newenvironment{terminal}{%
+  \begin{beamercolorbox}[wd=\linewidth,sep=5pt,rounded=true]{terminal}%
+  \ttfamily\small\ignorespaces}{%
+  \end{beamercolorbox}}
 
 \tikzset{
   caja/.style={draw=utpNegro, very thick, rounded corners=1.5pt, fill=white,

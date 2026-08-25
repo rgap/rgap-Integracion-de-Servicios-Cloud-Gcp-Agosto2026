@@ -1,9 +1,9 @@
-% Motor: XeLaTeX. Sesion 04 — material docente UTP.
+% Motor: XeLaTeX. Sesion 03 — material docente UTP.
 \documentclass[aspectratio=169,10pt,c]{beamer}
 \input{header.tex}
 
 \title{Integración de Servicios Cloud GCP}
-\subtitle{Monitoreo y troubleshooting en Linux}
+\subtitle{Linux, terminal e interfaces de red en una máquina virtual}
 \date{Semana 02 - Sesión 04}
 \author{Rel Guzman}
 
@@ -11,134 +11,726 @@
 
 {\setbeamertemplate{footline}{}\maketitle}
 
-\begin{frame}{Revisión de la sesión anterior}
-\begin{itemize}\setlength\itemsep{9pt}
-  \item ¿Qué diferencia hay entre terminal, shell y comando?
-  \item ¿Qué comandos muestran las interfaces, direcciones y rutas de Linux?
-  \item ¿Para qué sirven un alias y una función?
-  \item ¿Qué sucede con ellos cuando cierras la terminal?
-\end{itemize}
-\end{frame}
-
-\begin{frame}[c]
-\begin{block}{Logro de la sesión}
-Al finalizar, podrás monitorear \textbf{CPU, memoria, disco y procesos}, y aplicar un método ordenado de \textbf{troubleshooting} para delimitar una falla básica de conectividad mediante evidencia.
-\end{block}
-\end{frame}
-
-\begin{frame}{Saberes previos}
-\begin{itemize}\setlength\itemsep{10pt}
-  \item Si una aplicación funciona lentamente, ¿qué recurso revisarías primero?
-  \item ¿Una cifra alta siempre representa una falla?
-  \item Cuando ``no hay internet'', ¿qué prueba realizarías antes de cambiar la configuración?
-  \item ¿Cómo demostrarías que una corrección realmente funcionó?
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Utilidad de esta sesión}
-\begin{block}{¿Para qué te servirá lo aprendido?}
-Podrás observar el estado de una VM Linux, identificar el recurso o la capa de red relacionada con un síntoma y verificar una corrección sin depender de suposiciones.
-\end{block}
-\vspace{0.2cm}
-\small Es la misma disciplina que usarás con instancias de Compute Engine: medir, reunir evidencia, cambiar una sola variable y comprobar el resultado.
-\end{frame}
-
-\begin{frame}{Monitorear es medir antes de cambiar}
-\concepto{Monitoreo}{Observación del estado y del consumo de recursos para detectar tendencias, límites o comportamientos anómalos.}
+\begin{frame}{La máquina virtual ejecuta su propio sistema}
 \begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Recursos principales}
-\small CPU · memoria · almacenamiento · procesos · red · servicios · logs.
+\column{.47\textwidth}
+\begin{block}{Tres conceptos de la sesión anterior}
+\small
+\textbf{Anfitrión:} equipo físico que aporta CPU, memoria, disco y red.\par\medskip
+\textbf{Hipervisor:} programa que crea y administra máquinas virtuales.\par\medskip
+\textbf{Máquina virtual (MV):} computadora definida mediante software que recibe recursos del anfitrión.
 \end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Una fotografía y una película}
-\small \texttt{free -h} toma una fotografía. \texttt{top} actualiza datos continuamente y deja ver la evolución.
+\column{.49\textwidth}
+\begin{exampleblock}{Ejemplo completo}
+\small
+\textbf{Anfitrión:} laptop del estudiante.\par
+$\downarrow$\par
+\textbf{Hipervisor:} VirtualBox, VMware u otro disponible.\par
+$\downarrow$\par
+\textbf{Sistema invitado:} sistema operativo que inicia dentro de la MV.
 \end{exampleblock}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Estos comandos forman un kit inicial de monitoreo}
-\begin{center}
-\scriptsize
-\begin{tabular}{>{\bfseries}p{2.5cm}p{3.4cm}p{5.2cm}}
-\toprule
-Recurso & Comandos & Qué observar \\
-\midrule
-CPU y procesos & \texttt{top}, \texttt{ps aux} & carga, \%CPU, proceso responsable \\
-Memoria & \texttt{free -h}, \texttt{top} & disponible, usada, swap \\
-Disco & \texttt{df -h}, \texttt{du -sh} & partición llena, carpeta grande \\
-Red & \texttt{ip -s link}, \texttt{ss -tulpn} & errores, bytes, puertos \\
-Servicios & \texttt{systemctl --failed} & unidades que fallaron \\
-Logs & \texttt{journalctl -p err -b} & errores del arranque actual \\
-\bottomrule
-\end{tabular}
-\end{center}
-\vspace{0.15cm}
-\small Herramientas opcionales: \texttt{htop}, \texttt{iotop}, \texttt{vmstat}, \texttt{sar}. Primero domina las que suelen venir instaladas.
-\end{frame}
-
-\begin{frame}{Práctica 1: interpreta evidencia, no solo números \textnormal{\small(10 min)}}
-\begin{enumerate}\setlength\itemsep{6pt}\small
-  \item Abre la terminal de tu máquina con Ubuntu.
-  \item Ejecuta \texttt{uptime} y observa la carga del sistema.
-  \item Ejecuta \texttt{free -h} y revisa la memoria disponible.
-  \item Ejecuta \texttt{df -h} y revisa el espacio de la partición principal.
-  \item Ejecuta \texttt{ps aux --sort=-\%cpu | head} e identifica el proceso con mayor uso de CPU.
-  \item Escribe una conclusión: ``Observo..., por eso concluyo...''.
-\end{enumerate}
-\begin{alertblock}{Una cifra aislada no siempre es un problema}
-\small Linux usa memoria libre como caché. En \texttt{free -h}, observa especialmente la columna \textbf{available}; luego relaciona el dato con síntomas y procesos.
+\begin{frame}{El laboratorio está listo cuando Ubuntu abre la terminal}
+\begin{alertblock}{Ubuntu Desktop}
+\small Sistema Linux preparado para usar con escritorio gráfico. Puede ejecutarse directamente en el equipo o dentro de una máquina virtual.
 \end{alertblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Configuración sugerida para la MV}
+\small 4 GB de RAM · 2 núcleos asignados · 20 GB de disco · 1 dispositivo virtual de conexión con salida a internet.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Resultado completo esperado}
+\small
+$\checkmark$ Ubuntu muestra el escritorio.\par
+$\checkmark$ La aplicación Terminal abre.\par
+$\checkmark$ Conoces la contraseña del usuario.\par
+$\checkmark$ La MV tiene conexión de red.
+\end{exampleblock}
+\end{columns}
 \end{frame}
 
-\begin{frame}{Troubleshooting es un método para reducir incertidumbre}
-\concepto{Troubleshooting}{Proceso sistemático para identificar la causa de una falla, comprobarla con evidencia, aplicar una corrección y verificar el resultado.}
-\begin{center}
-\small\bfseries Síntoma $\rightarrow$ alcance $\rightarrow$ hipótesis $\rightarrow$ prueba $\rightarrow$ cambio $\rightarrow$ verificación
-\end{center}
-\begin{exampleblock}{La diferencia clave}
-\small Reiniciar puede ocultar un síntoma; diagnosticar explica la causa. Un cambio sin evidencia puede crear una segunda falla.
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás usar la aplicación Terminal de Ubuntu para identificar el sistema, desplazarte entre carpetas, consultar la configuración básica de red y reutilizar instrucciones, comprobando el resultado de cada acción.
+\end{block}
+\end{frame}
+
+\begin{frame}{Linux administra recursos; Ubuntu lo entrega listo}
+\begin{description}[Distribución]\small
+  \item[Sistema operativo] Conjunto de programas que permite utilizar el hardware y ejecutar aplicaciones.
+  \item[Kernel] Núcleo del sistema operativo: coordina CPU, memoria, disco, red y dispositivos.
+  \item[Unix] Familia de sistemas operativos iniciada en 1969; popularizó usuarios, reglas de acceso (permisos), programas en ejecución (procesos) y un árbol único de archivos.
+  \item[Linux] Kernel libre creado en 1991 que sigue muchas ideas de Unix. Osea Unix no era libre.
+  \item[Distribución] Sistema listo para instalar: reúne Linux, aplicaciones, instalador, actualizaciones y configuración.
+\end{description}
+\begin{exampleblock}{Ejemplo}
+\small Ubuntu es una \textbf{distribución}; utiliza el \textbf{kernel Linux} para administrar los recursos del equipo.
 \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Práctica 2: diagnostica la red por capas \textnormal{\small(12 min)}}
-\begin{alertblock}{Caso}
-\small La máquina con Ubuntu no puede abrir páginas web. Descubre en qué punto se interrumpe la conexión.
-\end{alertblock}
-\begin{enumerate}\setlength\itemsep{4pt}\small
-  \item \textbf{¿Existe y está activa?} \texttt{ip -br link}
-  \item \textbf{¿Tiene dirección?} \texttt{ip -br addr}
-  \item \textbf{¿Tiene ruta por defecto?} \texttt{ip route}
-  \item \textbf{¿Llega al gateway?} \texttt{ping -c 3 <gateway>}
-  \item \textbf{¿Llega a internet por IP?} \texttt{ping -c 3 8.8.8.8}
-  \item \textbf{¿Resuelve nombres?} \texttt{getent hosts google.com}
-  \item \textbf{¿El servicio responde?} \texttt{curl -I https://example.com}
-\end{enumerate}
-\small La primera prueba que falla delimita la capa donde conviene investigar.
+\begin{frame}{La distribución añade aplicaciones sobre el kernel}
+\begin{columns}[c,onlytextwidth]
+\column{.61\textwidth}
+\includegraphics[width=\linewidth]{linux-capas.png}
+\column{.35\textwidth}
+\begin{exampleblock}{}
+\small
+\textbf{Arriba:} Ubuntu agrega escritorio, archivos, navegador, aplicaciones y terminal.\par\medskip
+\textbf{Centro:} Linux coordina esos recursos.\par\medskip
+\textbf{Abajo:} hardware — CPU, memoria, disco y red.
+\end{exampleblock}
+\end{columns}
 \end{frame}
 
-\begin{frame}{Confusiones frecuentes: aclaremos antes de cerrar}
+\begin{frame}{Unix y Linux comparten ideas, no el mismo origen}
+\begin{center}
 \small
-\begin{tabular}{>{\bfseries}p{4.8cm}p{6.1cm}}
+\begin{tabular}{>{\bfseries}p{3.1cm}p{3.9cm}p{4.0cm}}
 \toprule
-Confusión & Aclaración \\
+Aspecto & Unix & Linux \\
 \midrule
-Una cifra alta siempre es una falla & Relaciona la cifra con el contexto, los procesos y los síntomas. \\
-Memoria ``used'' alta siempre es falla & Revisa \texttt{available}, swap, procesos y síntomas. \\
-Un solo comando explica todo & Contrasta varias mediciones y delimita el alcance. \\
-Troubleshooting es probar soluciones & Primero reúne evidencia y comprueba una posible causa. \\
-Reiniciar demuestra que se corrigió & Repite la prueba inicial y confirma que el síntoma desapareció. \\
+Origen & Bell Labs, 1969 & Linus Torvalds, 1991 \\
+Qué era al inicio & Sistema operativo completo & Kernel \\
+Uso actual & El Unix original ya no se usa; existen sistemas derivados y sistemas que cumplen el estándar UNIX & Kernel de muchas distribuciones GNU/Linux \\
+Ejemplos & AIX, HP-UX y macOS & Ubuntu, Debian, Mint y Kali usan Linux \\
 \bottomrule
 \end{tabular}
+\end{center}
+\begin{alertblock}{Resultado de la comparación}
+\small Linux no es una versión de Unix: es otro kernel que adoptó muchas de sus ideas y formas de trabajo.
+\end{alertblock}
 \end{frame}
 
-\begin{frame}{Ahora puedes responder las preguntas de salida}
-\begin{enumerate}\setlength\itemsep{7pt}\small
-  \item \textbf{¿Qué comandos monitorean Linux?} \texttt{uptime} para carga, \texttt{free -h} para memoria, \texttt{df -h} para disco y \texttt{top} o \texttt{ps} para procesos.
-  \item \textbf{¿Qué es troubleshooting?} Un proceso ordenado para observar una falla, reunir evidencia, comprobar una posible causa, corregirla y verificar el resultado.
-  \item \textbf{¿Cómo se diagnostica la red?} Desde la interfaz y la dirección IP hacia la ruta, el gateway, DNS y el servicio.
-  \item \textbf{¿Cómo se valida una corrección?} Repitiendo la prueba que evidenció la falla y confirmando el resultado esperado.
+\begin{frame}{Paquete y gestor de paquetes}
+\begin{block}{Dos definiciones antes del ejemplo}
+\small Un \textbf{paquete} es un archivo que contiene un programa y la información necesaria para instalarlo. Un \textbf{gestor de paquetes} instala, actualiza o elimina esos paquetes.
+\end{block}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.6cm}p{4.3cm}p{3.8cm}}
+\toprule
+Familia & Distribuciones & Paquete y gestor \\
+\midrule
+Debian & Debian, Ubuntu, Mint, Kali & \texttt{.deb}; \texttt{apt} y \texttt{dpkg} \\
+Red Hat & RHEL, Fedora, Rocky, AlmaLinux & \texttt{.rpm}; \texttt{dnf} y \texttt{rpm} \\
+Arch / SUSE & Arch, Manjaro, openSUSE & \texttt{pacman} / \texttt{zypper} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\small\textbf{Resultado para el laboratorio:} Ubuntu pertenece a la familia Debian; por eso trabajaremos con paquetes \texttt{.deb} y el gestor \texttt{apt}.
+\end{frame}
+
+\begin{frame}{Ubuntu recibe programas en archivos \texttt{.deb}}
+\begin{block}{Definiciones necesarias}
+\small Un \textbf{archivo \texttt{.deb}} es el formato de paquete usado por Debian y Ubuntu. Los \textbf{metadatos} describen el paquete. Una \textbf{dependencia} es otro paquete necesario. La \textbf{arquitectura} indica el tipo de equipo compatible.
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.44\textwidth}
+\includegraphics[width=\linewidth]{paquete-deb.png}
+\column{.50\textwidth}
+\begin{exampleblock}{Así se ve el nombre del archivo}
+\centering\large\texttt{nano\_7.2\_amd64.deb}
+\end{exampleblock}
+\small
+\begin{tabular}{>{\bfseries}p{1.7cm}p{3.9cm}}
+\texttt{nano} & nombre del programa \\
+\texttt{7.2} & versión del paquete \\
+\texttt{amd64} & arquitectura de 64 bits \\
+\texttt{.deb} & formato de Debian y Ubuntu \\
+\end{tabular}
+\begin{alertblock}{Qué contiene}
+\scriptsize Metadatos —nombre, versión y dependencias—, archivos del programa y documentación.
+\end{alertblock}
+\end{columns}
+\small\textbf{Resultado:} Ubuntu reconoce el archivo \texttt{.deb} porque pertenece a la familia Debian.
+\end{frame}
+
+\begin{frame}{Primero inicia la máquina virtual}
+\begin{block}{Punto de partida}
+\large La MV puede contener una instalación reciente de Ubuntu o un sistema que ya fue utilizado.
+\end{block}
+\begin{alertblock}{Índice local}
+\small Catálogo que Ubuntu guarda en la MV con los paquetes y versiones disponibles en los repositorios configurados.
+\end{alertblock}
+\begin{enumerate}\setlength\itemsep{9pt}\large
+  \item Inicia la MV.
+  \item Espera hasta que aparezca el escritorio de Ubuntu.
+  \item Como primera tarea, actualiza el índice local.
 \end{enumerate}
+\begin{exampleblock}{Siguiente acción}
+\small La próxima diapositiva muestra la instrucción y el resultado esperado de la actualización.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Primer inicio: actualiza el índice con \texttt{apt}}
+\begin{block}{Definiciones necesarias}
+\small Un \textbf{repositorio} es un servidor que almacena paquetes. El \textbf{índice local} es el catálogo de paquetes que Ubuntu guarda en la MV. \texttt{sudo} ejecuta una instrucción con permisos de administración.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.38\textwidth}
+\begin{block}{Qué ocurre}
+\begin{enumerate}\small
+  \item Ejecutas \texttt{sudo apt update}.
+  \item \texttt{apt} consulta los repositorios configurados.
+  \item Ubuntu renueva su índice local de paquetes.
+\end{enumerate}
+\end{block}
+\column{.58\textwidth}
+\begin{exampleblock}{Ejemplo y resultado esperado}
+\begin{terminal}
+\small sudo apt update\\
+Obj:1 archive.ubuntu.com ubuntu InRelease\\
+Leyendo lista de paquetes... Hecho\\
+Creando árbol de dependencias... Hecho\\
+Todos los paquetes están actualizados.
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\small\textbf{Comprobación:} las tareas de lectura y dependencias muestran \texttt{Hecho}. Las líneas pueden variar según Ubuntu y los repositorios configurados.
+\end{frame}
+
+\begin{frame}{¿Por qué actualizar el índice antes de instalar?}
+\begin{block}{Tres definiciones para el ejemplo}
+\small \textbf{Node.js} ejecuta JavaScript fuera del navegador. \textbf{npm} gestiona paquetes para proyectos Node.js. Una \textbf{API} es un servicio que recibe solicitudes y devuelve datos o resultados.
+\end{block}
+\begin{alertblock}{La razón}
+\small \texttt{apt} consulta el índice local para localizar versiones disponibles y sus dependencias. Al actualizarlo primero, evita buscar información antigua antes de una instalación.
+\end{alertblock}
+\begin{columns}[T,onlytextwidth]
+\column{.39\textwidth}
+\begin{block}{Para una API}
+\begin{enumerate}\small
+  \item Actualiza el índice local.
+  \item Instala \texttt{nodejs} y \texttt{npm}.
+  \item Comprueba ambas versiones.
+\end{enumerate}
+\end{block}
+\footnotesize\textbf{Resultado:} la MV dispone del entorno y del gestor necesarios para preparar una API con Node.js.
+\column{.57\textwidth}
+\begin{exampleblock}{Instalación y resultado esperado}
+\begin{terminal}
+\scriptsize sudo apt install nodejs npm\\
+¿Desea continuar? [S/n] s\\
+Configurando nodejs (...) ...\\
+Configurando npm (...) ...\\
+node --version\\
+v18.x.x\\
+npm --version\\
+9.x.x
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Ejecutando comandos}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Terminal y shell conectan la entrada con el resultado}
+\begin{block}{Dos definiciones antes del ejemplo}
+\small La \textbf{Terminal} es la aplicación donde escribes instrucciones y lees resultados. La \textbf{shell} es el programa que interpreta cada instrucción y solicita su ejecución.
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.52\textwidth}
+\includegraphics[width=\linewidth]{terminal-flujo.png}
+\column{.44\textwidth}
+\begin{exampleblock}{Resultado completo}
+\small \texttt{whoami} es el comando que solicita el nombre del usuario actual. La shell lo interpreta y la terminal muestra el resultado.
+\end{exampleblock}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ whoami\\
+rgap\\
+rgap@ubuntu:\textasciitilde\$
+\end{terminal}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Una línea distingue cuatro elementos}
+\small El \textbf{prompt} aparece antes de escribir. La \textbf{instrucción} comienza con el comando y puede incluir una opción y un argumento.
+\begin{center}
+\begin{tikzpicture}[node distance=1.6mm]
+  \node[caja,fill=utpGrisClaro,minimum width=4.0cm] (p) {\texttt{rgap@ubuntu:\textasciitilde\$}};
+  \node[caja,fill=utpRojo!12,minimum width=2.0cm,right=of p] (c) {\texttt{ls}};
+  \node[caja,fill=utpGrisClaro,minimum width=2.0cm,right=of c] (o) {\texttt{-a}};
+  \node[caja,fill=utpRojo!12,minimum width=2.4cm,right=of o] (a) {\texttt{/etc}};
+
+  \node[below=4mm of p,text width=3.6cm,align=center,font=\small] {\textbf{Prompt}\\Texto previo que identifica usuario, equipo y ubicación.};
+  \node[below=4mm of c,text width=2.4cm,align=center,font=\small] {\textbf{Comando}\\Acción que se solicita: listar.};
+  \node[below=4mm of o,text width=2.4cm,align=center,font=\small] {\textbf{Opción}\\Cambia cómo actúa el comando.};
+  \node[below=4mm of a,text width=2.7cm,align=center,font=\small] {\textbf{Argumento}\\Dato sobre el que actúa: \texttt{/etc}.};
+\end{tikzpicture}
+\end{center}
+\begin{exampleblock}{Lectura completa}
+\small El prompt indica dónde estás. La instrucción \texttt{ls -a /etc} solicita el contenido de \texttt{/etc}, incluidos los elementos ocultos.
+\end{exampleblock}
+\end{frame}
+
+
+
+\begin{frame}{El sistema de archivos organiza todo desde una raíz}
+\begin{description}[Ruta relativa]\small
+  \item[Sistema de archivos] Forma en que Linux organiza directorios y archivos.
+  \item[Directorio] Contenedor que puede guardar archivos y otros directorios.
+  \item[Raíz \texttt{/}] Punto inicial del árbol completo.
+  \item[Ruta absoluta] Ubicación que comienza en \texttt{/}; no depende del directorio actual.
+  \item[Ruta relativa] Ubicación calculada desde el directorio actual.
+  \item[Directorio personal] Espacio del usuario, representado también por \texttt{\textasciitilde}.
+\end{description}
+\begin{exampleblock}{Ejemplo}
+\small Absoluta: \texttt{/home/rgap/Documentos} · relativa desde \texttt{/home/rgap}: \texttt{Documentos}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Cada rama del árbol cumple una función}
+\begin{columns}[c,onlytextwidth]
+\column{.61\textwidth}
+\includegraphics[width=\linewidth]{sistema-archivos.png}
+\column{.35\textwidth}
+\begin{exampleblock}{Resultado completo}
+\small
+\texttt{/home}: archivos personales.\par
+\texttt{/etc}: configuración.\par
+\texttt{/var}: datos variables y registros de eventos (logs).\par
+\texttt{/tmp}: archivos temporales.\par
+\texttt{/usr/bin}: programas y comandos.\par\medskip
+Todos descienden de la raíz \texttt{/}.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{\texttt{pwd}: muestra la ubicación actual}
+\begin{block}{Definición}
+\large \texttt{pwd} muestra la ruta completa del directorio en el que estás trabajando.
+\end{block}
+\begin{exampleblock}{Ejemplo y resultado completo}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ pwd\\
+/home/rgap
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Cómo comprobarlo}
+\small La salida comienza con \texttt{/}; por eso es una ruta absoluta. En este ejemplo, corresponde al directorio personal de \texttt{rgap}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{ls -a}: muestra también los elementos ocultos}
+\begin{block}{Dos definiciones}
+\small \texttt{ls} lista el contenido del directorio actual. La opción \texttt{-a} incluye los nombres ocultos. Un \textbf{repositorio Git} es un directorio cuyo historial y configuración se guardan en el directorio oculto \texttt{.git}.
+\end{block}
+\begin{exampleblock}{Ejemplo en el directorio de una API}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde/api-repo\$ ls -a\\
+.\quad ..\quad .git\quad .gitignore\quad README.md\\
+package.json\quad src
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Resultado}
+\small \texttt{.git} confirma que el directorio es un repositorio Git. \texttt{.} representa la ubicación actual y \texttt{..}, la ubicación superior.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{mkdir}: crea un directorio}
+\begin{block}{Definición}
+\large \texttt{mkdir} crea un directorio nuevo dentro de la ubicación actual.
+\end{block}
+\begin{exampleblock}{Ejemplo y comprobación}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ mkdir api\\
+rgap@ubuntu:\textasciitilde\$ ls -a\\
+.\quad ..\quad api
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Resultado}
+\small \texttt{mkdir api} no imprime una confirmación cuando funciona. El resultado se comprueba porque \texttt{api} aparece en el listado.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{cd}: cambia la ubicación actual}
+\begin{block}{Definición}
+\large \texttt{cd} cambia la ubicación actual al directorio indicado como argumento.
+\end{block}
+\begin{exampleblock}{Ejemplo y resultado completo}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ cd api\\
+rgap@ubuntu:\textasciitilde/api\$ pwd\\
+/home/rgap/api
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Cómo comprobarlo}
+\small El prompt cambia a \texttt{\textasciitilde/api} y \texttt{pwd} confirma la nueva ruta completa.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{cat}: muestra el contenido de un archivo}
+\begin{block}{Definición}
+\large \texttt{cat} lee un archivo y muestra su contenido como salida.
+\end{block}
+\begin{exampleblock}{Ejemplo en un repositorio Git}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde/api-repo\$ cat README.md\\
+\# API del curso\\
+Servicio de ejemplo con Node.js
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Resultado}
+\small La salida coincide con el texto guardado en \texttt{README.md}; el archivo no se modifica.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Otros comandos identifican usuario, equipo y versión}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{description}[\texttt{cat /etc/os-release}]\small
+  \item[\texttt{whoami}] Usuario actual.
+  \item[\texttt{hostname}] Nombre del equipo.
+  \item[\texttt{cat /etc/os-release}] Distribución y versión.
+  \item[\texttt{uname -a}] Kernel, nombre del equipo y arquitectura.
+\end{description}
+\column{.50\textwidth}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ whoami\\
+rgap\\
+rgap@ubuntu:\textasciitilde\$ hostname\\
+ubuntu\\
+rgap@ubuntu:\textasciitilde\$ uname -a\\
+Linux ubuntu 6.8.0 x86\_64 GNU/Linux
+\end{terminal}
+\end{columns}
+\vspace{3mm}
+\small\textbf{Resultado:} ya puedes demostrar quién usa la MV, cómo se llama y qué kernel ejecuta.
+\end{frame}
+
+\begin{frame}{Práctica 1A: identifica el sistema \textnormal{\small(5 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Ejecuta \texttt{whoami}, \texttt{hostname} y \texttt{cat /etc/os-release}.
+  \item Crea primero \texttt{\textasciitilde/curso\_cloud} y después \texttt{sesion03} con \texttt{mkdir}.
+\end{enumerate}
+\column{.48\textwidth}
+\begin{exampleblock}{Resultado completo esperado}
+\begin{terminal}
+\$ whoami\\
+rgap\\
+\$ hostname\\
+ubuntu\\
+\$ cat /etc/os-release\\
+NAME="Ubuntu"\\
+VERSION="24.04 LTS"\\
+\$ mkdir \textasciitilde/curso\_cloud\\
+\$ mkdir \textasciitilde/curso\_cloud/sesion03
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Seguridad}
+\small Comprende cada comando y confirma la ruta. No uses \texttt{sudo} —ejecución con privilegios administrativos— ni comandos de borrado sin saber qué cambiarán.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Práctica 1B: guarda la evidencia \textnormal{\small(5 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.43\textwidth}
+\begin{enumerate}\setlength\itemsep{6pt}\small
+  \item Ingresa con \texttt{cd}.
+  \item Confirma la ruta con \texttt{pwd}.
+  \item Guarda \texttt{uname -a > evidencia.txt}.
+  \item Revisa el archivo con \texttt{cat evidencia.txt}.
+\end{enumerate}
+\column{.53\textwidth}
+\begin{exampleblock}{Resultado completo esperado}
+\begin{terminal}
+\$ cd \textasciitilde/curso\_cloud/sesion03\\
+\$ pwd\\
+/home/rgap/curso\_cloud/sesion03\\
+\$ uname -a > evidencia.txt\\
+\$ cat evidencia.txt\\
+Linux ubuntu 6.8.0 x86\_64 GNU/Linux
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\vspace{3mm}
+\small\textbf{Comprobación:} el archivo \texttt{evidencia.txt} existe en la ruta mostrada y contiene la salida de \texttt{uname -a}.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Interfaces de red}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Una interfaz de red permite que Ubuntu se comunique}
+\begin{block}{Definición inicial}
+\small Una \textbf{interfaz de red} es la parte que Ubuntu usa para comunicarse con otros equipos.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Cómo reconocerla}
+\small Ubuntu le asigna un nombre. En nuestra MV veremos \texttt{ens160}.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Qué ocurre por ella}
+\small Por la interfaz salen solicitudes y regresan respuestas.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Ejemplo sencillo}
+\small Al abrir un sitio web, la solicitud sale de Ubuntu por \texttt{ens160} y la respuesta regresa por esa misma interfaz.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{El adaptador virtual enlaza la MV con la red externa}
+\begin{columns}[c,onlytextwidth]
+\column{.64\textwidth}
+\includegraphics[width=\linewidth]{mv-red.png}
+\column{.32\textwidth}
+\begin{exampleblock}{}
+\small
+1. La MV usa su interfaz.\par
+2. El adaptador virtual entrega el tráfico al hipervisor.\par
+3. El router permite salir de la red local.\par
+4. La conexión alcanza internet.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El resultado de \texttt{ip a} muestra dos interfaces}
+\begin{columns}[T,onlytextwidth]
+\column{.54\textwidth}
+\begin{exampleblock}{Líneas principales del resultado}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ ip a\\
+1: lo\\
+\quad inet 127.0.0.1/8 scope host lo\\
+2: ens160\\
+\quad inet 192.168.35.151/24\\
+\quad scope global dynamic ens160
+\end{terminal}
+\end{exampleblock}
+\column{.42\textwidth}
+\begin{description}[\texttt{ens160}]\small
+  \item[\texttt{ip a}] Lista interfaces y direcciones.
+  \item[\texttt{lo}] Interfaz interna del propio Ubuntu.
+  \item[\texttt{ens160}] Conecta la MV con la red.
+  \item[\texttt{inet}] Presenta una dirección IPv4: cuatro números separados por puntos.
+  \item[\texttt{/24}] Indica la parte que identifica la red local.
+\end{description}
+\end{columns}
+\begin{alertblock}{Qué significa este resultado}
+\small \texttt{state UP}: \texttt{ens160} está activa. \texttt{dynamic}: su dirección fue asignada automáticamente. \texttt{UNKNOWN} en \texttt{lo} no es un error: no hay una conexión externa que comprobar porque \texttt{lo} funciona dentro de Ubuntu y no depende de un cable ni del adaptador virtual.
+\end{alertblock}
+\scriptsize Otros campos: \texttt{link/ether} = dirección del adaptador; \texttt{mtu}, \texttt{qdisc} y \texttt{qlen} = transmisión de datos; \texttt{inet6} = dirección IP más larga; \texttt{valid\_lft} = tiempo de validez.
+\end{frame}
+
+\begin{frame}{Tu MV muestra dos interfaces: \texttt{lo} y \texttt{ens160}}
+\begin{block}{Una es interna y la otra conecta con la red}
+\small El resultado de \texttt{ip a} presenta dos interfaces con funciones diferentes.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{\texttt{lo}: comunicación interna}
+\small
+Dirección: \texttt{127.0.0.1/8}.\par
+Ubuntu la usa para comunicarse consigo mismo. No conecta la MV con otros equipos.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{\texttt{ens160}: comunicación con la red}
+\small
+Dirección: \texttt{192.168.35.151/24}.\par
+Es la interfaz que permite que la MV se comunique con la red externa.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Lectura correcta del resultado}
+\small Aunque \texttt{ip a} muestra dos interfaces, solo \texttt{ens160} conecta la MV con la red externa. \texttt{lo} funciona únicamente dentro de Ubuntu.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ruta, puerta de enlace y DNS describen el camino}
+\begin{description}[Puerta de enlace]\small
+  \item[Ruta] Regla que indica por dónde debe enviarse el tráfico hacia un destino.
+  \item[Puerta de enlace] Router que permite salir de la red local; también se denomina \emph{gateway}.
+  \item[DNS] Servicio que traduce nombres, como \texttt{example.com}, a direcciones IP.
+\end{description}
+\begin{exampleblock}{Ejemplo completo}
+\small En este laboratorio, la MV \texttt{192.168.35.151/24} sale mediante \emph{Share with my Mac}. La Mac usa \texttt{192.168.100.140/24} en el Wi-Fi y su puerta de enlace es \texttt{192.168.100.1}. El DNS resuelve el nombre del sitio antes de iniciar la conexión.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{La MV llega a internet a través de la Mac}
+\begin{block}{NAT conecta las dos redes}
+\small \textbf{NAT} significa traducción de direcciones de red. En \emph{Share with my Mac}, la Mac recibe el tráfico de la red virtual y lo envía por su conexión Wi-Fi usando su propia dirección.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[
+  flowbox/.style={draw=utpRojo,fill=utpGris!8,rounded corners=2pt,align=center,minimum height=1.55cm,font=\scriptsize},
+  flowarrow/.style={-{Latex[length=2.5mm]},very thick,draw=utpRojo}
+]
+\node[flowbox,text width=2.25cm] (vm) {\textbf{MV Ubuntu}\\\texttt{ens160}\\\texttt{192.168.35.151/24}};
+\node[flowbox,text width=2.35cm,right=5mm of vm] (nat) {\textbf{NAT en la Mac}\\\emph{Share with my Mac}\\traduce la dirección};
+\node[flowbox,text width=2.35cm,right=5mm of nat] (wifi) {\textbf{Wi-Fi de la Mac}\\\texttt{192.168.100.140/24}};
+\node[flowbox,text width=2.05cm,right=5mm of wifi] (router) {\textbf{Router}\\\texttt{192.168.100.1}};
+\node[flowbox,text width=1.45cm,right=5mm of router] (internet) {\textbf{Internet}};
+\draw[flowarrow] (vm) -- (nat);
+\draw[flowarrow] (nat) -- (wifi);
+\draw[flowarrow] (wifi) -- (router);
+\draw[flowarrow] (router) -- (internet);
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Flujo completo}
+\small El DNS convierte el nombre del sitio en una IP. La solicitud sale por \texttt{ens160}, la Mac aplica NAT, el Wi-Fi la entrega al router y el router la envía a internet. La respuesta regresa por el camino inverso hasta la MV.
+\end{alertblock}
+\scriptsize La captura no muestra el servidor DNS ni la dirección pública utilizada por el router; por eso no se asignan valores a esos datos.
+\end{frame}
+
+\begin{frame}{Alias y función reducen instrucciones repetidas}
+\begin{columns}[c,onlytextwidth]
+\column{.56\textwidth}
+\includegraphics[width=\linewidth]{alias-funcion.png}
+\column{.40\textwidth}
+\begin{block}{Alias}
+\small Nombre corto que representa \textbf{un comando} con sus opciones. Ejemplo: \texttt{o} puede representar \texttt{xdg-open .}.
+\end{block}
+\begin{exampleblock}{Función}
+\small Nombre que agrupa \textbf{uno o varios comandos} ejecutados en orden. Forma: \texttt{nombre() \{ comandos; \}}.
+\end{exampleblock}
+\begin{alertblock}{Duración en esta práctica}
+\small Ambos existen solo en la terminal actual. Al cerrarla, desaparecen.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Bash y Zsh son shells; \texttt{\$SHELL} indica la configurada}
+\begin{block}{Variable de entorno}
+\small Dato con nombre que la shell conserva para describir la sesión. \texttt{SHELL} guarda la ubicación completa de la shell configurada. El comando \texttt{echo} muestra un texto o el valor de una variable.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Bash en Ubuntu}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ echo \$SHELL\\
+/bin/bash
+\end{terminal}
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Zsh en otra cuenta}
+\begin{terminal}
+rel@equipo:\textasciitilde\$ echo \$SHELL\\
+/bin/zsh
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\small\textbf{Resultado:} ambas son shells; la salida permite reconocer cuál está configurada.
+\end{frame}
+
+\begin{frame}{\texttt{xdg-open .} abre la carpeta actual en Ubuntu}
+\begin{block}{Dos elementos antes de crear el alias}
+\small \texttt{xdg-open} solicita a Ubuntu abrir un elemento con la aplicación gráfica predeterminada. El punto \texttt{.} representa el directorio actual.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Comando completo}
+\begin{terminal}
+rgap@ubuntu:\textasciitilde\$ pwd\\
+/home/rgap\\
+rgap@ubuntu:\textasciitilde\$ xdg-open .
+\end{terminal}
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{alertblock}{Resultado visible}
+\small Ubuntu abre la aplicación \textbf{Archivos} y muestra el contenido de \texttt{/home/rgap}, que era el directorio actual.
+\end{alertblock}
+\end{columns}
+\vspace{4mm}
+\small\textbf{Idea del alias:} escribir \texttt{o} será más rápido que repetir \texttt{xdg-open .}.
+\end{frame}
+
+\begin{frame}{Práctica 2: crea un alias y una función \textnormal{\small(12 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Confirma la shell con \texttt{echo \$SHELL}.
+  \item Crea \texttt{alias o='xdg-open .'}.
+  \item Ejecuta \texttt{o} y confirma que se abra \textbf{Archivos}.
+  \item Crea \texttt{info() \{ whoami; hostname; pwd; \}}.
+  \item Ejecuta \texttt{info}.
+\end{enumerate}
+\column{.50\textwidth}
+\begin{exampleblock}{Resultado completo esperado}
+\begin{terminal}\$ echo \$SHELL\\
+/bin/bash\\
+\$ alias o='xdg-open .'\\
+\$ o\\
+Se abre la carpeta actual en Archivos\\
+\$ info() \{ whoami; hostname; pwd; \}\\
+\$ info\\
+rgap\\
+ubuntu\\
+/home/rgap/curso\_cloud/sesion03
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Comprobación final}
+\small \texttt{o} abre la carpeta actual en Archivos; \texttt{info} devuelve usuario, equipo y ruta, en ese orden.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{.bashrc} conserva alias y funciones}
+\begin{block}{Archivo de configuración de Bash}
+\small \texttt{.bashrc} es un archivo oculto ubicado en el directorio personal. Bash lee sus instrucciones cada vez que inicia una terminal interactiva.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Solo en la terminal actual}
+\small Si creas \texttt{o} e \texttt{info} directamente en la terminal, desaparecen cuando la cierras.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Guardados en \texttt{.bashrc}}
+\small Si escribes allí el alias y la función, Bash vuelve a crearlos al abrir cada terminal nueva.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Dos comandos que utilizaremos}
+\small \texttt{nano \textasciitilde/.bashrc} abre el archivo en un editor de texto. \texttt{source \textasciitilde/.bashrc} vuelve a leerlo sin cerrar la terminal actual.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Práctica 3: guarda los atajos en \texttt{.bashrc} \textnormal{\small(12 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.43\textwidth}
+\begin{enumerate}\setlength\itemsep{4pt}\small
+  \item Abre el archivo con \texttt{nano \textasciitilde/.bashrc}.
+  \item Agrega el alias \texttt{o} y la función \texttt{info} al final.
+  \item Guarda con \texttt{Ctrl+O}, confirma con \texttt{Enter} y sal con \texttt{Ctrl+X}.
+  \item Ejecuta \texttt{source \textasciitilde/.bashrc}.
+  \item Prueba \texttt{o} e \texttt{info}.
+\end{enumerate}
+\column{.53\textwidth}
+\begin{exampleblock}{Contenido y resultado esperado}
+\begin{terminal}
+\$ nano \textasciitilde/.bashrc\\
+alias o='xdg-open .'\\
+info() \{ whoami; hostname; pwd; \}\\
+\$ source \textasciitilde/.bashrc\\
+\$ o\\
+Se abre la carpeta actual en Archivos\\
+\$ info\\
+rgap\\
+ubuntu\\
+/home/rgap/curso\_cloud/sesion03
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\small\textbf{Comprobación:} abre una terminal nueva y ejecuta \texttt{o} e \texttt{info}; ambos deben seguir disponibles.
 \end{frame}
 
 \begin{frame}[plain]
@@ -151,8 +743,10 @@ Reiniciar demuestra que se corrigió & Repite la prueba inicial y confirma que e
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{4pt}
-  \item Debian Administrator's Handbook y páginas de manual: \texttt{ip}, \texttt{ss}, \texttt{free}, \texttt{top}, \texttt{df}, \texttt{systemctl} y \texttt{journalctl}.
-  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}, diapositivas de monitoreo y troubleshooting reorganizadas para esta sesión.
+  \item Debian Administrator's Handbook y páginas de manual: \texttt{bash}, \texttt{pwd}, \texttt{ls}, \texttt{mkdir}, \texttt{cd}, \texttt{cat}, \texttt{uname}, \texttt{ip}, \texttt{xdg-open} y \texttt{nano}.
+  \item Documentación del hipervisor utilizado: límites de hardware virtual y modos de red disponibles.
+  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}.
+  \item Ilustraciones educativas generadas para esta sesión: capas de Linux, flujo de terminal, sistema de archivos, red virtual y alias/función.
 \end{itemize}
 \end{frame}
 
