@@ -3,7 +3,7 @@
 \input{header.tex}
 
 \title{Integración de Servicios Cloud GCP}
-\subtitle{Linux, terminal e interfaces de red en una máquina virtual}
+\subtitle{Linux, terminal y sistema de archivos en una máquina virtual}
 \date{Semana 02 - Sesión 04}
 \author{Rel Guzman}
 
@@ -54,7 +54,7 @@ $\checkmark$ La MV tiene conexión de red.
 
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
-Al finalizar, podrás usar la aplicación Terminal de Ubuntu para identificar el sistema, desplazarte entre carpetas, consultar la configuración básica de red y reutilizar instrucciones, comprobando el resultado de cada acción.
+Al finalizar, podrás usar la aplicación Terminal de Ubuntu para identificar el sistema, instalar programas, desplazarte entre carpetas y guardar evidencias, comprobando el resultado de cada acción.
 \end{block}
 \end{frame}
 
@@ -414,7 +414,7 @@ Linux ubuntu 6.8.0 x86\_64 GNU/Linux
 \column{.48\textwidth}
 \begin{enumerate}\setlength\itemsep{4pt}\small
   \item Ejecuta \texttt{whoami}, \texttt{hostname} y \texttt{cat /etc/os-release}.
-  \item Crea primero \texttt{\textasciitilde/curso\_cloud} y después \texttt{sesion03} con \texttt{mkdir}.
+  \item Crea primero \texttt{\textasciitilde/curso\_cloud} y después \texttt{sesion04} con \texttt{mkdir}.
 \end{enumerate}
 \column{.48\textwidth}
 \begin{exampleblock}{Resultado completo esperado}
@@ -427,7 +427,7 @@ ubuntu\\
 NAME="Ubuntu"\\
 VERSION="24.04 LTS"\\
 \$ mkdir \textasciitilde/curso\_cloud\\
-\$ mkdir \textasciitilde/curso\_cloud/sesion03
+\$ mkdir \textasciitilde/curso\_cloud/sesion04
 \end{terminal}
 \end{exampleblock}
 \end{columns}
@@ -443,14 +443,14 @@ VERSION="24.04 LTS"\\
   \item Ingresa con \texttt{cd}.
   \item Confirma la ruta con \texttt{pwd}.
   \item Guarda \texttt{uname -a > evidencia.txt}.
-  \item Revisa el archivo con \texttt{cat evidencia.txt}.
+  \item Revisa el archivo con \texttt{cat}.
 \end{enumerate}
 \column{.53\textwidth}
 \begin{exampleblock}{Resultado completo esperado}
 \begin{terminal}
-\$ cd \textasciitilde/curso\_cloud/sesion03\\
+\$ cd \textasciitilde/curso\_cloud/sesion04\\
 \$ pwd\\
-/home/rgap/curso\_cloud/sesion03\\
+/home/rgap/curso\_cloud/sesion04\\
 \$ uname -a > evidencia.txt\\
 \$ cat evidencia.txt\\
 Linux ubuntu 6.8.0 x86\_64 GNU/Linux
@@ -461,277 +461,6 @@ Linux ubuntu 6.8.0 x86\_64 GNU/Linux
 \small\textbf{Comprobación:} el archivo \texttt{evidencia.txt} existe en la ruta mostrada y contiene la salida de \texttt{uname -a}.
 \end{frame}
 
-\begin{frame}[plain]
-\vfill
-\begin{center}
-{\fontsize{29}{34}\selectfont\bfseries Interfaces de red}\par
-\vspace{4mm}
-{\color{utpRojo}\rule{8.5cm}{1.2pt}}
-\end{center}
-\vfill
-\end{frame}
-
-\begin{frame}{Una interfaz de red permite que Ubuntu se comunique}
-\begin{block}{Definición inicial}
-\small Una \textbf{interfaz de red} es la parte que Ubuntu usa para comunicarse con otros equipos.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{Cómo reconocerla}
-\small Ubuntu le asigna un nombre. En nuestra MV veremos \texttt{ens160}.
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{Qué ocurre por ella}
-\small Por la interfaz salen solicitudes y regresan respuestas.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Ejemplo sencillo}
-\small Al abrir un sitio web, la solicitud sale de Ubuntu por \texttt{ens160} y la respuesta regresa por esa misma interfaz.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{El adaptador virtual enlaza la MV con la red externa}
-\begin{columns}[c,onlytextwidth]
-\column{.64\textwidth}
-\includegraphics[width=\linewidth]{mv-red.png}
-\column{.32\textwidth}
-\begin{exampleblock}{}
-\small
-1. La MV usa su interfaz.\par
-2. El adaptador virtual entrega el tráfico al hipervisor.\par
-3. El router permite salir de la red local.\par
-4. La conexión alcanza internet.
-\end{exampleblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{El resultado de \texttt{ip a} muestra dos interfaces}
-\begin{columns}[T,onlytextwidth]
-\column{.54\textwidth}
-\begin{exampleblock}{Líneas principales del resultado}
-\begin{terminal}
-rgap@ubuntu:\textasciitilde\$ ip a\\
-1: lo\\
-\quad inet 127.0.0.1/8 scope host lo\\
-2: ens160\\
-\quad inet 192.168.35.151/24\\
-\quad scope global dynamic ens160
-\end{terminal}
-\end{exampleblock}
-\column{.42\textwidth}
-\begin{description}[\texttt{ens160}]\small
-  \item[\texttt{ip a}] Lista interfaces y direcciones.
-  \item[\texttt{lo}] Interfaz interna del propio Ubuntu.
-  \item[\texttt{ens160}] Conecta la MV con la red.
-  \item[\texttt{inet}] Presenta una dirección IPv4: cuatro números separados por puntos.
-  \item[\texttt{/24}] Indica la parte que identifica la red local.
-\end{description}
-\end{columns}
-\begin{alertblock}{Qué significa este resultado}
-\small \texttt{state UP}: \texttt{ens160} está activa. \texttt{dynamic}: su dirección fue asignada automáticamente. \texttt{UNKNOWN} en \texttt{lo} no es un error: no hay una conexión externa que comprobar porque \texttt{lo} funciona dentro de Ubuntu y no depende de un cable ni del adaptador virtual.
-\end{alertblock}
-\scriptsize Otros campos: \texttt{link/ether} = dirección del adaptador; \texttt{mtu}, \texttt{qdisc} y \texttt{qlen} = transmisión de datos; \texttt{inet6} = dirección IP más larga; \texttt{valid\_lft} = tiempo de validez.
-\end{frame}
-
-\begin{frame}{Tu MV muestra dos interfaces: \texttt{lo} y \texttt{ens160}}
-\begin{block}{Una es interna y la otra conecta con la red}
-\small El resultado de \texttt{ip a} presenta dos interfaces con funciones diferentes.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{\texttt{lo}: comunicación interna}
-\small
-Dirección: \texttt{127.0.0.1/8}.\par
-Ubuntu la usa para comunicarse consigo mismo. No conecta la MV con otros equipos.
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{\texttt{ens160}: comunicación con la red}
-\small
-Dirección: \texttt{192.168.35.151/24}.\par
-Es la interfaz que permite que la MV se comunique con la red externa.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Lectura correcta del resultado}
-\small Aunque \texttt{ip a} muestra dos interfaces, solo \texttt{ens160} conecta la MV con la red externa. \texttt{lo} funciona únicamente dentro de Ubuntu.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Ruta, puerta de enlace y DNS describen el camino}
-\begin{description}[Puerta de enlace]\small
-  \item[Ruta] Regla que indica por dónde debe enviarse el tráfico hacia un destino.
-  \item[Puerta de enlace] Router que permite salir de la red local; también se denomina \emph{gateway}.
-  \item[DNS] Servicio que traduce nombres, como \texttt{example.com}, a direcciones IP.
-\end{description}
-\begin{exampleblock}{Ejemplo completo}
-\small En este laboratorio, la MV \texttt{192.168.35.151/24} sale mediante \emph{Share with my Mac}. La Mac usa \texttt{192.168.100.140/24} en el Wi-Fi y su puerta de enlace es \texttt{192.168.100.1}. El DNS resuelve el nombre del sitio antes de iniciar la conexión.
-\end{exampleblock}
-\end{frame}
-
-\begin{frame}{La MV llega a internet a través de la Mac}
-\begin{block}{NAT conecta las dos redes}
-\small \textbf{NAT} significa traducción de direcciones de red. En \emph{Share with my Mac}, la Mac recibe el tráfico de la red virtual y lo envía por su conexión Wi-Fi usando su propia dirección.
-\end{block}
-\begin{center}
-\begin{tikzpicture}[
-  flowbox/.style={draw=utpRojo,fill=utpGris!8,rounded corners=2pt,align=center,minimum height=1.55cm,font=\scriptsize},
-  flowarrow/.style={-{Latex[length=2.5mm]},very thick,draw=utpRojo}
-]
-\node[flowbox,text width=2.25cm] (vm) {\textbf{MV Ubuntu}\\\texttt{ens160}\\\texttt{192.168.35.151/24}};
-\node[flowbox,text width=2.35cm,right=5mm of vm] (nat) {\textbf{NAT en la Mac}\\\emph{Share with my Mac}\\traduce la dirección};
-\node[flowbox,text width=2.35cm,right=5mm of nat] (wifi) {\textbf{Wi-Fi de la Mac}\\\texttt{192.168.100.140/24}};
-\node[flowbox,text width=2.05cm,right=5mm of wifi] (router) {\textbf{Router}\\\texttt{192.168.100.1}};
-\node[flowbox,text width=1.45cm,right=5mm of router] (internet) {\textbf{Internet}};
-\draw[flowarrow] (vm) -- (nat);
-\draw[flowarrow] (nat) -- (wifi);
-\draw[flowarrow] (wifi) -- (router);
-\draw[flowarrow] (router) -- (internet);
-\end{tikzpicture}
-\end{center}
-\begin{alertblock}{Flujo completo}
-\small El DNS convierte el nombre del sitio en una IP. La solicitud sale por \texttt{ens160}, la Mac aplica NAT, el Wi-Fi la entrega al router y el router la envía a internet. La respuesta regresa por el camino inverso hasta la MV.
-\end{alertblock}
-\scriptsize La captura no muestra el servidor DNS ni la dirección pública utilizada por el router; por eso no se asignan valores a esos datos.
-\end{frame}
-
-\begin{frame}{Alias y función reducen instrucciones repetidas}
-\begin{columns}[c,onlytextwidth]
-\column{.56\textwidth}
-\includegraphics[width=\linewidth]{alias-funcion.png}
-\column{.40\textwidth}
-\begin{block}{Alias}
-\small Nombre corto que representa \textbf{un comando} con sus opciones. Ejemplo: \texttt{o} puede representar \texttt{xdg-open .}.
-\end{block}
-\begin{exampleblock}{Función}
-\small Nombre que agrupa \textbf{uno o varios comandos} ejecutados en orden. Forma: \texttt{nombre() \{ comandos; \}}.
-\end{exampleblock}
-\begin{alertblock}{Duración en esta práctica}
-\small Ambos existen solo en la terminal actual. Al cerrarla, desaparecen.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Bash y Zsh son shells; \texttt{\$SHELL} indica la configurada}
-\begin{block}{Variable de entorno}
-\small Dato con nombre que la shell conserva para describir la sesión. \texttt{SHELL} guarda la ubicación completa de la shell configurada. El comando \texttt{echo} muestra un texto o el valor de una variable.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{Bash en Ubuntu}
-\begin{terminal}
-rgap@ubuntu:\textasciitilde\$ echo \$SHELL\\
-/bin/bash
-\end{terminal}
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{Zsh en otra cuenta}
-\begin{terminal}
-rel@equipo:\textasciitilde\$ echo \$SHELL\\
-/bin/zsh
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\small\textbf{Resultado:} ambas son shells; la salida permite reconocer cuál está configurada.
-\end{frame}
-
-\begin{frame}{\texttt{xdg-open .} abre la carpeta actual en Ubuntu}
-\begin{block}{Dos elementos antes de crear el alias}
-\small \texttt{xdg-open} solicita a Ubuntu abrir un elemento con la aplicación gráfica predeterminada. El punto \texttt{.} representa el directorio actual.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.50\textwidth}
-\begin{exampleblock}{Comando completo}
-\begin{terminal}
-rgap@ubuntu:\textasciitilde\$ pwd\\
-/home/rgap\\
-rgap@ubuntu:\textasciitilde\$ xdg-open .
-\end{terminal}
-\end{exampleblock}
-\column{.46\textwidth}
-\begin{alertblock}{Resultado visible}
-\small Ubuntu abre la aplicación \textbf{Archivos} y muestra el contenido de \texttt{/home/rgap}, que era el directorio actual.
-\end{alertblock}
-\end{columns}
-\vspace{4mm}
-\small\textbf{Idea del alias:} escribir \texttt{o} será más rápido que repetir \texttt{xdg-open .}.
-\end{frame}
-
-\begin{frame}{Práctica 2: crea un alias y una función \textnormal{\small(12 min)}}
-\begin{columns}[T,onlytextwidth]
-\column{.46\textwidth}
-\begin{enumerate}\setlength\itemsep{4pt}\small
-  \item Confirma la shell con \texttt{echo \$SHELL}.
-  \item Crea \texttt{alias o='xdg-open .'}.
-  \item Ejecuta \texttt{o} y confirma que se abra \textbf{Archivos}.
-  \item Crea \texttt{info() \{ whoami; hostname; pwd; \}}.
-  \item Ejecuta \texttt{info}.
-\end{enumerate}
-\column{.50\textwidth}
-\begin{exampleblock}{Resultado completo esperado}
-\begin{terminal}\$ echo \$SHELL\\
-/bin/bash\\
-\$ alias o='xdg-open .'\\
-\$ o\\
-Se abre la carpeta actual en Archivos\\
-\$ info() \{ whoami; hostname; pwd; \}\\
-\$ info\\
-rgap\\
-ubuntu\\
-/home/rgap/curso\_cloud/sesion03
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Comprobación final}
-\small \texttt{o} abre la carpeta actual en Archivos; \texttt{info} devuelve usuario, equipo y ruta, en ese orden.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{\texttt{.bashrc} conserva alias y funciones}
-\begin{block}{Archivo de configuración de Bash}
-\small \texttt{.bashrc} es un archivo oculto ubicado en el directorio personal. Bash lee sus instrucciones cada vez que inicia una terminal interactiva.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{Solo en la terminal actual}
-\small Si creas \texttt{o} e \texttt{info} directamente en la terminal, desaparecen cuando la cierras.
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{Guardados en \texttt{.bashrc}}
-\small Si escribes allí el alias y la función, Bash vuelve a crearlos al abrir cada terminal nueva.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Dos comandos que utilizaremos}
-\small \texttt{nano \textasciitilde/.bashrc} abre el archivo en un editor de texto. \texttt{source \textasciitilde/.bashrc} vuelve a leerlo sin cerrar la terminal actual.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Práctica 3: guarda los atajos en \texttt{.bashrc} \textnormal{\small(12 min)}}
-\begin{columns}[T,onlytextwidth]
-\column{.43\textwidth}
-\begin{enumerate}\setlength\itemsep{4pt}\small
-  \item Abre el archivo con \texttt{nano \textasciitilde/.bashrc}.
-  \item Agrega el alias \texttt{o} y la función \texttt{info} al final.
-  \item Guarda con \texttt{Ctrl+O}, confirma con \texttt{Enter} y sal con \texttt{Ctrl+X}.
-  \item Ejecuta \texttt{source \textasciitilde/.bashrc}.
-  \item Prueba \texttt{o} e \texttt{info}.
-\end{enumerate}
-\column{.53\textwidth}
-\begin{exampleblock}{Contenido y resultado esperado}
-\begin{terminal}
-\$ nano \textasciitilde/.bashrc\\
-alias o='xdg-open .'\\
-info() \{ whoami; hostname; pwd; \}\\
-\$ source \textasciitilde/.bashrc\\
-\$ o\\
-Se abre la carpeta actual en Archivos\\
-\$ info\\
-rgap\\
-ubuntu\\
-/home/rgap/curso\_cloud/sesion03
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\small\textbf{Comprobación:} abre una terminal nueva y ejecuta \texttt{o} e \texttt{info}; ambos deben seguir disponibles.
-\end{frame}
 
 \begin{frame}[plain]
 \begin{tikzpicture}[remember picture,overlay]
@@ -743,10 +472,10 @@ ubuntu\\
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{4pt}
-  \item Debian Administrator's Handbook y páginas de manual: \texttt{bash}, \texttt{pwd}, \texttt{ls}, \texttt{mkdir}, \texttt{cd}, \texttt{cat}, \texttt{uname}, \texttt{ip}, \texttt{xdg-open} y \texttt{nano}.
-  \item Documentación del hipervisor utilizado: límites de hardware virtual y modos de red disponibles.
+  \item Debian Administrator's Handbook y páginas de manual: \texttt{bash}, \texttt{pwd}, \texttt{ls}, \texttt{mkdir}, \texttt{cd}, \texttt{cat}, \texttt{uname}, \texttt{apt} y \texttt{dpkg}.
+  \item Documentación del hipervisor utilizado: creación de máquinas virtuales y asignación de recursos.
   \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}.
-  \item Ilustraciones educativas generadas para esta sesión: capas de Linux, flujo de terminal, sistema de archivos, red virtual y alias/función.
+  \item Ilustraciones educativas generadas para esta sesión: capas de Linux, paquete \texttt{.deb}, flujo de terminal y sistema de archivos.
 \end{itemize}
 \end{frame}
 
