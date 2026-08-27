@@ -683,83 +683,58 @@ active\\
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Prepara la VM y conecta desde otro equipo}
+\begin{frame}{GitHub permite trabajar por SSH y esto explica por qué}
+\begin{center}
+\begin{tikzpicture}[node distance=1cm]
+  \node[caja] (cli) {Tu equipo\\ \footnotesize guarda la clave privada};
+  \node[cajaverde, right=4.4cm of cli] (srv) {GitHub\\ \footnotesize guarda tu clave pública};
+  \draw[flechavuelta] (cli) -- node[above,font=\scriptsize] {SSH, puerto 22} node[below,font=\scriptsize] {\texttt{git@github.com}} (srv);
+\end{tikzpicture}
+\end{center}
 \begin{columns}[T,onlytextwidth]
-\column{.52\textwidth}
-\begin{exampleblock}{En Ubuntu, equipo remoto}
-\begin{terminal}\footnotesize
-\$ sudo apt install openssh-server -y\\
-\$ sudo systemctl enable --now ssh\\
-\$ systemctl is-active ssh\\
-active\\
-\$ ip -br addr
-\end{terminal}
+\column{.31\textwidth}
+\begin{exampleblock}{Te identifica}
+\small Registras tu clave pública en la cuenta. Tu clave privada demuestra quién eres sin enviar contraseña.
 \end{exampleblock}
-\column{.44\textwidth}
-\begin{exampleblock}{En el equipo cliente}
-\begin{terminal}\footnotesize
-\$ ssh rgap@192.168.100.158\\
-The authenticity of host ...\\
-Are you sure ...? yes\\
-rgap@192.168.100.158's password:
-\end{terminal}
+\column{.31\textwidth}
+\begin{exampleblock}{Protege el envío}
+\small El código y las credenciales viajan por un canal cifrado, aunque uses una red compartida.
+\end{exampleblock}
+\column{.31\textwidth}
+\begin{exampleblock}{Se nota en la URL}
+\small \texttt{https://github.com/...} usa la web; \texttt{git@github.com:...} usa SSH.
 \end{exampleblock}
 \end{columns}
-\begin{alertblock}{Primera conexión}
-\small Verifica la huella del servidor antes de aceptarla. En modo puente, habilitar SSH hace visible la VM para la red local según el firewall.
+\begin{alertblock}{La misma idea que en una VM}
+\small GitHub, tu máquina virtual y un servidor cloud aceptan SSH por lo mismo: identifica al usuario y cifra la conexión. Si pierdes el equipo, se revoca esa clave desde la cuenta sin cambiar nada más.
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Las claves SSH agilizan el acceso remoto}
+\begin{frame}{Servicios y puertos clásicos}
+\begin{block}{Por qué importan}
+\small Una misma dirección IP atiende varios servicios a la vez. El puerto indica a cuál de ellos llega cada conexión.
+\end{block}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
-\begin{exampleblock}{Crea una clave en el cliente}
-\begin{terminal}\footnotesize
-\$ ssh-keygen -t ed25519 \\
-\quad -C "curso-cloud"\\
-\$ ssh-copy-id \\
-\quad rgap@192.168.100.158
-\end{terminal}
+\begin{exampleblock}{Acceso y web}
+\small
+\texttt{22} SSH: administración remota.\par\smallskip
+\texttt{80} HTTP: web sin cifrar.\par\smallskip
+\texttt{443} HTTPS: web cifrada.\par\smallskip
+\texttt{53} DNS: resolución de nombres.
 \end{exampleblock}
 \column{.48\textwidth}
-\begin{exampleblock}{Administra la VM por SSH}
-\begin{terminal}\footnotesize
-\$ ssh rgap@192.168.100.158\\
-\$ systemctl status mi-api \\
-\quad --no-pager\\
-\$ ./monitor\_servicios.py
-\end{terminal}
+\begin{exampleblock}{Datos y aplicaciones}
+\small
+\texttt{3306} MySQL.\par\smallskip
+\texttt{5432} PostgreSQL.\par\smallskip
+\texttt{8000} y \texttt{3000}: aplicaciones Node en desarrollo.\par\smallskip
+\texttt{25} y \texttt{587} SMTP: correo saliente.
 \end{exampleblock}
 \end{columns}
-\begin{alertblock}{Protege la clave privada}
-\small No compartas el archivo privado. La clave pública sí se instala en el servidor. En GCP también pueden intervenir OS Login y reglas de firewall.
+\begin{alertblock}{Ya los usaste en esta sesión}
+\small \texttt{443} al abrir Google en Firefox, \texttt{3306} cuando \texttt{mi-api} comprueba MySQL y \texttt{8000} al consultar la API. \texttt{ss -ltn} muestra qué puertos escucha tu equipo.
 \end{alertblock}
-\end{frame}
-
-\begin{frame}{Práctica 2: integra la sesión \textnormal{\small(25 min)}}
-\begin{columns}[T,onlytextwidth]
-\column{.49\textwidth}
-\begin{exampleblock}{En la MV}
-\begin{enumerate}\setlength\itemsep{3pt}\small
-  \item Ejecuta \texttt{saludo.py} después de agregar \texttt{u+x}.
-  \item Lista archivos \texttt{.service} y filtra los habilitados.
-  \item Inicia y habilita \texttt{mysql} y \texttt{mi-api}.
-  \item Ejecuta \texttt{monitor\_servicios.py}.
-  \item Habilita \texttt{ssh} y confirma la IP.
-\end{enumerate}
-\end{exampleblock}
-\column{.47\textwidth}
-\begin{exampleblock}{Desde el cliente}
-\begin{enumerate}\setlength\itemsep{3pt}\small
-  \item Conecta con \texttt{ssh usuario@IP}.
-  \item Ejecuta \texttt{hostname} y \texttt{whoami}.
-  \item Comprueba \texttt{mysql} y \texttt{mi-api}.
-  \item Consulta los últimos registros de \texttt{mi-api}.
-  \item Cierra la sesión con \texttt{exit}.
-\end{enumerate}
-\end{exampleblock}
-\end{columns}
-\scriptsize\textbf{Comprobación final:} los scripts tienen permisos mínimos, ambos servicios están \texttt{active/enabled}, la API informa que MySQL es alcanzable y SSH permite repetir las consultas desde otro equipo.
 \end{frame}
 
 \begin{frame}[plain]

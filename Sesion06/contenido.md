@@ -44,11 +44,10 @@ Al finalizar, el estudiante administra permisos de archivos, diferencia servicio
 32. Diagnóstico mediante estado, registro, puertos y dependencias.
 33. Separador: introducción a SSH.
 34. Definición, usos, componentes y puerto habitual de SSH.
-35. Instalación de OpenSSH Server y primera conexión remota.
-36. Autenticación mediante claves SSH y administración de la MV.
-37. Práctica 2 integrada: permisos, servicios, monitor y SSH.
-38. Cierre.
-39. Referencias.
+35. Caso concreto: GitHub acepta SSH; clave pública en la cuenta, clave privada en el equipo y la URL `git@github.com:...`.
+36. Servicios y puertos clásicos: `22`, `80`, `443`, `53`, `3306`, `5432`, `8000`/`3000` y `25`/`587`.
+37. Cierre.
+38. Referencias.
 
 ## Práctica de descubrimiento del tráfico
 
@@ -111,11 +110,17 @@ Después de revisar el código, se utiliza `chmod u+x monitor_servicios.py` y `.
 
 ## Introducción a SSH
 
-- SSH permite ejecutar comandos remotos mediante una conexión cifrada.
-- La MV instala `openssh-server` y administra el servidor como `ssh.service`.
-- El cliente se conecta mediante `ssh usuario@IP` y verifica la huella en el primer acceso.
-- Una clave Ed25519 se crea con `ssh-keygen -t ed25519` y su parte pública se instala con `ssh-copy-id`.
-- Al habilitar SSH se abre un servicio de red; se debe revisar la red virtual y el firewall.
+Esta sección es solo introductoria y conceptual: no se ejecutan comandos ni se instala el servidor. El objetivo es que el estudiante entienda el modelo antes de usarlo en la sesión siguiente.
+
+- SSH permite trabajar en otro equipo mediante una conexión cifrada; el modelo es cliente–servidor y el servidor escucha normalmente en el puerto 22.
+- En la primera conexión el servidor presenta una huella y el usuario decide si confía en ella.
+- El canal viaja cifrado: quien observe la red no lee comandos ni contraseñas.
+- SSH entrega una terminal de texto, no un escritorio remoto.
+- La autenticación puede ser por contraseña o por par de claves; se menciona sin desarrollarla.
+- GitHub sirve como ejemplo cercano: acepta SSH porque identifica al usuario mediante la clave pública registrada en la cuenta y cifra el envío; se nota en la URL del repositorio (`https://github.com/...` frente a `git@github.com:...`). La misma razón aplica a una VM o a un servidor cloud.
+- Puertos clásicos que se repasan: `22` SSH, `80` HTTP, `443` HTTPS, `53` DNS, `3306` MySQL, `5432` PostgreSQL, `8000`/`3000` aplicaciones Node y `25`/`587` SMTP.
+- Los puertos se conectan con lo ya visto en la sesión: `443` en Firefox hacia Google, `3306` en la comprobación de `mi-api` y `8000` en la API; `ss -ltn` muestra los puertos en escucha.
+- La sesión no incluye una práctica integrada final: el cierre ocurre después del diagnóstico de servicios y de esta introducción.
 
 ## Archivos de demostración
 
