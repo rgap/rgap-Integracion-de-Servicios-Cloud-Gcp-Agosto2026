@@ -15,8 +15,8 @@ VM_IP = [IP privada de la máquina virtual]
 ROUTER_IP = [puerta de enlace predeterminada]
 HOST_IP = [IP privada de la computadora física]
 DEST_IP = [IP del servidor de destino]
-PROTOCOL = HTTPS sobre TCP
-PORT = 443
+PROTOCOL = [protocolo identificado]
+PORT = [puerto identificado]
 ```
 
 Para que todos trabajen con un caso similar, realiza una conexión HTTPS a:
@@ -44,6 +44,8 @@ VM Settings → Network Adapter → Bridged
 ```
 
 Con el modo **Bridged**, la máquina virtual se conecta a la misma subred que la computadora física y recibe su propia dirección IP, como si fuera otro equipo de la red local. No debes seleccionar el modo **NAT**, porque representa un flujo de red diferente.
+
+![alt text](image-1.png)
 
 ## 2. Obtén la IP de la máquina virtual
 
@@ -231,8 +233,8 @@ VM_IP =
 ROUTER_IP =
 HOST_IP =
 DEST_IP =
-PROTOCOL = HTTPS sobre TCP
-PORT = 443
+PROTOCOL =
+PORT =
 ```
 
 ## 10. Elabora el diagrama de secuencia
