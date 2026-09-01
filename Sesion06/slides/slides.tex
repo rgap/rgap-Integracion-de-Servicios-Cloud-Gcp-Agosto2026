@@ -3,7 +3,7 @@
 \input{header.tex}
 
 \title{Integración de Servicios Cloud GCP}
-\subtitle{Permisos, servicios, automatización con IA y acceso remoto en Linux}
+\subtitle{Herramientas de IA en la terminal y análisis del flujo de red en Linux}
 \date{Semana 03 - Sesión 06}
 \author{Rel Guzman}
 
@@ -15,13 +15,13 @@
 \begin{itemize}\setlength\itemsep{10pt}
   \item ¿Para qué sirve \texttt{systemctl}?
   \item ¿Qué diferencia existe entre \texttt{start} y \texttt{enable}?
-  \item ¿Ya instalaron Warp y Antigravity CLI?
+  \item ¿Qué interfaces mostró \texttt{ip a} en su máquina virtual?
 \end{itemize}
 \end{frame}
 
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
-Al finalizar, podrás administrar permisos de archivos, reconocer qué servicios se ejecutan o inician con Ubuntu, supervisarlos con apoyo de IA, relacionar una aplicación Node con MySQL y explicar cómo SSH permite administrar un equipo remoto.
+Al finalizar, podrás instalar y usar herramientas asistidas por IA en Ubuntu (Visual Studio Code, Warp y Antigravity CLI), obtener con comandos los datos de red de tu máquina virtual y construir con ayuda de IA un diagrama del recorrido que sigue el tráfico hasta Internet.
 \end{block}
 \end{frame}
 
@@ -29,15 +29,16 @@ Al finalizar, podrás administrar permisos de archivos, reconocer qué servicios
 \begin{itemize}\setlength\itemsep{10pt}
   \item ¿Qué tanto saben sobre servidores creados con Node.js?
   \item La clase pasada accedimos a un servidor de Node.js desde la red local y lo probamos con \texttt{curl}. ¿Se acuerdan qué comando usamos?
+  \item ¿Qué diferencia hay entre la IP de la máquina virtual y la puerta de enlace?
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Utilidad de esta sesión}
 \begin{block}{¿Para qué te servirá lo aprendido?}
-Podrás ejecutar scripts con permisos controlados, identificar servicios del sistema, decidir cuáles deben iniciar con Ubuntu y comprobar el estado de una aplicación Node junto con MySQL.
+Podrás apoyarte en un asistente de IA dentro de la terminal para descubrir comandos, explicar resultados y documentar lo que ocurre en tu equipo, sin dejar de verificar cada dato por tu cuenta.
 \end{block}
 \vspace{0.2cm}
-\small También podrás pedir a la IA un monitor sencillo y seguro, y usar SSH como base para administrar máquinas virtuales y servidores cloud desde otra terminal.
+\small También podrás describir con precisión cómo sale el tráfico de una máquina virtual hacia Internet, una habilidad necesaria para diagnosticar y configurar redes en entornos cloud.
 \end{frame}
 
 \begin{frame}[plain]
@@ -122,12 +123,22 @@ arm64
 \$ agy
 \end{terminal}
 \small Solicitud de ejemplo:\par
-\texttt{Explica los permisos de saludo.py.}
+\texttt{Explica qué interfaces de red tiene esta VM.}
 \end{exampleblock}
 \end{columns}
 \begin{alertblock}{Primer inicio y ruta del comando}
 \scriptsize El primer inicio puede abrir el navegador para iniciar sesión. Si aparece \texttt{agy: command not found}, agrega \texttt{export PATH="\$HOME/.local/bin:\$PATH"} a \texttt{\textasciitilde/.bashrc} y ejecuta \texttt{source \textasciitilde/.bashrc}.
 \end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Análisis del flujo de red con IA}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
 \end{frame}
 
 \begin{frame}{Práctica: reúne los datos de la ruta \textnormal{\small(12 min)}}
@@ -197,547 +208,6 @@ MODE       = Bridged
 \end{frame}
 
 \begin{frame}[plain]
-\vfill
-\begin{center}
-{\fontsize{29}{34}\selectfont\bfseries Gestión de permisos}\par
-\vspace{4mm}
-{\color{utpRojo}\rule{8.5cm}{1.2pt}}
-\end{center}
-\vfill
-\end{frame}
-
-\begin{frame}{Los permisos responden quién puede hacer qué}
-\begin{block}{Idea central}
-\small Ubuntu protege cada archivo indicando qué acciones puede realizar el \textbf{propietario}, el \textbf{grupo} y el \textbf{resto de usuarios}.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{¿Quién?}
-\small
-\texttt{u}: propietario.\par\medskip
-\texttt{g}: grupo.\par\medskip
-\texttt{o}: otros usuarios.
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{¿Qué puede hacer?}
-\small
-\texttt{r}: leer.\par\medskip
-\texttt{w}: modificar.\par\medskip
-\texttt{x}: ejecutar o atravesar un directorio.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Principio práctico}
-\small Concede solo el permiso necesario para la tarea. Dar más permisos no corrige la causa de un problema.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{\texttt{ls -l} permite leer los permisos de izquierda a derecha}
-\begin{exampleblock}{Archivo antes de hacerlo ejecutable}
-\begin{terminal}\footnotesize
-rgap@ubuntu:\textasciitilde/Desktop\$ ls -l saludo.py\\
--rw-rw-r-- 1 rgap rgap 0 Aug 27 15:34 saludo.py
-\end{terminal}
-\end{exampleblock}
-\begin{columns}[T,onlytextwidth]
-\column{.22\textwidth}
-\begin{block}{\texttt{-}}
-\small Es un archivo regular. Una \texttt{d} indicaría directorio.
-\end{block}
-\column{.24\textwidth}
-\begin{block}{\texttt{rw-}}
-\small El propietario puede leer y modificar; todavía no puede ejecutar.
-\end{block}
-\column{.24\textwidth}
-\begin{block}{\texttt{rw-}}
-\small El grupo \texttt{rgap} puede leer y modificar el archivo.
-\end{block}
-\column{.24\textwidth}
-\begin{block}{\texttt{r--}}
-\small Los demás usuarios solo pueden leerlo.
-\end{block}
-\end{columns}
-\end{frame}
-
-\begin{frame}{El script necesita una línea de intérprete y permiso \texttt{x}}
-\begin{columns}[T,onlytextwidth]
-\column{.55\textwidth}
-\begin{exampleblock}{Contenido de \texttt{saludo.py}}
-\begin{terminal}\footnotesize
-\#!/usr/bin/env python3\\
-usuario = input('¿Cómo te llamas? ')\\
-print(f'Hola, \{usuario\}')
-\end{terminal}
-\end{exampleblock}
-\column{.41\textwidth}
-\begin{block}{La primera línea decide quién lo interpreta}
-\small \texttt{\#!/usr/bin/env python3} indica que Ubuntu debe buscar Python 3 y usarlo para ejecutar el archivo.
-\end{block}
-\end{columns}
-\begin{alertblock}{Primer intento}
-\begin{terminal}
-\$ ./saludo.py\\
-bash: ./saludo.py: Permiso denegado
-\end{terminal}
-\small El archivo existe, pero el propietario aún no posee permiso de ejecución.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{\texttt{chmod u+x} concede ejecución solo al propietario}
-\begin{columns}[T,onlytextwidth]
-\column{.57\textwidth}
-\begin{exampleblock}{Cambio y comprobación}
-\begin{terminal}\footnotesize
-\$ chmod u+x saludo.py\\
-\$ ls -l saludo.py\\
--rwxrw-r-- 1 rgap rgap 157 Aug 27 15:41 saludo.py\\
-\$ ./saludo.py\\
-¿Cómo te llamas? Ana\\
-Hola, Ana. El script ya tiene permiso de ejecución.
-\end{terminal}
-\end{exampleblock}
-\column{.39\textwidth}
-\begin{block}{Cómo se lee}
-\small
-\texttt{u}: propietario.\par\medskip
-\texttt{+}: agrega un permiso.\par\medskip
-\texttt{x}: permite ejecución directa.
-\end{block}
-\end{columns}
-\begin{alertblock}{Diferencia importante}
-\small \texttt{python3 saludo.py} puede funcionar sin \texttt{x} porque ejecutas Python y este lee el archivo. \texttt{./saludo.py} sí demuestra el permiso de ejecución.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{La forma simbólica explica mejor la intención}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{Cambios concretos}
-\begin{terminal}
-\$ chmod u+x saludo.py\\
-\$ chmod g-w datos.txt\\
-\$ chmod o-r secreto.txt
-\end{terminal}
-\small Cada comando expresa quién cambia, si agrega o quita, y qué permiso afecta.
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{Forma numérica}
-\small \texttt{r=4}, \texttt{w=2}, \texttt{x=1}. La suma se calcula para propietario, grupo y otros.
-\begin{terminal}
-\$ chmod 750 tarea.sh\\
-rwx r-x ---
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Evita \texttt{chmod 777}}
-\small Permitir lectura, escritura y ejecución a todos suele ocultar el problema y ampliar innecesariamente el acceso.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Práctica 1: asigna ejecución al script \textnormal{\small(12 min)}}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{enumerate}\setlength\itemsep{5pt}\small
-  \item Entra en \texttt{\textasciitilde/Escritorio/curso\_cloud/}\linebreak
-        \texttt{sesion06/demo}.
-  \item Ejecuta \texttt{ls -l saludo.py}.
-  \item Retira \texttt{x} con \texttt{chmod u-x saludo.py}.
-  \item Prueba \texttt{./saludo.py} y explica el error.
-  \item Agrega \texttt{x} con \texttt{chmod u+x saludo.py}.
-  \item Ejecuta nuevamente el script.
-\end{enumerate}
-\column{.48\textwidth}
-\begin{exampleblock}{Resultado esperado}
-\begin{terminal}\footnotesize
-\$ chmod u-x saludo.py\\
-\$ ./saludo.py\\
-bash: ./saludo.py: Permiso denegado\\
-\$ chmod u+x saludo.py\\
-\$ ./saludo.py\\
-¿Cómo te llamas? Luis\\
-Hola, Luis. El script ya tiene permiso de ejecución.
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\small\textbf{Comprobación:} \texttt{ls -l} debe comenzar con \texttt{-rwx}.
-\end{frame}
-
-\begin{frame}[plain]
-\vfill
-\begin{center}
-{\fontsize{29}{34}\selectfont\bfseries Servicios al iniciar Ubuntu}\par
-\vspace{4mm}
-{\color{utpRojo}\rule{8.5cm}{1.2pt}}
-\end{center}
-\vfill
-\end{frame}
-
-\begin{frame}{\texttt{systemd} mantiene disponibles los servicios}
-\begin{block}{Tres piezas relacionadas}
-\small Un \textbf{servicio} realiza una tarea en segundo plano. Un archivo \texttt{.service} describe cómo ejecutarlo. \texttt{systemd} aplica esa descripción y \texttt{systemctl} permite consultarla o controlarla.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{exampleblock}{Consultar no modifica}
-\begin{terminal}
-\$ systemctl status mysql\\
-\$ systemctl is-active mysql
-\end{terminal}
-\end{exampleblock}
-\column{.49\textwidth}
-\begin{exampleblock}{Controlar requiere privilegios}
-\begin{terminal}
-\$ sudo systemctl start mysql\\
-\$ sudo systemctl enable mysql
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Dos preguntas diferentes}
-\small \texttt{active} responde “¿está funcionando ahora?”. \texttt{enabled} responde “¿está configurado para iniciar con Ubuntu?”.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Lista los archivos de servicio conocidos por Ubuntu}
-\begin{exampleblock}{Comando solicitado para el laboratorio}
-\begin{terminal}\footnotesize
-\$ sudo systemctl list-unit-files --type service --all\\
-UNIT FILE                    STATE     PRESET\\
-mysql.service                enabled   enabled\\
-ssh.service                  disabled  enabled\\
-systemd-journald.service     static    -
-\end{terminal}
-\end{exampleblock}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Qué muestra}
-\small Los archivos de unidad instalados y su estado de habilitación. No indica por sí solo cuáles están ejecutándose.
-\end{block}
-\column{.48\textwidth}
-\begin{block}{Sobre \texttt{sudo} y \texttt{--all}}
-\small La consulta normalmente funciona sin \texttt{sudo}; \texttt{--all} hace explícito que no se filtrará por estado.
-\end{block}
-\end{columns}
-\end{frame}
-
-\begin{frame}{El estado del archivo explica cómo puede iniciarse}
-\begin{description}[\texttt{disabled}]\small
-  \item[\texttt{enabled}] Tiene enlaces de arranque y normalmente se iniciará al alcanzar su objetivo.
-  \item[\texttt{disabled}] Existe, pero no quedó configurado para iniciar automáticamente.
-  \item[\texttt{static}] No se habilita directamente; otra unidad puede activarlo como dependencia.
-  \item[\texttt{masked}] Está bloqueado y no puede iniciarse hasta retirar la máscara.
-  \item[\texttt{PRESET}] Es otra columna: muestra la política recomendada por el paquete o la distribución.
-\end{description}
-\begin{alertblock}{No confundas estado de archivo con estado actual}
-\small Un servicio puede estar \texttt{active} y \texttt{disabled}, o estar \texttt{inactive} y \texttt{enabled}.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Distingue servicios activos de servicios habilitados}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Servicios activos ahora}
-\begin{terminal}\footnotesize
-\$ systemctl list-units \\
-\quad --type=service --state=running
-\end{terminal}
-\small Consulta unidades cargadas que se encuentran funcionando.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{exampleblock}{Servicios habilitados al arranque}
-\begin{terminal}\footnotesize
-\$ systemctl list-unit-files \\
-\quad --type=service --state=enabled
-\end{terminal}
-\small Filtra archivos configurados para iniciar con Ubuntu.
-\end{exampleblock}
-\end{columns}
-\begin{block}{Comprobación individual}
-\begin{terminal}
-\$ systemctl is-active mysql\\
-active\\
-\$ systemctl is-enabled mysql\\
-enabled
-\end{terminal}
-\end{block}
-\end{frame}
-
-\begin{frame}{Pide a \texttt{agy} un monitor de solo lectura}
-\begin{block}{Solicitud dentro de \texttt{\textasciitilde/Escritorio/curso\_cloud/sesion06/demo}}
-\small\texttt{Crea monitor\_servicios.py. Debe consultar systemctl is-active e is-enabled para mysql.service y mi-api.service, mostrar fecha y hora, y no usar sudo, shell=True, reinicios ni cambios. Antes de escribirlo, explica el plan.}
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.49\textwidth}
-\begin{exampleblock}{Revisa antes de ejecutar}
-\begin{terminal}
-\$ sed -n '1,220p' \\
-\quad monitor\_servicios.py
-\end{terminal}
-\small Confirma que solo consulte y que use una lista de argumentos segura.
-\end{exampleblock}
-\column{.47\textwidth}
-\begin{alertblock}{Límite explícito}
-\small El monitor informa. No debe reiniciar servicios automáticamente ni solicitar permisos de administrador.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{El monitor resume estado actual e inicio automático}
-\begin{columns}[T,onlytextwidth]
-\column{.58\textwidth}
-\begin{exampleblock}{Permiso y ejecución}
-\begin{terminal}\footnotesize
-\$ chmod u+x monitor\_servicios.py\\
-\$ ./monitor\_servicios.py\\
-Monitoreo: 2026-08-27 16:20:00\\
-mysql.service        activo=active     inicio=enabled\\
-mi-api.service       activo=active     inicio=enabled
-\end{terminal}
-\end{exampleblock}
-\column{.38\textwidth}
-\begin{block}{Qué integra}
-\small
-1. Un script Python.\par\medskip
-2. Permiso de ejecución.\par\medskip
-3. Consultas a \texttt{systemctl}.\par\medskip
-4. Revisión humana de la salida de IA.
-\end{block}
-\end{columns}
-\begin{alertblock}{Si un servicio no existe}
-\small La salida puede indicar \texttt{inactive}, \texttt{not-found} o un mensaje equivalente. Primero confirma el nombre con \texttt{list-unit-files}.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}[plain]
-\vfill
-\begin{center}
-{\fontsize{29}{34}\selectfont\bfseries Servicios con Node y MySQL}\par
-\vspace{4mm}
-{\color{utpRojo}\rule{8.5cm}{1.2pt}}
-\end{center}
-\vfill
-\end{frame}
-
-\begin{frame}{Node atiende solicitudes y MySQL mantiene los datos}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\begin{block}{Aplicación Node}
-\small Publica una API en el puerto \texttt{8000}. Node.js no crea un servicio genérico \texttt{node.service}; nosotros definiremos \texttt{mi-api.service}.
-\end{block}
-\column{.49\textwidth}
-\begin{block}{Servidor MySQL}
-\small Mantiene disponible el motor de base de datos. En Ubuntu, el paquete \texttt{mysql-server} suele administrarse como \texttt{mysql.service}.
-\end{block}
-\end{columns}
-\begin{exampleblock}{Preparación del laboratorio}
-\begin{terminal}\footnotesize
-\$ sudo apt update\\
-\$ sudo apt install nodejs mysql-server -y\\
-\$ node --version\\
-\$ systemctl status mysql --no-pager
-\end{terminal}
-\end{exampleblock}
-\begin{alertblock}{Comprueba el nombre real}
-\small Si usas MariaDB u otro paquete, el nombre puede cambiar. Búscalo antes con \texttt{systemctl list-unit-files '*mysql*' '*mariadb*'}.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{La API comprueba si MySQL responde en el puerto \texttt{3306}}
-\begin{columns}[T,onlytextwidth]
-\column{.61\textwidth}
-\begin{exampleblock}{Idea principal de \texttt{app.js}}
-\begin{terminal}\footnotesize
-const http = require('http');\\
-const net = require('net');\\
-net.createConnection(\\
-\quad \{ host: '127.0.0.1', port: 3306 \}\\
-);\\
-server.listen(8000, '127.0.0.1');
-\end{terminal}
-\end{exampleblock}
-\column{.35\textwidth}
-\begin{block}{Respuesta de salud}
-\small Si MySQL acepta la conexión, la API devuelve estado \texttt{200}. Si no responde, devuelve \texttt{503}.
-\end{block}
-\begin{alertblock}{Alcance}
-\small Aquí verificamos disponibilidad del motor; las consultas SQL y credenciales se trabajarán por separado.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{La unidad \texttt{mi-api.service} relaciona Node con MySQL}
-\begin{columns}[T,onlytextwidth]
-\column{.64\textwidth}
-\begin{exampleblock}{Archivo de unidad}
-\begin{terminal}\scriptsize
-\lbrack Unit\rbrack\\
-Description=API Node de la Sesion 06\\
-Requires=mysql.service\\
-After=network.target mysql.service\\
-\lbrack Service\rbrack\\
-Type=simple\\
-User=rgap\\
-WorkingDirectory=/home/rgap/Escritorio/curso\_cloud/sesion06/demo\\
-ExecStart=/usr/bin/node app.js\\
-Restart=on-failure\\
-\lbrack Install\rbrack\\
-WantedBy=multi-user.target
-\end{terminal}
-\end{exampleblock}
-\column{.32\textwidth}
-\begin{block}{Cómo se interpreta}
-\small
-\texttt{Requires}: declara la dependencia.\par\medskip
-\texttt{After}: ordena el inicio.\par\medskip
-\texttt{ExecStart}: ejecuta Node.\par\medskip
-\texttt{WantedBy}: permite habilitar el arranque.
-\end{block}
-\end{columns}
-\begin{alertblock}{Importante}
-\scriptsize Ajusta \texttt{User} y \texttt{WorkingDirectory} a tu cuenta. \texttt{After=mysql.service} ordena el inicio, pero no garantiza que MySQL ya acepte conexiones; por eso comprobamos el puerto.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{\texttt{enable --now} inicia y habilita los servicios}
-\begin{columns}[T,onlytextwidth]
-\column{.56\textwidth}
-\begin{exampleblock}{Instala la unidad e inicia ambos servicios}
-\begin{terminal}\footnotesize
-\$ sudo install -m 644 mi-api.service \\
-\quad /etc/systemd/system/mi-api.service\\
-\$ sudo systemctl daemon-reload\\
-\$ sudo systemctl enable --now \\
-\quad mysql.service mi-api.service
-\end{terminal}
-\end{exampleblock}
-\column{.40\textwidth}
-\begin{exampleblock}{Comprueba}
-\begin{terminal}\footnotesize
-\$ systemctl is-active \\
-\quad mysql mi-api\\
-active\\
-active\\
-\$ curl 127.0.0.1:8000\\
-\{"node":"activo",\\
- "mysql":"alcanzable"\}
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\small\textbf{Resultado:} MySQL y la API quedan activos ahora y habilitados para el próximo inicio de Ubuntu.
-\end{frame}
-
-\begin{frame}{Estado, registro y puertos orientan el diagnóstico}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Si la API no responde}
-\begin{terminal}\footnotesize
-\$ systemctl status mi-api \\
-\quad --no-pager\\
-\$ journalctl -u mi-api -n 20 \\
-\quad --no-pager
-\end{terminal}
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{exampleblock}{Comprueba puertos y dependencia}
-\begin{terminal}\footnotesize
-\$ ss -ltn | grep -E \\
-\quad ':3306|:8000'\\
-\$ systemctl list-dependencies \\
-\quad mi-api.service
-\end{terminal}
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Orden recomendado}
-\small Lee el estado y el registro antes de reiniciar. El mensaje de error suele indicar si falta el archivo, la ruta, el usuario o la dependencia.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}[plain]
-\vfill
-\begin{center}
-{\fontsize{29}{34}\selectfont\bfseries Introducción a SSH}\par
-\vspace{4mm}
-{\color{utpRojo}\rule{8.5cm}{1.2pt}}
-\end{center}
-\vfill
-\end{frame}
-
-\begin{frame}{SSH crea una terminal remota cifrada}
-\begin{block}{Qué es}
-\small SSH significa \emph{Secure Shell}. Permite autenticarse en otro equipo y ejecutar comandos a través de una conexión protegida.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.31\textwidth}
-\begin{exampleblock}{Dónde se usa}
-\small Máquinas virtuales, servidores Linux, instancias de Compute Engine y equipos de laboratorio.
-\end{exampleblock}
-\column{.31\textwidth}
-\begin{exampleblock}{Para qué se usa}
-\small Administrar servicios, revisar registros, copiar archivos y desplegar aplicaciones.
-\end{exampleblock}
-\column{.31\textwidth}
-\begin{exampleblock}{Qué necesita}
-\small Un cliente SSH, un servidor SSH accesible, usuario, dirección y un método de autenticación.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Modelo mental}
-\small Tu terminal es el cliente. La VM escucha normalmente en el puerto \texttt{22} y ejecuta allí los comandos autorizados.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{GitHub permite trabajar por SSH y esto explica por qué}
-\begin{center}
-\begin{tikzpicture}[node distance=1cm]
-  \node[caja] (cli) {Tu equipo\\ \footnotesize guarda la clave privada};
-  \node[cajaverde, right=4.4cm of cli] (srv) {GitHub\\ \footnotesize guarda tu clave pública};
-  \draw[flechavuelta] (cli) -- node[above,font=\scriptsize] {SSH, puerto 22} node[below,font=\scriptsize] {\texttt{git@github.com}} (srv);
-\end{tikzpicture}
-\end{center}
-\begin{columns}[T,onlytextwidth]
-\column{.31\textwidth}
-\begin{exampleblock}{Te identifica}
-\small Registras tu clave pública en la cuenta. Tu clave privada demuestra quién eres sin enviar contraseña.
-\end{exampleblock}
-\column{.31\textwidth}
-\begin{exampleblock}{Protege el envío}
-\small El código y las credenciales viajan por un canal cifrado, aunque uses una red compartida.
-\end{exampleblock}
-\column{.31\textwidth}
-\begin{exampleblock}{Se nota en la URL}
-\small \texttt{https://github.com/...} usa la web; \texttt{git@github.com:...} usa SSH.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{La misma idea que en una VM}
-\small GitHub, tu máquina virtual y un servidor cloud aceptan SSH por lo mismo: identifica al usuario y cifra la conexión. Si pierdes el equipo, se revoca esa clave desde la cuenta sin cambiar nada más.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Servicios y puertos clásicos}
-\begin{block}{Por qué importan}
-\small Una misma dirección IP atiende varios servicios a la vez. El puerto indica a cuál de ellos llega cada conexión.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Acceso y web}
-\small
-\texttt{22} SSH: administración remota.\par\smallskip
-\texttt{80} HTTP: web sin cifrar.\par\smallskip
-\texttt{443} HTTPS: web cifrada.\par\smallskip
-\texttt{53} DNS: resolución de nombres.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{exampleblock}{Datos y aplicaciones}
-\small
-\texttt{3306} MySQL.\par\smallskip
-\texttt{5432} PostgreSQL.\par\smallskip
-\texttt{8000} y \texttt{3000}: aplicaciones Node en desarrollo.\par\smallskip
-\texttt{25} y \texttt{587} SMTP: correo saliente.
-\end{exampleblock}
-\end{columns}
-\begin{alertblock}{Ya los usaste en esta sesión}
-\small \texttt{443} al abrir Google en Firefox, \texttt{3306} cuando \texttt{mi-api} comprueba MySQL y \texttt{8000} al consultar la API. \texttt{ss -ltn} muestra qué puertos escucha tu equipo.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}[plain]
 \begin{tikzpicture}[remember picture,overlay]
   \node[anchor=center,inner sep=0pt] at (current page.center)
     {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
@@ -747,12 +217,12 @@ active\\
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{3pt}
-  \item GNU Coreutils: manual de \texttt{chmod}; páginas de manual de \texttt{ls}, \texttt{chmod} y \texttt{env}.
-  \item systemd: páginas de manual de \texttt{systemctl}, \texttt{systemd.unit} y \texttt{systemd.service}, \texttt{freedesktop.org/software/systemd/man}.
-  \item Documentación de Ubuntu Server: OpenSSH y MySQL, \texttt{documentation.ubuntu.com/server}.
-  \item Documentación de Node.js: módulos nativos \texttt{http} y \texttt{net}, \texttt{nodejs.org/api}.
-  \item Documentación oficial de Warp para Linux, \texttt{docs.warp.dev}; documentación oficial de Google Antigravity CLI, \texttt{antigravity.google/docs/cli}.
   \item Documentación oficial de Visual Studio Code para Linux, \texttt{code.visualstudio.com/docs/setup/linux}.
+  \item Documentación oficial de Warp para Linux, \texttt{docs.warp.dev}.
+  \item Documentación oficial de Google Antigravity CLI, \texttt{antigravity.google/docs/cli}.
+  \item \texttt{iproute2}: páginas de manual de \texttt{ip-address}, \texttt{ip-route} y \texttt{ss}.
+  \item Captura de tráfico: páginas de manual de \texttt{tcpdump} y documentación de Wireshark, \texttt{wireshark.org/docs}.
+  \item Documentación de Ubuntu Server: configuración de red, \texttt{documentation.ubuntu.com/server}.
   \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}; identidad visual y estructura docente de la Sesión 05.
 \end{itemize}
 \end{frame}
