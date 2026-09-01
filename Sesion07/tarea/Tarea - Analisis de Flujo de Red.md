@@ -4,7 +4,7 @@
 
 En esta tarea analizarás cómo una máquina virtual con Ubuntu se conecta a un servidor de Internet cuando utiliza el modo de red **Adaptador puente (Bridged)**.
 
-Al terminar, elaborarás un diagrama de secuencia y un diagrama de topología con los datos reales de tu equipo. Además, explicarás qué ocurre con el tráfico desde que sale de la máquina virtual hasta que recibe una respuesta.
+Al terminar, elaborarás un diagrama de secuencia y un diagrama de bloques que represente la arquitectura de red con los datos reales de tu equipo. Además, explicarás qué ocurre con el tráfico desde que sale de la máquina virtual hasta que recibe una respuesta.
 
 ## Datos que debes registrar
 
@@ -12,8 +12,8 @@ Registra los siguientes valores:
 
 ```text
 VM_IP = [IP privada de la máquina virtual]
-HOST_IP = [IP privada de la computadora física]
 ROUTER_IP = [puerta de enlace predeterminada]
+HOST_IP = [IP privada de la computadora física]
 DEST_IP = [IP del servidor de destino]
 PROTOCOL = HTTPS sobre TCP
 PORT = 443
@@ -150,6 +150,10 @@ Dentro de Ubuntu ejecuta:
 ping www.google.com
 ```
 
+Antes de iniciar la conexión, **DNS** traduce el nombre `www.google.com` a una dirección IP que la VM puede usar como destino.
+
+![Resumen de cómo DNS selecciona una dirección IP para www.google.com](image.png)
+
 La dirección IP aparece entre paréntesis en la primera línea. Después de verla, puedes detener el comando con `Ctrl+C`:
 
 ```text
@@ -162,28 +166,18 @@ Entonces registrarías:
 DEST_IP = 142.250.190.46
 ```
 
-## 7. Realiza y comprueba la conexión HTTPS
+## 7. Comprueba la conexión HTTPS desde el navegador
 
-Ejecuta en Ubuntu:
+Al ingresar `www.google.com` en la barra de direcciones del navegador, Firefox reconoce que el dominio está configurado para utilizar conexiones seguras y le asigna automáticamente HTTPS. HTTPS utiliza de manera estándar el puerto 443. En cambio, existen sitios como `httpforever.com` que sí permiten conexiones mediante HTTP.
 
-```bash
-curl -I https://www.google.com
-```
-
-Si la conexión funciona, recibirás encabezados HTTP parecidos a estos:
-
-```text
-HTTP/2 200
-```
-
-Esta prueba confirma que puedes establecer una conexión HTTPS. Como la dirección comienza con `https://`, se utiliza HTTPS sobre TCP y el puerto predeterminado es el 443:
+Por lo tanto, para completar el diagrama debes registrar:
 
 ```text
 PROTOCOL = HTTPS sobre TCP
 PORT = 443
 ```
 
-`HTTPS` es el protocolo de aplicación y utiliza `TCP` como protocolo de transporte. Por eso debes expresarlo como `HTTPS sobre TCP` en tu diagrama.
+En esta práctica, HTTPS utiliza `TCP` como protocolo de transporte. Por eso debes expresarlo como `HTTPS sobre TCP` en tu diagrama.
 
 ## 8. Explica el flujo de red
 
@@ -197,6 +191,8 @@ Destino: DEST_IP
 Puerto de destino: 443
 ```
 
+Aunque la VM utiliza el modo puente y no el modo NAT del hipervisor, el router de la red sí realiza NAT para permitir la salida a Internet. Son dos funciones diferentes: el modo puente conecta la VM directamente a la red local y el router traduce la IP privada de la VM al comunicarse con Internet.
+
 El router realiza la traducción de direcciones (NAT) al enviar el tráfico a Internet:
 
 ```text
@@ -209,9 +205,11 @@ Origen = IP pública
 Destino = DEST_IP
 ```
 
-**NAT (Network Address Translation)** es el mecanismo que utiliza el router para reemplazar la IP privada de la máquina virtual por una IP pública al enviar el tráfico a Internet. El router guarda temporalmente esta traducción para saber a qué dispositivo de la red local debe entregar la respuesta.
+**NAT (Network Address Translation)** permite que varios dispositivos de una red privada usen **una sola IP pública** para salir a Internet.
 
-Cuando llega la respuesta, el router consulta la conexión registrada, reemplaza la IP pública por `VM_IP` como destino y la devuelve a la máquina virtual.
+Ejemplo: la VM tiene `192.168.1.20`. Al entrar a una web, el router cambia esa IP privada por su IP pública. Cuando llega la respuesta, el router recuerda qué dispositivo hizo la petición y la devuelve a la VM.
+
+En corto: **NAT traduce IPs privadas ↔ IP pública**.
 
 La expresión **IP pública** aparece en el diagrama para representar la dirección que se observa desde Internet. Puedes obtenerla si deseas comprobarla, pero no debes agregarla a tus resultados.
 
@@ -230,8 +228,8 @@ Llena esta plantilla con los valores que obtuviste:
 
 ```text
 VM_IP =
-HOST_IP =
 ROUTER_IP =
+HOST_IP =
 DEST_IP =
 PROTOCOL = HTTPS sobre TCP
 PORT = 443
@@ -347,7 +345,7 @@ sequenceDiagram
     Note over VM: 📥 Respuesta recibida<br/>IP Origen: 142.250.190.46<br/>IP Destino: 192.168.1.20
 ```
 
-## 11. Elabora el diagrama de topología
+## 11. Elabora el diagrama de bloques de la arquitectura de red
 
 Este diagrama muestra cómo se conectan la máquina virtual, el hipervisor, la interfaz física, el router y el servidor de Google.
 
@@ -413,10 +411,5 @@ flowchart LR
 
 Tu entrega debe incluir:
 
-1. Los seis valores completados: `VM_IP`, `HOST_IP`, `ROUTER_IP`, `DEST_IP`, `PROTOCOL` y `PORT`.
-2. Una captura de los comandos `ip addr` e `ip route` ejecutados en la VM.
-3. Una captura del comando usado para obtener `HOST_IP` en la computadora física.
-4. Una captura de `ping www.google.com` y otra de la conexión realizada con `curl`.
-5. El diagrama de secuencia con tus valores reales.
-6. El diagrama de topología con tus valores reales.
-
+1. El diagrama de secuencia con tus valores reales.
+2. El diagrama de bloques de la arquitectura de red con tus valores reales.
