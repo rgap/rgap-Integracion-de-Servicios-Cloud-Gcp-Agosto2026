@@ -1,0 +1,802 @@
+% Motor: XeLaTeX. Sesion 08 — material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Ciclo de vida de un servicio, servidores reales, firewall, DNS y permisos}
+\date{Semana 04 - Sesión 08}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué tres datos definen un socket?
+  \item ¿Qué pasos hace el servidor que el cliente no necesita hacer, y por qué?
+  \item En la práctica anterior, ¿qué comando les dijo qué proceso ocupaba el puerto \texttt{8080}?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás describir el ciclo de vida de un servicio y qué rol se encarga de cada etapa, usar servidores y servicios reales (nginx, MySQL y el firewall del sistema), reconocer los puertos clásicos, describir el papel de un servidor DNS y administrar los permisos de los archivos de un proyecto.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Para qué sirve \texttt{systemctl} y qué diferencia hay entre \texttt{start} y \texttt{enable}?
+  \item ¿Quién instala y quién mantiene los servidores donde corre una aplicación?
+  \item ¿Han visto alguna vez un servicio caído en producción? ¿Quién lo levantó?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Un servicio no se instala y se olvida: hay que configurarlo, arrancarlo, vigilarlo, actualizarlo y darlo de baja. Saber quién responde por cada etapa te permite ubicarte en un equipo real y entender qué te delega un proveedor cloud y qué sigue siendo tuyo.
+\end{block}
+\vspace{0.2cm}
+\small También podrás abrir y cerrar puertos con criterio, entender cómo el DNS apunta un dominio a un servidor y proteger archivos sensibles como el \texttt{.env} de un proyecto.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Ciclo de vida de un servicio\\ y roles a cargo}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Un servicio recorre siempre las mismas etapas}
+\begin{block}{Idea central}
+\small El servidor que escribimos la sesión pasada moría al cerrar la terminal. Un servicio de verdad tiene una vida más larga: alguien lo instala, lo configura, lo arranca, lo vigila, lo actualiza y algún día lo apaga. Cada etapa deja rastro y tiene un responsable.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[node distance=3.5mm]
+  \node[caja] (a) {\footnotesize Instalar};
+  \node[caja, right=of a] (b) {\footnotesize Configurar};
+  \node[cajaverde, right=of b] (c) {\footnotesize Arrancar y\\[-1pt] habilitar};
+  \node[cajaverde, right=of c] (d) {\footnotesize Operar y\\[-1pt] monitorear};
+  \node[caja, right=of d] (e) {\footnotesize Actualizar};
+  \node[cajanaranja, right=of e] (f) {\footnotesize Detener y\\[-1pt] dar de baja};
+  \draw[flecha] (a) -- (b); \draw[flecha] (b) -- (c); \draw[flecha] (c) -- (d);
+  \draw[flecha] (d) -- (e); \draw[flecha] (e) -- (f);
+  \draw[flecha] (e.south) .. controls +(0,-0.7) and +(0,-0.7) .. node[below,font=\scriptsize] {vuelve a operar} (d.south);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{La etapa más larga es \emph{operar}}
+\small Instalar toma minutos; operar dura años. Ahí ocurren las caídas y los registros que crecen.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Dar de baja también es trabajo}
+\small Un servicio olvidado sigue escuchando en un puerto y ya nadie lo actualiza: se vuelve la puerta de entrada más fácil.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El ciclo de vida, visto con \texttt{systemd}}
+\begin{block}{Cada etapa tiene su comando}
+\small En Ubuntu, \texttt{systemd} es quien mantiene vivos los servicios. Lo vemos con \texttt{nginx}, un servidor web. Son los mismos comandos para cualquier servicio: solo cambia el nombre.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Lo esencial: instalar, encender, mirar}
+\begin{terminal}\footnotesize
+\$ sudo apt install nginx\\
+\$ sudo systemctl start nginx\\
+\$ systemctl status nginx\\
+\$ sudo systemctl stop nginx
+\end{terminal}
+\small Con estos cuatro ya puedes levantar un servicio y comprobar si está vivo.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Después: dejarlo fijo y mantenerlo}
+\begin{terminal}\footnotesize
+\$ sudo systemctl enable nginx\\
+\$ sudo systemctl reload nginx\\
+\$ journalctl -u nginx\\
+\$ sudo systemctl disable --now nginx
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{\texttt{start} frente a \texttt{enable}}
+\small \texttt{start} lo levanta ahora; \texttt{enable} hace que vuelva solo tras reiniciar la máquina.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{\texttt{reload} frente a \texttt{restart}}
+\small \texttt{reload} relee la configuración sin cortar el servicio; \texttt{restart} lo apaga y lo vuelve a abrir.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Quién se encarga de cada etapa}
+\begin{block}{En un equipo pequeño una sola persona hace todo; en uno grande, no}
+\small Los nombres cambian entre empresas, pero las responsabilidades son estas.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{exampleblock}{Desarrollador}
+\small Escribe el servicio y define qué necesita para arrancar: puerto, variables de entorno, dependencias.
+\end{exampleblock}
+\begin{exampleblock}{Administrador de sistemas \textnormal{\scriptsize(SysAdmin)}}
+\small Instala, configura y mantiene el servidor: paquetes, usuarios, permisos, respaldos.
+\end{exampleblock}
+\begin{exampleblock}{DevOps / SRE}
+\small Automatiza el despliegue y vigila que el servicio siga en pie: monitoreo, alertas e incidentes.
+\end{exampleblock}
+\column{.32\textwidth}
+\begin{exampleblock}{Cloud engineer}
+\small Construye y opera la infraestructura en la nube: VMs, redes, reglas de firewall, permisos de acceso y costos.
+\end{exampleblock}
+\begin{exampleblock}{Arquitecto cloud}
+\small Decide el diseño: si el servicio corre en una VM propia o en un servicio administrado del proveedor.
+\end{exampleblock}
+\column{.32\textwidth}
+\begin{exampleblock}{Administrador de base de datos \textnormal{\scriptsize(DBA)}}
+\small Responde por MySQL o PostgreSQL: esquema, respaldos, restauración y rendimiento de las consultas.
+\end{exampleblock}
+\begin{exampleblock}{Analista de seguridad}
+\small Decide qué puertos se abren y desde dónde, revisa registros y exige que lo expuesto esté justificado.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Base de datos y firewall\\ simulados}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Servidor de base de datos simulado: \texttt{servidor\_mysql.py}}
+\begin{columns}[T,onlytextwidth]
+\column{.56\textwidth}
+\begin{exampleblock}{El mismo esqueleto, otra respuesta}
+\begin{terminal}\scriptsize
+TABLA = \lbrack (1, 'Ana', 'ana@utp.edu.pe'), ... \rbrack\\
+~\\
+s.bind(('127.0.0.1', 3307))\\
+s.listen(5)\\
+while True:\\
+\quad cli, dir = s.accept()\\
+\quad consulta = cli.recv(1024).decode()\\
+\quad cli.sendall(responder(consulta).encode())\\
+\quad cli.close()
+\end{terminal}
+\end{exampleblock}
+\column{.40\textwidth}
+\begin{exampleblock}{Qué cambia frente al de HTTP}
+\small Solo el puerto y lo que se devuelve: en vez de una página, filas de una tabla.
+\end{exampleblock}
+\begin{block}{Puerto 3307}
+\small Se usa \texttt{3307} para no chocar con un MySQL real, que ocupa el \texttt{3306}.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cliente de base de datos: \texttt{cliente\_mysql.py}}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Conecta, consulta y lee}
+\begin{terminal}\scriptsize
+c.connect(('127.0.0.1', 3307))\\
+c.sendall('SELECT * FROM usuarios'.encode())\\
+respuesta = c.recv(4096)\\
+c.close()\\
+print(respuesta.decode())
+\end{terminal}
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{exampleblock}{Resultado}
+\begin{terminal}\footnotesize
+\$ python3 cliente\_mysql.py\\
+Consulta enviada:\\
+SELECT * FROM usuarios\\
+1 | Ana | ana@utp.edu.pe\\
+2 | Luis | luis@utp.edu.pe\\
+3 | Sara | sara@utp.edu.pe
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{block}{La misma secuencia que el cliente HTTP}
+\small \texttt{connect()}, \texttt{sendall()}, \texttt{recv()}. Cambia el puerto y el texto que se envía; el mecanismo es idéntico. Un MySQL real usa un formato binario más elaborado, pero por debajo también es esto.
+\end{block}
+\end{frame}
+
+\begin{frame}{Cliente, servidor y servicio no son lo mismo}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{exampleblock}{Cliente}
+\small Quien inicia la conexión y pide algo. Termina cuando obtiene su respuesta.
+\end{exampleblock}
+\column{.31\textwidth}
+\begin{exampleblock}{Servidor}
+\small Quien escucha en un puerto y responde. Necesita estar activo antes que el cliente.
+\end{exampleblock}
+\column{.31\textwidth}
+\begin{exampleblock}{Servicio}
+\small Cualquier programa que el sistema mantiene en segundo plano para cumplir una función.
+\end{exampleblock}
+\end{columns}
+\begin{block}{No todo servicio es un servidor}
+\small Un servidor siempre escucha peticiones; un servicio no tiene por qué hacerlo. \texttt{cron} ejecuta tareas a cierta hora, un servicio de respaldo copia archivos de madrugada y \texttt{systemd-timesyncd} ajusta el reloj: ninguno abre un puerto ni espera clientes, y aun así los tres son servicios.
+\end{block}
+\begin{exampleblock}{El firewall es un servicio, no un servidor}
+\small Nadie se conecta al firewall. Se ejecuta en segundo plano revisando el tráfico que entra y decidiendo si dejarlo pasar. Por eso no tiene cliente ni responde peticiones: solo filtra.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Teoría: un firewall decide qué conexiones pasan}
+\begin{block}{Cómo razona}
+\small Recorre una lista de \textbf{reglas} en orden. Si alguna coincide con el origen y el puerto, aplica su acción. Si ninguna coincide, aplica la \textbf{política por defecto}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{exampleblock}{Política por defecto: denegar}
+\small Se cierra todo y se abre solo lo necesario. Es el criterio recomendado en servidores.
+\end{exampleblock}
+\column{.31\textwidth}
+\begin{exampleblock}{Qué mira cada regla}
+\small Dirección de origen, puerto de destino, protocolo y la acción: permitir o denegar.
+\end{exampleblock}
+\column{.31\textwidth}
+\begin{exampleblock}{Escuchar no es ser accesible}
+\small El programa puede estar activo y aun así el firewall impedir que lleguen las conexiones.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El firewall como servicio: \texttt{servicio\_firewall.py}}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{La política: el baneo va primero y sin puerto}
+\begin{terminal}\scriptsize
+POLITICA\_POR\_DEFECTO = 'DENEGAR'\\
+REGLAS = \lbrack\\
+\quad \{'origen': '203.0.113.66/32',\\
+\quad ~~'puerto': 'cualquiera', 'accion': 'DENEGAR'\},\\
+\quad \{'origen': '192.168.100.0/24',\\
+\quad ~~'puerto': 22, 'accion': 'PERMITIR'\},\\
+\quad \{'origen': '0.0.0.0/0',\\
+\quad ~~'puerto': 80, 'accion': 'PERMITIR'\},\\
+\quad ...\\
+\rbrack
+\end{terminal}
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Es la puerta, no el destino}
+\small Se queda corriendo y todo pasa por él. Lo que permite lo \textbf{reenvía} al servicio; lo que deniega no llega nunca.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[node distance=7mm]
+  \node[caja] (i) {\footnotesize intento};
+  \node[cajanaranja, right=of i] (f) {\footnotesize firewall\\[-2pt]\scriptsize :9000};
+  \node[cajaverde, below=6mm of f] (s) {\footnotesize servicio\\[-2pt]\scriptsize :9001};
+  \draw[flecha] (i) -- (f);
+  \draw[flecha] (f) -- node[right,font=\scriptsize] {si permite} (s);
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\begin{block}{Por qué la regla 1 va primero}
+\small Es la única sin puerto: cierra esa IP en \textbf{toda} la máquina. Si estuviera al final nunca se aplicaría al \texttt{80}, porque la regla 3 ya habría dejado pasar. Es el mismo motivo por el que en \texttt{ufw} un baneo se agrega con \texttt{insert 1} y no al final.
+\end{block}
+\end{frame}
+
+\begin{frame}{El servicio está activo; el firewall decide quién llega}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Terminal 2: el firewall, corriendo}
+\begin{terminal}\scriptsize
+\$ python3 servicio\_firewall.py\\
+FIREWALL ACTIVO en 127.0.0.1:9000\\
+Esperando intentos...\\
+~\\
+192.168.100.161 \phantom{0}-> 22~~ PERMITIR (regla 2)\\
+203.0.113.9~~~~ \phantom{0}-> 3306 DENEGAR~ (por defecto)\\
+203.0.113.66~~~ \phantom{0}-> 80~~ DENEGAR~ (regla 1)
+\end{terminal}
+\end{exampleblock}
+\begin{exampleblock}{Terminal 1: el servicio, corriendo}
+\begin{terminal}\scriptsize
+\$ python3 servicio.py\\
+Servicio ACTIVO en 127.0.0.1:9001\\
+~\\
+\lbrack 15:33\rbrack atendiendo a 192.168.100.161
+\end{terminal}
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Terminal 3: los intentos}
+\begin{terminal}\scriptsize
+\$ python3 intento\_1.py\\
+PERMITIDO. Servicio atendido\\
+~\\
+\$ python3 intento\_2.py\\
+DENEGADO (política por defecto)\\
+~\\
+\$ python3 intento\_3.py\\
+DENEGADO (regla 1)
+\end{terminal}
+\end{exampleblock}
+\begin{alertblock}{Mira la terminal 1}
+\small Solo registró \textbf{un} intento. Los otros dos nunca llegaron al servicio: murieron en el firewall.
+\end{alertblock}
+\end{columns}
+\begin{block}{Escuchar no es ser accesible}
+\small El servicio nunca se detuvo. Lo único que cambió fue quién tenía permiso de llegar. Por eso, ante un servicio que "no responde", se revisan dos cosas distintas: si hay alguien escuchando (\texttt{ss -ltnp}) y si se le permite llegar (\texttt{ufw status}).
+\end{block}
+\end{frame}
+
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Servidores y servicios\\ reales en uso}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{\texttt{nginx} publica sitios web en el puerto \texttt{80}}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Instala y comprueba}
+\begin{terminal}\footnotesize
+\$ sudo apt update\\
+\$ sudo apt install nginx -y\\
+\$ systemctl status nginx\\
+\$ curl -I 127.0.0.1\\
+HTTP/1.1 200 OK\\
+Server: nginx/1.24.0 (Ubuntu)
+\end{terminal}
+\small Es el mismo servicio que usamos en el ciclo de vida.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{Qué aporta frente al nuestro}
+\small Atiende muchos clientes a la vez, sirve archivos reales, registra accesos y admite HTTPS.
+\end{block}
+\begin{exampleblock}{Dónde viven los archivos}
+\begin{terminal}\footnotesize
+/var/www/html/index.html
+\end{terminal}
+\small Lo que dejes ahí queda publicado.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{MySQL escucha en \texttt{3306} y conserva los datos}
+\begin{columns}[T,onlytextwidth]
+\column{.54\textwidth}
+\begin{exampleblock}{Instala, activa y conéctate}
+\begin{terminal}\footnotesize
+\$ sudo apt install mysql-server -y\\
+\$ sudo systemctl start mysql\\
+\$ sudo systemctl enable mysql\\
+\$ systemctl is-active mysql\\
+active\\
+\$ sudo mysql -e 'SHOW DATABASES;'
+\end{terminal}
+\end{exampleblock}
+\column{.42\textwidth}
+\begin{block}{Lo que simulamos, en real}
+\small Aquí también hay un servidor escuchando y un cliente (\texttt{mysql}) que envía consultas y recibe filas.
+\end{block}
+\begin{block}{Comprueba el nombre real}
+\small Con MariaDB la unidad cambia de nombre. Búscala con \texttt{systemctl list-unit-files '*mysql*'}.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{UFW aplica en el sistema las reglas que simulamos}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Política por defecto y permisos}
+\begin{terminal}\footnotesize
+\$ sudo ufw default deny incoming\\
+\$ sudo ufw allow 22/tcp\\
+\$ sudo ufw allow 80/tcp\\
+\$ sudo ufw enable\\
+\$ sudo ufw status numbered
+\end{terminal}
+\small Abre el \texttt{22} antes de activarlo: si administras la máquina por SSH y no lo permites, pierdes el acceso.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{Es el mismo razonamiento}
+\small \texttt{default deny} es la política por defecto de \texttt{servicio\_firewall.py}; cada \texttt{allow} es una regla de la lista, y un baneo por IP se agrega con \texttt{insert 1}.
+\end{block}
+\begin{exampleblock}{Regla por origen}
+\begin{terminal}\footnotesize
+\$ sudo ufw allow from \textbackslash\\
+\quad 192.168.1.0/24 to any \textbackslash\\
+\quad port 3306
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Casos usuales de uso de un firewall}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cerrar la base de datos al exterior}
+\small La app se conecta desde la propia máquina o desde la red interna; el \texttt{3306} nunca debe estar abierto a Internet.
+\end{exampleblock}
+\begin{exampleblock}{Publicar solo lo necesario}
+\small En un servidor web se dejan abiertos \texttt{80} y \texttt{443}, y se cierra todo lo demás.
+\end{exampleblock}
+\begin{exampleblock}{Limitar la administración}
+\small Permitir el \texttt{22} solo desde la IP de la oficina o de la VPN, no desde cualquier origen.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Bloquear un origen abusivo}
+\small Banear la IP que está intentando adivinar contraseñas o saturando el servidor.
+\end{exampleblock}
+\begin{exampleblock}{Cerrar puertos de desarrollo}
+\small \texttt{3000}, \texttt{8000} y paneles internos sirven mientras desarrollas; en producción no deben quedar expuestos.
+\end{exampleblock}
+\begin{exampleblock}{Separar ambientes}
+\small Que el servidor de pruebas solo acepte conexiones del equipo de desarrollo.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Práctica: baneo por IP contra un sitio en \texttt{nginx} \textnormal{\small(20 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1. Publica un sitio estático en la VM}
+\begin{terminal}\scriptsize
+\$ echo '<h1>Sitio de prueba</h1>' \textbackslash\\
+\quad | sudo tee /var/www/html/index.html\\
+\$ sudo ufw allow 80/tcp\\
+\$ sudo ufw enable
+\end{terminal}
+\small Desde el host, abre \texttt{http://VM\_IP} en el navegador: debe verse la página.
+\end{exampleblock}
+\begin{exampleblock}{2. Banea la IP del host}
+\begin{terminal}\scriptsize
+\$ sudo ufw insert 1 deny from HOST\_IP
+\end{terminal}
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{3. Comprueba y revierte}
+\begin{terminal}\scriptsize
+\$ sudo ufw status numbered\\
+\lbrack 1\rbrack Anywhere  DENY IN  HOST\_IP\\
+\lbrack 2\rbrack 80/tcp    ALLOW IN Anywhere\\
+~\\
+\$ sudo ufw delete 1
+\end{terminal}
+\small Recarga el navegador en cada paso y anota qué ocurre.
+\end{exampleblock}
+\begin{block}{\texttt{deny} frente a \texttt{reject}}
+\small \texttt{deny} descarta el paquete en silencio: el navegador se queda cargando hasta agotar el tiempo. \texttt{reject} avisa y el error es inmediato.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Servicios y puertos clásicos}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Una misma IP atiende varios servicios a la vez}
+\begin{block}{Por qué importan}
+\small El puerto indica a cuál de esos servicios llega cada conexión. Los números que siguen son \textbf{estándares}: la convención que todo el mundo espera. Pero, como ya vieron, nada impide levantar un servidor en el puerto que quieran —lo hicimos en el \texttt{8080} y en el \texttt{3307}—; solo que entonces el cliente debe indicarlo.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Acceso y web}
+\small
+\texttt{22} SSH: administración remota.\par\smallskip
+\texttt{80} HTTP: web sin cifrar.\par\smallskip
+\texttt{443} HTTPS: web cifrada.\par\smallskip
+\texttt{53} DNS: resolución de nombres.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Datos y aplicaciones}
+\small
+\texttt{3306} MySQL.\par\smallskip
+\texttt{5432} PostgreSQL.\par\smallskip
+\texttt{8000} y \texttt{3000}: aplicaciones Node o Python en desarrollo.\par\smallskip
+\texttt{25} y \texttt{587} SMTP: correo saliente.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Qué hace un analista de seguridad ante un puerto abierto}
+\begin{block}{Cada puerto abierto es superficie de ataque}
+\small El trabajo no es cerrarlo todo, sino justificar uno por uno: qué servicio escucha ahí, quién necesita alcanzarlo y desde dónde.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1. Inventariar}
+\begin{terminal}\footnotesize
+\$ sudo ss -ltnp
+\end{terminal}
+\small Qué escucha, en qué dirección y qué programa lo abrió.
+\end{exampleblock}
+\begin{exampleblock}{2. Mirar desde fuera}
+\begin{terminal}\footnotesize
+\$ nmap -sV VM\_IP
+\end{terminal}
+\small Ve lo mismo que vería un atacante, incluida la versión del servicio.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{3. Preguntar por cada puerto}
+\small ¿Debe ser accesible desde Internet, solo desde la red interna o solo desde la propia máquina?
+\end{exampleblock}
+\begin{exampleblock}{4. Reducir y vigilar}
+\small Cerrar lo que no se justifica, restringir por origen, mantener el servicio actualizado y revisar los registros de acceso.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries El servidor DNS}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Un servidor DNS traduce nombres en direcciones IP}
+\begin{block}{Qué problema resuelve}
+\small Las personas recordamos \texttt{google.com}; las máquinas necesitan una IP. El DNS es el servicio que convierte lo primero en lo segundo, y escucha en el puerto \texttt{53}. Si falla, el navegador no encuentra el sitio aunque el servidor esté funcionando.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{exampleblock}{Registros frecuentes}
+\small
+\texttt{A}: apunta un nombre a una IPv4.\par\smallskip
+\texttt{AAAA}: lo mismo, con IPv6.\par\smallskip
+\texttt{CNAME}: alias de otro nombre.\par\smallskip
+\texttt{MX}: a qué servidor va el correo.\par\smallskip
+\texttt{TXT}: notas y verificaciones de dominio.
+\end{exampleblock}
+\column{.50\textwidth}
+\begin{block}{Lo que harás en la práctica}
+\small Al contratar un hosting o crear una VM te entregan una \textbf{IP pública}. Para que tu dominio apunte ahí, entras al panel del proveedor del dominio y editas el \textbf{registro A}, poniendo esa IP.
+\end{block}
+\begin{exampleblock}{Y el \texttt{www}}
+\small Suele resolverse con un \texttt{CNAME} de \texttt{www.tudominio.com} hacia \texttt{tudominio.com}, para no repetir la IP en dos sitios.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Gestión de permisos}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Los permisos responden quién puede hacer qué}
+\begin{block}{Idea central}
+\small Ubuntu protege cada archivo indicando qué acciones puede realizar el \textbf{propietario}, el \textbf{grupo} y el \textbf{resto de usuarios}. Un servidor lo usan varias personas y varios servicios: los permisos evitan que un programa cualquiera lea las credenciales de otro.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{¿Quién?}
+\small
+\texttt{u}: propietario.\par\medskip
+\texttt{g}: grupo.\par\medskip
+\texttt{o}: otros usuarios.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{¿Qué puede hacer?}
+\small
+\texttt{r}: leer.\par\medskip
+\texttt{w}: modificar.\par\medskip
+\texttt{x}: ejecutar o atravesar un directorio.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{\texttt{ls -l} se lee de izquierda a derecha}
+\begin{exampleblock}{Los archivos del proyecto \textnormal{\scriptsize(carpeta \texttt{Sesion08/proyecto})}}
+\begin{terminal}\footnotesize
+rgap@ubuntu:\textasciitilde/proyecto\$ ls -la\\
+-rw-rw-r-- 1 rgap rgap ~~79 Sep  1 13:51 .env\\
+-rw-rw-r-- 1 rgap rgap 2845 Sep  1 13:50 servidor\_http.py
+\end{terminal}
+\small Con \texttt{ls -a} también aparecen los archivos ocultos, los que empiezan con punto.
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.22\textwidth}
+\begin{block}{\texttt{-}}
+\small Archivo regular. Una \texttt{d} indicaría directorio.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{rw-}}
+\small El propietario lee y modifica; todavía no ejecuta.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{rw-}}
+\small El grupo \texttt{rgap} lee y modifica.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{r--}}
+\small Los demás solo leen. Aquí está el problema del \texttt{.env}.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Caso 1: un \texttt{.py} necesita intérprete y permiso \texttt{x}}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Primera línea del script}
+\begin{terminal}\footnotesize
+\#!/usr/bin/env python3\\
+from http.server import \textbackslash\\
+\quad BaseHTTPRequestHandler, HTTPServer\\
+...
+\end{terminal}
+\small Le indica a Ubuntu qué programa debe interpretarlo.
+\end{exampleblock}
+\begin{block}{Por qué \texttt{python3 archivo.py} sí funciona}
+\small Ahí ejecutas Python, y Python solo \emph{lee} el archivo. \texttt{./archivo.py} exige que el archivo mismo sea ejecutable.
+\end{block}
+\column{.44\textwidth}
+\begin{exampleblock}{Antes y después}
+\begin{terminal}\footnotesize
+\$ ./servidor\_http.py\\
+bash: Permiso denegado\\
+\$ chmod u+x servidor\_http.py\\
+\$ ./servidor\_http.py\\
+Escuchando en \\
+http://127.0.0.1:8080
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Caso 2: el \texttt{.env} guarda secretos y debe cerrarse}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Qué contiene}
+\begin{terminal}\footnotesize
+DB\_USER=app\_web\\
+DB\_PASSWORD=cambia-esta-clave\\
+API\_KEY=clave-de-ejemplo-no-real
+\end{terminal}
+\small Credenciales que dan acceso real a la base de datos y a servicios de pago.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Ciérralo al propietario}
+\begin{terminal}\footnotesize
+\$ chmod 600 .env\\
+\$ ls -l .env\\
+-rw------- 1 rgap rgap 223 .env
+\end{terminal}
+\small \texttt{600}: el propietario lee y escribe; nadie más entra.
+\end{exampleblock}
+\end{columns}
+\begin{block}{El permiso no reemplaza al \texttt{.gitignore}}
+\small \texttt{chmod} protege el archivo en esta máquina. Para que no llegue al repositorio, además debe estar listado en \texttt{.gitignore}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Forma simbólica y forma numérica}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Simbólica: dices qué cambiar}
+\begin{terminal}
+\$ chmod u+x app.py\\
+\$ chmod o-r .env
+\end{terminal}
+\small La primera agrega ejecución al propietario. La segunda quita la lectura a los demás.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Numérica: \texttt{r=4}, \texttt{w=2}, \texttt{x=1}}
+\begin{terminal}
+4+2+1 = 7  rwx\\
+4+2   = 6  rw-\\
+4     = 4  r--
+\end{terminal}
+\small Un dígito por cada grupo: propietario, grupo y otros.
+\end{exampleblock}
+\end{columns}
+\begin{exampleblock}{Los tres que verás casi siempre}
+\begin{terminal}\footnotesize
+chmod 600 .env          rw- --- ---   solo el propietario\\
+chmod 644 index.html    rw- r-- r--   todos leen, solo tú editas\\
+chmod 777 archivo       rwx rwx rwx   todos hacen todo: evítalo
+\end{terminal}
+\small \texttt{777} no arregla la causa de un error de permisos; solo amplía quién puede provocarlo.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Práctica: un sitio Python detrás de \texttt{nginx} \textnormal{\small(20 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{1. Crea \texttt{sitio.py} y pruébalo}
+\begin{terminal}\scriptsize
+from http.server import \textbackslash\\
+\quad BaseHTTPRequestHandler, HTTPServer\\
+~\\
+class Handler(BaseHTTPRequestHandler):\\
+\quad def do\_GET(self):\\
+\quad\quad self.send\_response(200)\\
+\quad\quad self.send\_header("Content-Type",\\
+\quad\quad\quad "text/html; charset=utf-8")\\
+\quad\quad self.end\_headers()\\
+\quad\quad self.wfile.write(HTML.encode())\\
+~\\
+HTTPServer(("127.0.0.1", 3000),\\
+\quad Handler).serve\_forever()
+\end{terminal}
+\small El HTML va en la constante \texttt{HTML}, arriba del todo.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{2. Ponlo detrás de \texttt{nginx}}
+\begin{terminal}\scriptsize
+\$ sudo nano \textbackslash\\
+\quad /etc/nginx/sites-available/default\\
+~\\
+location / \{\\
+\quad proxy\_pass http://127.0.0.1:3000;\\
+\}\\
+~\\
+\$ sudo nginx -t\\
+\$ sudo systemctl reload nginx
+\end{terminal}
+\end{exampleblock}
+\begin{exampleblock}{3. Corrige los permisos}
+\begin{terminal}\scriptsize
+\$ chmod u+x iniciar.sh\\
+\$ chmod 600 .env
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{block}{Comprobación}
+\small Desde el host, \texttt{http://VM\_IP} muestra la página con el \texttt{3000} cerrado en \texttt{ufw}: quien atiende afuera es \texttt{nginx}. Explica por qué el \texttt{3000} no necesita abrirse.
+\end{block}
+\end{frame}
+
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item systemd: páginas de manual de \texttt{systemctl}, \texttt{journalctl}, \texttt{systemd.unit} y \texttt{systemd.service}, \texttt{freedesktop.org/software/systemd/man}.
+  \item Documentación de Ubuntu Server: nginx, MySQL, UFW y \texttt{systemd-resolved}, \texttt{documentation.ubuntu.com/server}.
+  \item Documentación oficial de nginx, \texttt{nginx.org/en/docs} y \texttt{docs.nginx.com}.
+  \item Páginas de manual de \texttt{ufw}, \texttt{ss} y \texttt{nmap}.
+  \item Documentación de Python: módulo \texttt{socket}, \texttt{docs.python.org/3/library/socket.html}.
+  \item RFC 1034 y RFC 1035: conceptos y especificación del sistema de nombres de dominio.
+  \item GNU Coreutils: manual de \texttt{chmod}; páginas de manual de \texttt{ls}, \texttt{chmod} y \texttt{env}.
+  \item Documentación de Python: módulo \texttt{http.server}, \texttt{docs.python.org/3/library/http.server.html}.
+  \item nginx: \emph{Beginner's Guide} y \texttt{ngx\_http\_proxy\_module}, \texttt{nginx.org/en/docs}.
+  \item Documentación oficial de Google Antigravity CLI, \texttt{antigravity.google/docs/cli}.
+  \item Material base proporcionado: \emph{Fundamentos de Linux — Programa completo}; identidad visual y estructura docente de la Sesión 05.
+\end{itemize}
+\end{frame}
+
+\end{document}

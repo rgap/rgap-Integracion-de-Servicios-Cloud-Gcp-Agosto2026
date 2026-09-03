@@ -1,0 +1,9 @@
+# Archivos generados
+__pycache__/
+*.pyc
+
+# En un proyecto REAL, la línea siguiente debe estar activa: el .env guarda
+# credenciales y no puede llegar al repositorio. Aquí se deja comentada a
+# propósito, porque el .env de esta carpeta es material de clase con valores
+# falsos y tiene que viajar con el curso para poder hacer el ejercicio.
+# .env
