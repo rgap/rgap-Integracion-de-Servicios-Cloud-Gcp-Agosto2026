@@ -1,0 +1,766 @@
+% Motor: XeLaTeX. Sesion 09 - material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{De los servicios y puertos al control de usuarios y permisos}
+\date{Semana 05 - Sesión 09}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué etapas recorre un servicio desde que se instala hasta que se da de baja?
+  \item ¿Cómo se relacionan un servicio que escucha, su puerto y una regla del firewall?
+  \item ¿Qué registro DNS usarías para apuntar un dominio a la IP pública de una VM?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás reconocer qué hicieron \texttt{nginx}, MySQL y el firewall, justificar los accesos de red, diferenciar usuarios normales y privilegiados, aplicar permisos seguros y crear una nueva cuenta de usuario en Ubuntu.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item En un servidor compartido, ¿todas las cuentas deberían poder hacer lo mismo?
+  \item ¿Qué diferencia imaginas entre un usuario normal, \texttt{root} y una cuenta usada por un servicio?
+  \item ¿Cómo decidirías quién puede leer, modificar o ejecutar un archivo?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Una aplicación en producción reúne servicios, puertos y cuentas con distintos privilegios. Reconocer cada pieza permite diagnosticar si el problema está en el servicio, en la red o en el acceso asignado a una persona o proceso.
+\end{block}
+\vspace{0.2cm}
+\small La misma idea se repite en todo el servidor: permitir únicamente lo necesario. Se aplica al firewall, a los roles y a los permisos de scripts, configuraciones y secretos.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries De los servicios al control de acceso}
+\par\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{\texttt{nginx} fue la puerta de entrada al sitio web}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{block}{Lo que observamos en la Sesión 08}
+\small Escuchó en el puerto público \texttt{80} y respondió al navegador con el sitio web. El cliente necesitó la IP de la VM y el puerto; \texttt{nginx} se encargó de procesar la solicitud HTTP.
+\end{block}
+\begin{exampleblock}{Consulta la versión instalada}
+\begin{terminal}\footnotesize
+\$ nginx -v
+\end{terminal}
+\small El número exacto depende de la versión de Ubuntu y de su repositorio.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{exampleblock}{Versión y año}
+\small
+\textbf{0.1.0 - 2004}\par
+Primera versión pública, publicada el 4 de octubre.\par\medskip
+\textbf{1.0 - 2011}\par
+Primera versión estable de la serie \texttt{1.x}.
+\end{exampleblock}
+\begin{alertblock}{La consecuencia}
+\small En la práctica final también actuará como \textbf{proxy inverso}: el navegador hablará con \texttt{nginx} y el puerto \texttt{3000} de Python podrá permanecer cerrado al exterior.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{MySQL recibió consultas y conservó los datos}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{block}{Servidor y cliente cumplen funciones distintas}
+\small El servidor \texttt{mysqld} escucha normalmente en el puerto \texttt{3306}, procesa instrucciones SQL y conserva los cambios en disco. El programa \texttt{mysql} es el cliente que se conecta y envía las consultas.
+\end{block}
+\begin{exampleblock}{Consulta las versiones instaladas}
+\begin{terminal}\footnotesize
+\$ mysqld --version\\
+\$ mysql --version
+\end{terminal}
+\small La primera corresponde al servidor; la segunda, al cliente.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{exampleblock}{Versiones y años clave}
+\small
+\textbf{Primera versión - 1995}\par
+Se publicó en mayo de 1995.\par\medskip
+\textbf{8.0 - 2018}\par
+Introdujo una generación moderna del motor.\par\medskip
+\textbf{8.4 LTS - 2024}\par
+Primera versión de soporte prolongado.
+\end{exampleblock}
+\begin{block}{No debe quedar público}
+\small La aplicación necesita conectarse a MySQL; cualquier equipo de Internet, no. El acceso debe limitarse por red y por usuario de la base de datos.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El kernel filtra el tráfico y UFW administra las reglas}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{block}{Lo que comprobamos en la Sesión 08}
+\small El servicio podía seguir activo aunque una conexión no llegara. El firewall revisaba origen, puerto, protocolo y orden de las reglas antes de permitir o bloquear el tráfico.
+\end{block}
+\begin{exampleblock}{Qué componente hace cada trabajo}
+\small \textbf{Netfilter} forma parte del kernel de Linux y aplica el filtrado. \textbf{UFW} es la herramienta sencilla con la que escribimos y consultamos esas reglas.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{exampleblock}{¿Se instalaba o ya estaba disponible?}
+\begin{terminal}\footnotesize
+\$ command -v ufw\\
+\$ ufw --version\\
+\$ sudo ufw status
+\end{terminal}
+\small Netfilter forma parte del kernel y no se instala aparte. Ubuntu suele incluir UFW, pero se comprueba: si el comando no existe, entonces se instala.
+\begin{terminal}\footnotesize
+\$ sudo apt install ufw
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Instalar no significa activar}
+\small Instalar UFW agrega la herramienta. \texttt{sudo ufw enable} activa el firewall y hace que sus reglas se carguen al iniciar.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Una IP ofrece 65 535 puertos TCP y 65 535 UDP}
+\begin{block}{Una misma IP puede atender muchos servicios a la vez}
+\small Por cada dirección IP, TCP y UDP numeran sus puertos del \texttt{0} al \texttt{65535}; el \texttt{0} se reserva y los servicios usan del \texttt{1} al \texttt{65535}. El puerto identifica a qué proceso debe entregarse cada conexión.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{La misma IP, destinos distintos}
+\small
+\texttt{22/tcp}: SSH administra la VM.\par\smallskip
+\texttt{80/tcp}: \texttt{nginx} recibe HTTP.\par\smallskip
+\texttt{3306/tcp}: MySQL recibe consultas.\par\smallskip
+\texttt{3000/tcp}: la aplicación Python escucha localmente.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{El puerto no abre nada por sí solo}
+\small Para que una conexión llegue deben coincidir tres condiciones: un proceso escucha, la IP es alcanzable y el firewall autoriza ese tráfico.
+\end{exampleblock}
+\begin{alertblock}{No se abren los 65 535}
+\small Solo se exponen los puertos indispensables. Cada puerto innecesario aumenta la superficie de ataque.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El analista de seguridad reduce la exposición}
+\begin{block}{Cada puerto abierto es superficie de ataque}
+\small Su trabajo no es cerrarlo todo, sino justificar cada acceso: qué servicio escucha, quién necesita alcanzarlo, desde dónde y con qué privilegios.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1. Inventariar}
+\begin{terminal}\footnotesize
+\$ sudo ss -ltnp
+\end{terminal}
+\small Identifica qué escucha, en qué dirección y qué programa abrió el puerto.
+\end{exampleblock}
+\begin{exampleblock}{2. Mirar desde fuera}
+\begin{terminal}\footnotesize
+\$ nmap -sV VM\_IP
+\end{terminal}
+\small Observa lo que vería un atacante, incluida la versión del servicio.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{3. Justificar el acceso}
+\small Decide si debe ser accesible desde Internet, desde la red interna o solo desde la propia máquina.
+\end{exampleblock}
+\begin{exampleblock}{4. Reducir y vigilar}
+\small Cierra lo innecesario, restringe por origen, mantiene los servicios actualizados y revisa los registros.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Qué roles recuerdan y qué acceso necesita cada uno?}
+\begin{block}{Relaciona cada rol con una responsabilidad}
+\small Desarrollador, SysAdmin, DevOps/SRE, cloud engineer, arquitecto cloud, DBA y analista de seguridad. ¿Cuál escribe la aplicación, cuál opera el servidor y cuál decide o audita los accesos?
+\end{block}
+\begin{alertblock}{Pregunta para discutir}
+\centering
+{\Large\bfseries ¿Un desarrollador debe tener el mismo nivel de acceso que un administrador del sistema (SysAdmin)?}
+\end{alertblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Piensa en producción}
+\small ¿Quién debería instalar paquetes, crear usuarios, cambiar el firewall o reiniciar cualquier servicio?
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Piensa en la aplicación}
+\small ¿Qué archivos, registros y comandos necesita realmente un desarrollador para desplegar y diagnosticar su código?
+\end{exampleblock}
+\end{columns}
+\begin{block}{Criterio para la siguiente sección}
+\small No necesitan el mismo acceso. Cada persona y servicio debe recibir solo los permisos indispensables para cumplir su función: es el \textbf{principio de mínimo privilegio}.
+\end{block}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Gestión de permisos}\par
+\vspace{2mm}
+{\small El control de acceso continúa dentro del servidor}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Los permisos responden quién puede hacer qué}
+\begin{block}{Idea central}
+\small Ubuntu protege cada archivo indicando qué acciones puede realizar el \textbf{propietario}, el \textbf{grupo} y el \textbf{resto de usuarios}. Un servidor lo usan varias personas y varios servicios: los permisos evitan que un programa cualquiera lea las credenciales de otro.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{¿Quién?}
+\small
+\texttt{u}: propietario.\par\medskip
+\texttt{g}: grupo.\par\medskip
+\texttt{o}: otros usuarios.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{¿Qué puede hacer?}
+\small
+\texttt{r}: leer.\par\medskip
+\texttt{w}: modificar.\par\medskip
+\texttt{x}: ejecutar o atravesar un directorio.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{\texttt{cat /etc/passwd} muestra cuentas, no contraseñas}
+\begin{columns}[T,onlytextwidth]
+\column{.54\textwidth}
+\begin{exampleblock}{Muestra las cuentas de usuario del sistema}
+\begin{terminal}\scriptsize
+\$ cat /etc/passwd\\
+root:x:0:0:root:/root:/bin/bash\\
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\\
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\\
+rgap:x:1000:1000:Rel Guzman:/home/rgap:/bin/bash
+\end{terminal}
+\small Cada línea representa una cuenta. El resultado incluye personas, componentes del sistema y servicios; los nombres y números exactos cambian entre máquinas.
+\end{exampleblock}
+\column{.42\textwidth}
+\begin{block}{Datos que puedes reconocer}
+\footnotesize
+\texttt{usuario}: nombre de la cuenta.\par\smallskip
+\texttt{UID}: identificador del usuario.\par\smallskip
+\texttt{GID}: grupo principal.\par\smallskip
+\texttt{descripción}: nombre o comentario.\par\smallskip
+\texttt{home}: carpeta inicial.\par\smallskip
+\texttt{shell}: programa que se inicia al entrar.
+\end{block}
+\end{columns}
+\begin{alertblock}{¿Por qué todos pueden leerlo?}
+\small El sistema y muchos programas necesitan relacionar los UID y GID con nombres de cuentas. Este archivo contiene información de identificación, no las contraseñas de los usuarios.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{No cualquier cuenta puede iniciar sesión}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Cuentas usadas por personas}
+\footnotesize
+\textbf{Root user}: \texttt{root}, UID \texttt{0}. Tiene control total; se reserva para administración excepcional y recuperación.\par\smallskip
+\textbf{Regular user}: representa a una persona. Normalmente tiene UID desde \texttt{1000}, carpeta personal y shell interactiva.\par\smallskip
+\textbf{Administrator user}: usuario regular autorizado a usar \texttt{sudo}. No es otro tipo de UID; eleva privilegios cuando los necesita.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{exampleblock}{Cuentas usadas por el sistema}
+\footnotesize
+\textbf{System user}: ejecuta tareas internas. Suele tener UID bajo y una shell que impide entrar.\par\smallskip
+\textbf{Service account}: cuenta dedicada a un servicio, como \texttt{www-data} o \texttt{mysql}. Limita lo que ese proceso puede controlar.
+\end{exampleblock}
+\begin{block}{Las de mayor impacto}
+\footnotesize \texttt{root} y los administradores pueden cambiar todo. Las cuentas de servicios expuestos también son críticas y deben tener el mínimo privilegio.
+\end{block}
+\end{columns}
+\begin{alertblock}{¿Se puede iniciar sesión con cualquiera?}
+\footnotesize No. \texttt{/bin/bash} solo indica que una sesión interactiva es posible; también se necesitan credenciales, una cuenta desbloqueada y una política que lo permita. \texttt{/usr/sbin/nologin} o \texttt{/bin/false} la rechazan. Incluso \texttt{root} puede tener prohibido el acceso por SSH.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{\texttt{ls -l} se lee de izquierda a derecha}
+\begin{exampleblock}{Los archivos del proyecto \textnormal{\scriptsize(carpeta \texttt{Sesion08/proyecto})}}
+\begin{terminal}\footnotesize
+rgap@ubuntu:\textasciitilde/proyecto\$ ls -la\\
+-rw-rw-r-- 1 rgap rgap ~~79 Sep  1 13:51 .env\\
+-rw-rw-r-- 1 rgap rgap 2845 Sep  1 13:50 servidor\_http.py
+\end{terminal}
+\small Con \texttt{ls -a} también aparecen los archivos ocultos, los que empiezan con punto.
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.22\textwidth}
+\begin{block}{\texttt{-}}
+\small Archivo regular. Una \texttt{d} indicaría directorio.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{rw-}}
+\small El propietario lee y modifica; todavía no ejecuta.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{rw-}}
+\small El grupo \texttt{rgap} lee y modifica.
+\end{block}
+\column{.24\textwidth}
+\begin{block}{\texttt{r--}}
+\small Los demás solo leen. Aquí está el problema del \texttt{.env}.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Caso 1: un \texttt{.py} necesita intérprete y permiso \texttt{x}}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Primera línea del script}
+\begin{terminal}\footnotesize
+\#!/usr/bin/env python3\\
+from http.server import \textbackslash\\
+\quad BaseHTTPRequestHandler, HTTPServer\\
+...
+\end{terminal}
+\small Le indica a Ubuntu qué programa debe interpretarlo.
+\end{exampleblock}
+\begin{block}{Por qué \texttt{python3 archivo.py} sí funciona}
+\small Ahí ejecutas Python, y Python solo \emph{lee} el archivo. \texttt{./archivo.py} exige que el archivo mismo sea ejecutable.
+\end{block}
+\column{.44\textwidth}
+\begin{exampleblock}{Antes y después}
+\begin{terminal}\footnotesize
+\$ ./servidor\_http.py\\
+bash: Permiso denegado\\
+\$ chmod u+x servidor\_http.py\\
+\$ ./servidor\_http.py\\
+Escuchando en \\
+http://127.0.0.1:8080
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Caso 2: el \texttt{.env} contiene secretos}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Qué contiene}
+\begin{terminal}\footnotesize
+DB\_USER=app\_web\\
+DB\_PASSWORD=cambia-esta-clave\\
+API\_KEY=clave-de-ejemplo-no-real
+\end{terminal}
+\small Credenciales que dan acceso real a la base de datos y a servicios de pago.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Ciérralo al propietario}
+\begin{terminal}\footnotesize
+\$ chmod 600 .env\\
+\$ ls -l .env\\
+-rw------- 1 rgap rgap 223 .env
+\end{terminal}
+\small \texttt{600}: el propietario lee y escribe; nadie más entra.
+\end{exampleblock}
+\end{columns}
+\begin{block}{El permiso no reemplaza al \texttt{.gitignore}}
+\small \texttt{chmod} protege el archivo en esta máquina. Para que no llegue al repositorio, además debe estar listado en \texttt{.gitignore}.
+\end{block}
+\end{frame}
+
+\begin{frame}{\texttt{chmod} cambia los permisos de un archivo}
+\begin{block}{¿Qué es \texttt{chmod}?}
+\small Viene de \emph{change mode}. Modifica quién puede leer, escribir o ejecutar un archivo o directorio; no cambia su contenido ni su propietario.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{\texttt{u+x}: forma simbólica}
+\begin{terminal}\footnotesize
+\$ chmod u+x app.py
+\end{terminal}
+\small
+\texttt{u}: usuario propietario.\par
+\texttt{+}: agrega un permiso.\par
+\texttt{x}: permite ejecutar.\par\smallskip
+El propietario podrá ejecutar \texttt{app.py}; sus otros permisos no cambian.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{\texttt{600}: forma numérica}
+\begin{terminal}\footnotesize
+\$ chmod 600 .env
+\end{terminal}
+\small
+\texttt{6=4+2}: el propietario lee y escribe.\par
+Primer \texttt{0}: el grupo no tiene permisos.\par
+Segundo \texttt{0}: los demás tampoco.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Dos formas de expresar el cambio}
+\small \texttt{u+x} agrega un permiso concreto; \texttt{600} establece los permisos completos de propietario, grupo y otros.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Forma simbólica y forma numérica}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{exampleblock}{Simbólica: dices qué cambiar}
+\begin{terminal}
+\$ chmod u+x app.py\\
+\$ chmod o-r .env
+\end{terminal}
+\small La primera agrega ejecución al propietario. La segunda quita la lectura a los demás.
+\end{exampleblock}
+\column{.49\textwidth}
+\begin{exampleblock}{Numérica: \texttt{r=4}, \texttt{w=2}, \texttt{x=1}}
+\begin{terminal}
+4+2+1 = 7  rwx\\
+4+2   = 6  rw-\\
+4     = 4  r--
+\end{terminal}
+\small Un dígito por cada grupo: propietario, grupo y otros.
+\end{exampleblock}
+\end{columns}
+\begin{exampleblock}{Los tres que verás casi siempre}
+\begin{terminal}\footnotesize
+chmod 600 .env          rw- --- ---   solo el propietario\\
+chmod 644 index.html    rw- r-- r--   todos leen, solo tú editas\\
+chmod 777 archivo       rwx rwx rwx   todos hacen todo: evítalo
+\end{terminal}
+\small \texttt{777} no arregla la causa de un error de permisos; solo amplía quién puede provocarlo.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Práctica: un sitio Python detrás de \texttt{nginx} \textnormal{\small(20 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{1. Crea \texttt{sitio.py} y pruébalo}
+\begin{terminal}\scriptsize
+from http.server import \textbackslash\\
+\quad BaseHTTPRequestHandler, HTTPServer\\
+class Handler(BaseHTTPRequestHandler):\\
+\quad def do\_GET(self):\\
+\quad\quad self.send\_response(200)\\
+\quad\quad self.send\_header("Content-Type",\\
+\quad\quad\quad "text/html; charset=utf-8")\\
+\quad\quad self.end\_headers()\\
+\quad\quad self.wfile.write(HTML.encode())\\
+HTTPServer(("127.0.0.1", 3000),\\
+\quad Handler).serve\_forever()
+\end{terminal}
+\small El HTML va en la constante \texttt{HTML}, arriba del todo.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{2. Ponlo detrás de \texttt{nginx}}
+\begin{terminal}\scriptsize
+\$ sudo nano \textbackslash\\
+\quad /etc/nginx/sites-available/default\\
+location / \{\\
+\quad proxy\_pass http://127.0.0.1:3000;\\
+\}\\
+\$ sudo nginx -t\\
+\$ sudo systemctl reload nginx
+\end{terminal}
+\end{exampleblock}
+\begin{exampleblock}{3. Corrige los permisos}
+\begin{terminal}\scriptsize
+\$ chmod u+x iniciar.sh\\
+\$ chmod 600 .env
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{block}{Comprobación}
+\small Desde el host, \texttt{http://VM\_IP} muestra la página con el \texttt{3000} cerrado en \texttt{ufw}: quien atiende afuera es \texttt{nginx}. Explica por qué el \texttt{3000} no necesita abrirse.
+\end{block}
+\end{frame}
+
+\begin{frame}{\texttt{nginx} actúa como reverse proxy delante de \texttt{sitio.py}}
+\begin{block}{¿Qué es un reverse proxy?}
+\small Recibe la solicitud del cliente, la reenvía a un servidor interno y devuelve su respuesta. El navegador solo ve a \texttt{nginx}; el puerto de la aplicación permanece interno.
+\end{block}
+\begin{exampleblock}{El recorrido de la solicitud}
+\begin{terminal}\footnotesize
+Navegador -> nginx :80/:443 -> sitio.py 127.0.0.1:3000\\
+Navegador <- nginx <--------- respuesta generada por Python
+\end{terminal}
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{\texttt{nginx}: web server público}
+\small Atiende HTTP y HTTPS, entrega archivos estáticos y funciona como punto de entrada. También puede gestionar TLS, límites, registros y balanceo de carga.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{\texttt{sitio.py}: application server}
+\small Sí: en esta práctica ejecuta la lógica Python y genera la respuesta dinámica en \texttt{127.0.0.1:3000}.\par\smallskip
+\footnotesize \textbf{Precisión:} usa \texttt{http.server} para aprender el flujo; no es un servidor de producción. Una aplicación real usa un servidor especializado para su framework.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{32}{38}\selectfont\bfseries Usuarios del sistema}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{La práctica se ejecutó con un usuario normal}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Comprueba tu identidad}
+\begin{terminal}\footnotesize
+rgap@ubuntu:\textasciitilde\$ whoami\\
+rgap\\
+rgap@ubuntu:\textasciitilde\$ id\\
+uid=1000(rgap) gid=1000(rgap)\\
+groups=1000(rgap),27(sudo)
+\end{terminal}
+\small \texttt{rgap} es el \textbf{Regular user} o usuario normal con el que se inició sesión. Su UID no es \texttt{0}.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Root user o superusuario}
+\small \texttt{root} tiene UID \texttt{0} y control total sobre el sistema. Puede modificar archivos, usuarios, servicios y reglas de red.
+\end{block}
+\begin{block}{Administrator user}
+\small Sigue siendo un usuario regular, pero pertenece al grupo \texttt{sudo}. Puede elevar un comando cuando una tarea administrativa lo requiere.
+\end{block}
+\end{columns}
+\begin{alertblock}{Lo que ocurrió durante la práctica}
+\small Los comandos sin \texttt{sudo} se ejecutaron como \texttt{rgap}. En \texttt{sudo nginx -t}, solo ese comando recibió privilegios de administrador.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Root se usa temporalmente para administrar}
+\begin{columns}[T,onlytextwidth]
+\column{.53\textwidth}
+\begin{exampleblock}{Abrir y cerrar una terminal como root}
+\begin{terminal}\footnotesize
+rgap@ubuntu:\textasciitilde\$ sudo -i\\
+\lbrack sudo\rbrack~password for rgap:\\
+root@ubuntu:\textasciitilde\# whoami\\
+root\\
+root@ubuntu:\textasciitilde\# pwd\\
+/root\\
+root@ubuntu:\textasciitilde\# exit\\
+logout\\
+rgap@ubuntu:\textasciitilde\$
+\end{terminal}
+\end{exampleblock}
+\column{.43\textwidth}
+\begin{block}{Qué cambió en la terminal}
+\footnotesize Se pidió la contraseña de \texttt{rgap}. El prompt cambió de \texttt{\$} a \texttt{\#}, \texttt{whoami} mostró \texttt{root} y la carpeta personal pasó a \texttt{/root}. \texttt{exit} devolvió la sesión a \texttt{rgap}.
+\end{block}
+\begin{alertblock}{¿Es recomendado?}
+\footnotesize Para una sola tarea, se recomienda \texttt{sudo comando}. Usa \texttt{sudo -i} solo cuando necesites realizar varias tareas administrativas y sal con \texttt{exit} al terminar. No es recomendable trabajar siempre como root ni habilitar su inicio de sesión directo.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Práctica: crea e inicia sesión como \texttt{juandev} \textnormal{\small(10 min)}}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{1. Crea un usuario regular}
+\begin{terminal}\scriptsize
+rgap@ubuntu:\textasciitilde\$ sudo adduser juandev\\
+Adding user `juandev' ...\\
+Adding new group `juandev' ...\\
+Creating home directory `/home/juandev' ...\\
+New password:\\
+Retype new password:\\
+Is the information correct? [Y/n] Y\\
+rgap@ubuntu:\textasciitilde\$ id juandev\\
+uid=1001(juandev) gid=1001(juandev)\\
+groups=1001(juandev)
+\end{terminal}
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{2. Inicia sesión con esa cuenta}
+\begin{terminal}\scriptsize
+rgap@ubuntu:\textasciitilde\$ su - juandev\\
+Password:\\
+juandev@ubuntu:\textasciitilde\$ whoami\\
+juandev\\
+juandev@ubuntu:\textasciitilde\$ pwd\\
+/home/juandev\\
+juandev@ubuntu:\textasciitilde\$ exit\\
+logout\\
+rgap@ubuntu:\textasciitilde\$
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{block}{Explica lo que ocurrió}
+\footnotesize \texttt{adduser} creó la cuenta, su grupo principal y \texttt{/home/juandev}; también pidió una contraseña. \texttt{su - juandev} inició una sesión con esa identidad y cargó su entorno. \texttt{juandev} no es administrador: no pertenece a \texttt{sudo} salvo que se agregue explícitamente.
+\end{block}
+\end{frame}
+
+\begin{frame}{El equipo comparte el servidor, no la misma cuenta}
+\begin{exampleblock}{Un equipo con responsabilidades diferentes}
+\begin{terminal}\scriptsize
+admin@empresa.com  -> SysAdmin / Administrador\\
+juan@empresa.com   -> Developer\\
+maria@empresa.com  -> Developer\\
+pedro@empresa.com  -> DevOps
+\end{terminal}
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{¿Por qué podrían entrar al servidor?}
+\footnotesize
+\textbf{Admin}: instala paquetes, crea usuarios y mantiene el sistema.\par\smallskip
+\textbf{Juan y María}: despliegan la aplicación y consultan sus registros.\par\smallskip
+\textbf{Pedro}: automatiza despliegues y atiende incidentes operativos.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{¿Qué se hace en ese caso?}
+\footnotesize Se crea una cuenta Linux individual, se autentica con SSH, se asignan grupos y permisos según el rol, y se concede \texttt{sudo} solo para las tareas que realmente lo requieren. Los accesos se registran y se revocan cuando dejan de ser necesarios.
+\end{block}
+\end{columns}
+\begin{alertblock}{Acceso necesario no significa acceso total}
+\small Nunca se comparte la cuenta \texttt{root} ni una contraseña entre el equipo. Si un despliegue puede hacerse mediante una automatización, el desarrollador quizá no necesite acceso SSH directo.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{SSH abre una terminal segura en el servidor remoto}
+\begin{block}{SSH: Secure Shell}
+\small Crea una conexión cifrada entre tu computadora y una cuenta del servidor. Por defecto usa el puerto \texttt{22/tcp}; lo que escribes se ejecuta en la máquina remota.
+\end{block}
+\begin{center}
+{\large\bfseries \texttt{juan@laptop} \quad\(\longrightarrow\)\quad \textcolor{utpRojo}{SSH cifrado} \quad\(\longrightarrow\)\quad \texttt{juan@VM}}
+\end{center}
+\vspace{-2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.43\textwidth}
+\begin{exampleblock}{La forma básica}
+\begin{terminal}\footnotesize
+\$ ssh juan@203.0.113.10
+\end{terminal}
+\footnotesize
+\texttt{ssh}: programa cliente.\par\smallskip
+\texttt{juan}: cuenta en la VM.\par\smallskip
+\texttt{203.0.113.10}: IP del servidor.\par\smallskip
+Si no se indica otro, usa el puerto \texttt{22}.
+\end{exampleblock}
+\column{.53\textwidth}
+\begin{exampleblock}{Primera conexión y salida}
+\begin{terminal}\scriptsize
+juan@laptop:\textasciitilde\$ ssh juan@203.0.113.10\\
+Continue connecting (yes/no)? yes\\
+juan@203.0.113.10's password:\\
+juan@vm:\textasciitilde\$ whoami\\
+juan\\
+juan@vm:\textasciitilde\$ exit\\
+Connection to 203.0.113.10 closed.
+\end{terminal}
+\footnotesize Antes de responder \texttt{yes}, verifica la huella. Al entrar, el prompt cambia al de la VM; \texttt{exit} cierra la conexión.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Telnet permite comprobar si un puerto TCP responde}
+\begin{block}{Una conexión simple, pero sin cifrado}
+\small \texttt{telnet HOST PUERTO} intenta abrir una conexión TCP y permite escribir directamente al servicio. Sirve para aprender y diagnosticar conectividad; no debe usarse para iniciar sesión ni enviar contraseñas. Para acceso remoto seguro usamos SSH.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.42\textwidth}
+\begin{exampleblock}{1. Instala el cliente}
+\begin{terminal}\footnotesize
+\$ sudo apt update\\
+\$ sudo apt install inetutils-telnet
+\end{terminal}
+\end{exampleblock}
+\begin{exampleblock}{Forma básica}
+\begin{terminal}\footnotesize
+\$ telnet SERVIDOR PUERTO
+\end{terminal}
+\footnotesize Si necesitas salir: \texttt{Ctrl+]} y luego \texttt{quit}.
+\end{exampleblock}
+\column{.54\textwidth}
+\begin{exampleblock}{2. Comprueba el sitio en el puerto 80}
+\begin{terminal}\scriptsize
+\$ telnet 203.0.113.10 80\\
+Trying 203.0.113.10...\\
+Connected to 203.0.113.10.\\
+GET / HTTP/1.0\\
+[presiona Enter otra vez]\\
+HTTP/1.1 200 OK
+\end{terminal}
+\footnotesize Después de \texttt{GET}, presiona Enter dos veces. La conexión confirma que \texttt{nginx} atiende el puerto 80.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{3. Compara con el puerto interno}
+\footnotesize Ejecuta \texttt{telnet 203.0.113.10 3000}. Un rechazo o tiempo de espera indica que el servidor Python no está expuesto al exterior: los clientes deben entrar por \texttt{nginx}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Práctica: instala \texttt{gcloud} y conecta tu terminal con GCP \textnormal{\small(15 min)}}
+\begin{block}{GCP, en corto}
+\small Google Cloud Platform es la nube de Google: ofrece cómputo, almacenamiento, redes, bases de datos y otros servicios en centros de datos distribuidos. Los recursos se organizan dentro de proyectos.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1. Instala Google Cloud CLI en Ubuntu}
+\begin{terminal}\footnotesize
+\$ gcloud version\\
+\# Si el comando no existe:\\
+\$ sudo snap install \textbackslash\\
+\quad google-cloud-cli --classic\\
+\$ gcloud version
+\end{terminal}
+\footnotesize \texttt{gcloud} es el comando principal para administrar Google Cloud desde una terminal.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{2. Inicia la configuración}
+\begin{terminal}\footnotesize
+\$ gcloud init
+\end{terminal}
+\footnotesize Sigue el enlace mostrado, inicia sesión con tu cuenta y selecciona el proyecto con el que trabajarás.
+\end{exampleblock}
+\begin{exampleblock}{3. Comprueba la configuración}
+\begin{terminal}\footnotesize
+\$ gcloud auth list\\
+\$ gcloud config list\\
+\$ gcloud projects list
+\end{terminal}
+\footnotesize Verifica la cuenta activa, el proyecto configurado y los proyectos a los que tienes acceso.
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{Antes de crear recursos}
+\footnotesize Confirma siempre la cuenta y el proyecto activos: un comando ejecutado en el proyecto equivocado puede afectar recursos o generar costos.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item NGINX Community Blog: \emph{Celebrating 20 Years of NGINX} y \emph{Announcing NGINX Unit 1.0}, \texttt{blog.nginx.org}.
+  \item Documentación de NGINX: \emph{Reverse Proxy} y guía del servidor web, \texttt{docs.nginx.com/nginx/admin-guide/web-server}.
+  \item Documentación de Python: módulo \texttt{http.server}, \texttt{docs.python.org/3/library/http.server.html}.
+  \item Oracle / MySQL: \emph{30 Years MySQL Timeline}, \texttt{mysql.com/news-and-events/events/mysql-30th}.
+  \item Documentación de Ubuntu Server: \emph{Firewall}, \texttt{documentation.ubuntu.com/server/how-to/security/firewalls}.
+  \item IANA: \emph{Service Name and Transport Protocol Port Number Registry}, \texttt{iana.org/assignments/service-names-port-numbers}.
+  \item Google Cloud: descripción general e instalación de Google Cloud CLI mediante Snap, \texttt{docs.cloud.google.com}.
+  \item Páginas de manual de \texttt{nginx}, \texttt{mysqld}, \texttt{mysql}, \texttt{ufw}, \texttt{ss}, \texttt{nmap}, \texttt{telnet}, \texttt{passwd}, \texttt{nologin}, \texttt{sudo}, \texttt{su}, \texttt{adduser}, \texttt{ssh}, \texttt{ssh-keygen}, \texttt{id}, \texttt{whoami}, \texttt{ls} y \texttt{chmod}.
+  \item Material base proporcionado: Sesión 08; identidad visual UTP y estructura docente reutilizadas sin cambios.
+\end{itemize}
+\end{frame}
+
+\end{document}
