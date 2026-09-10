@@ -8,7 +8,7 @@ Estampa es un emprendimiento de polos temáticos que prepara su tienda en línea
 
 Los desarrolladores ya codificaron y entregaron [ecommerce_webapp](ecommerce_webapp/). Tu objetivo como administrador de sistemas (SysAdmin) es **desplegar esa aplicación en una VM Ubuntu y publicarla para los clientes de la red local mediante Nginx**, con Python funcionando detrás del servidor web. Debes demostrar cómo viajan las solicitudes y cómo se administran los procesos, permisos y reglas de acceso.
 
-El simulador plantea misiones, pero las implementaciones y pruebas deben ejecutarse realmente. Una explicación hipotética, una captura de los diagramas proporcionados o una respuesta generada por IA no reemplazan un servicio funcionando.
+El enunciado se organiza en partes, pero las implementaciones y pruebas deben ejecutarse realmente. Una explicación hipotética, una captura de los diagramas proporcionados o una respuesta generada por IA no reemplazan un servicio funcionando.
 
 ### Condiciones del encargo
 
@@ -43,7 +43,7 @@ Utiliza la terminal de tu sistema como cliente y documenta el entorno que emplea
 
 ## 3. Diagramas que debes llevar a la práctica
 
-> **Sobre `0.0.0.0` y `127.0.0.1`:** en las tablas y misiones siguientes, `0.0.0.0` no es la dirección de ningún equipo, sino una dirección de escucha que significa «aceptar conexiones por todas las interfaces de red de la VM»; por eso los clientes se conectan usando la IP real de la VM (`VM_IP`), no `0.0.0.0`. `127.0.0.1` es la dirección de loopback: un servicio que escucha ahí solo es accesible desde la propia VM.
+> **Sobre `0.0.0.0` y `127.0.0.1`:** en las tablas y partes siguientes, `0.0.0.0` no es la dirección de ningún equipo, sino una dirección de escucha que significa «aceptar conexiones por todas las interfaces de red de la VM»; por eso los clientes se conectan usando la IP real de la VM (`VM_IP`), no `0.0.0.0`. `127.0.0.1` es la dirección de loopback: un servicio que escucha ahí solo es accesible desde la propia VM.
 
 | Referencia                                         | Implementación y comprobación obligatoria                                                                                                                                                                         |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,13 +57,13 @@ Utiliza la terminal de tu sistema como cliente y documenta el entorno que emplea
 
 Utiliza el servidor HTTP incluido en la webapp, sin reescribirlo. Se evaluarán las pruebas de comunicación y sus resultados.
 
-## 4. Misiones y capturas obligatorias
+## 4. Actividades y capturas obligatorias
 
-Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados en un único informe, con capturas numeradas.
+Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados en un único informe, con capturas numeradas.
 
-> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E20`, se citan al final de cada misión, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
+> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E20`, se citan al final de cada parte, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
 
-### Misión 1 — Recibir el servidor e inventariar el entorno — 1 punto
+### Parte 1 — Recibir el servidor e inventariar el entorno — 1 punto
 
 1. Describe brevemente qué entrega desarrollo y qué debes resolver como sysadmin. Diferencia visitante, desarrollador y administrador.
 2. Configura o reutiliza una VM Ubuntu. Registra hipervisor, tipo, versión de Ubuntu, CPU, RAM y disco asignados; justifica que los recursos caben en el equipo físico.
@@ -76,7 +76,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E02:** identificación de Ubuntu y usuario, estructura de `ecommerce_webapp` y versiones de Python y Nginx.
 
-### Misión 2 — Reconocer la red y comprobar la salida a Internet — 2 puntos
+### Parte 2 — Reconocer la red y comprobar la salida a Internet — 2 puntos
 
 1. Obtén `VM_IP`, prefijo de red, interfaz activa y `ROUTER_IP` desde Ubuntu, mediante `ip addr` e `ip route` o comandos equivalentes.
 2. Obtén `HOST_IP` desde el equipo físico. Comprueba con el prefijo que cliente y VM pertenecen a la misma subred.
@@ -103,7 +103,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E04:** resolución de nombre y evidencia de la conexión HTTPS al destino real por TCP/443, mediante captura de tráfico o herramienta equivalente.
 
-### Misión 3 — Reproducir los tres diagramas de comunicación TCP — 3 puntos
+### Parte 3 — Reproducir los tres diagramas de comunicación TCP — 3 puntos
 
 1. En archivos de laboratorio separados de la webapp, adapta los ejemplos de la sesión 07 para crear un servidor TCP de saludo y un cliente TCP.
 2. En la VM, el servidor debe quedar a la escucha en `0.0.0.0:8000` y aceptar la conexión entrante del cliente.
@@ -117,7 +117,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E06:** evidencia del servicio en escucha y de la comunicación entre el cliente y el servidor. Puedes mantener brevemente la conexión abierta para observarla con `ss`.
 
-### Misión 4 — Desplegar la landing directamente en Python — 3 puntos
+### Parte 4 — Desplegar la landing directamente en Python — 3 puntos
 
 1. Inicia el proyecto entregado con Python 3 y las variables `HOST=0.0.0.0` y `PORT=8000`. Usa las variables de WhatsApp con valores de prueba identificados como tales.
 2. Comprueba desde la VM qué proceso escucha en `8000` y en qué dirección.
@@ -133,7 +133,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E09:** enlace de cotización generado con la configuración de prueba, sin marcadores `{{WHATSAPP_LINK}}` pendientes de sustituir.
 
-### Misión 5 — Administrar usuarios, permisos y servicio — 2 puntos
+### Parte 5 — Administrar usuarios, permisos y servicio — 2 puntos
 
 1. Define una cuenta sin privilegios administrativos para ejecutar la aplicación. Documenta propietario, grupo y permisos de los archivos y directorios necesarios.
 2. Configura las variables de entorno mediante `Environment` en la unidad systemd o un archivo declarado con `EnvironmentFile`: `server.py` no carga `.env` automáticamente.
@@ -151,12 +151,12 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E12:** sesión SSH desde el host, usuario e identificación de la VM de destino.
 
-### Misión 6 — Publicar mediante Nginx — 3 puntos
+### Parte 6 — Publicar mediante Nginx — 3 puntos
 
 1. Adapta la configuración de proxy inverso de la sesión 09. Nginx debe escuchar en el puerto `80` y reenviar las rutas del sitio hacia `http://127.0.0.1:8000`.
 2. Comprueba la configuración con `nginx -t` antes de aplicarla y recarga Nginx. Verifica que el bloque activo atienda el acceso por IP y no muestre la página predeterminada de Nginx.
 3. Desde la VM, verifica que el backend responde en `http://127.0.0.1:8000/`.
-4. Desde `PC_HOST`, visita `http://VM_IP/` y repite las pruebas de rutas de la misión 4 a través de Nginx. Comprueba HTML, CSS y enlaces de WhatsApp.
+4. Desde `PC_HOST`, visita `http://VM_IP/` y repite las pruebas de rutas de la parte 4 a través de Nginx. Comprueba HTML, CSS y enlaces de WhatsApp.
 5. Muestra los listeners: Nginx en `0.0.0.0:80` y Python en `127.0.0.1:8000`. Python ya no debe escuchar en `0.0.0.0:8000` ni en una dirección externa equivalente.
 6. Observa una solicitud en la interfaz de red de la VM y en loopback. Identifica los dos tramos TCP: `HOST_IP:puerto_efimero → VM_IP:80` y `127.0.0.1:otro_puerto_efimero → 127.0.0.1:8000`.
 7. Relaciona la petición y respuesta con los registros de Nginx y del backend. Explica que Nginx establece una conexión al backend: no es una sola conexión TCP que atraviesa ambos procesos.
@@ -167,7 +167,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E15:** tráfico de los dos tramos, con extremos, petición y respuesta identificados. Presenta varios recortes legibles si una sola imagen no permite verlos.
 
-### Misión 7 — Controlar el acceso y recuperar una falla — 2 puntos
+### Parte 7 — Controlar el acceso y recuperar una falla — 2 puntos
 
 1. Deja UFW activo: permite el acceso HTTP de la red de evaluación y SSH desde el origen administrativo; retira el permiso temporal de `8000` y registra las reglas finales.
 2. Desde el host, comprueba que `http://VM_IP/` funciona y que `http://VM_IP:8000/` no es accesible. Desde la VM, confirma que `http://127.0.0.1:8000/` sí responde. Usa tiempos de espera limitados para las pruebas negativas.
@@ -183,7 +183,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E18:** incidencia del backend, diagnóstico, recuperación y verificación de ambos servicios después del reinicio de la VM.
 
-### Misión 8 — Documentar la arquitectura implementada — 2 puntos
+### Parte 8 — Documentar la arquitectura implementada — 2 puntos
 
 Elabora **un diagrama de bloques propio de la arquitectura de red final**, con los valores reales de tu entorno. Debe incluir:
 
@@ -194,7 +194,7 @@ Elabora **un diagrama de bloques propio de la arquitectura de red final**, con l
 - Nginx en `VM_IP:80`, Python en `127.0.0.1:8000` y archivos de `ecommerce_webapp` dentro de la VM.
 - Flujo HTTP del cliente a Nginx y del proxy al backend, con flechas de respuesta, protocolos y puertos.
 - Acceso administrativo SSH al puerto `22`, limitado a su origen.
-- Salida de la VM hacia Internet usada en la misión 2: resolución DNS, destino observado y NAT del router, diferenciada del acceso local a la landing.
+- Salida de la VM hacia Internet usada en la parte 2: resolución DNS, destino observado y NAT del router, diferenciada del acceso local a la landing.
 
 Representa correctamente la pertenencia de componentes: Nginx y Python son procesos dentro de la misma VM; `127.0.0.1` pertenece a esa VM. El host aporta la interfaz física al puente, pero su IP no reemplaza la IP de origen de la VM. No dibujes el router como salto obligatorio de la petición local si ambos equipos comparten subred.
 
@@ -231,7 +231,7 @@ Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructur
 
 1. Identificación del estudiante y descripción del encargo.
 2. Inventario, ficha de red y relación de materiales previos utilizados. Declara los materiales no disponibles.
-3. Desarrollo de las ocho misiones: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
+3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
 4. Diagrama de bloques y diagramas de secuencia.
 5. Incidencia provocada, diagnóstico, corrección y pruebas posteriores al reinicio.
 6. Tabla final de aceptación y explicación de las decisiones técnicas.
@@ -263,14 +263,14 @@ Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener 
 
 | Sección evaluada | Evidencias | Puntaje |
 | --- | --- | ---: |
-| Misión 1 — Entorno Ubuntu, recursos y modo puente. | E01–E02 | 1 |
-| Misión 2 — Datos reales de red y salida a Internet. | E03–E04 | 2 |
-| Misión 3 — Implementación TCP e intercambio de mensajes. | E05–E06 | 3 |
-| Misión 4 — Landing en Python, rutas, cliente HTTP y cotización. | E07–E09 | 3 |
-| Misión 5 — Usuarios, permisos, systemd y SSH. | E10–E12 | 2 |
-| Misión 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E13–E15 | 3 |
-| Misión 7 — UFW, control de acceso, recuperación y reinicio. | E16–E18 | 2 |
-| Misión 8 — Diagrama de bloques y diagramas de secuencia. | E19 | 2 |
+| Parte 1 — Entorno Ubuntu, recursos y modo puente. | E01–E02 | 1 |
+| Parte 2 — Datos reales de red y salida a Internet. | E03–E04 | 2 |
+| Parte 3 — Implementación TCP e intercambio de mensajes. | E05–E06 | 3 |
+| Parte 4 — Landing en Python, rutas, cliente HTTP y cotización. | E07–E09 | 3 |
+| Parte 5 — Usuarios, permisos, systemd y SSH. | E10–E12 | 2 |
+| Parte 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E13–E15 | 3 |
+| Parte 7 — UFW, control de acceso, recuperación y reinicio. | E16–E18 | 2 |
+| Parte 8 — Diagrama de bloques y diagramas de secuencia. | E19 | 2 |
 | Actividad adicional — Mapa conceptual editable en `.canvas`. | E20 | 2 |
 | **Total** | | **20** |
 

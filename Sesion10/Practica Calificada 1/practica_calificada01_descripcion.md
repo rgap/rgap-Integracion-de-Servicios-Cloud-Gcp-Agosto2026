@@ -1,9 +1,9 @@
-# Práctica Calificada 1 — Descripción de la tarea
+# Práctica Calificada 1 — Despliegue de una landing ecommerce con Nginx y Python en una VM Ubuntu
 
 Desarrolla la **Práctica Calificada 1** siguiendo el enunciado `practica_calificada01.md`:
 https://github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/tree/main/Sesion10/Practica%20Calificada%201
 
-Actuando como Administrador de Sistemas (SysAdmin), despliega la aplicación `ecommerce_webapp` en una VM Ubuntu en modo puente y publícala en la red local mediante Nginx como proxy inverso, con Python como backend. Ejecuta las 8 misiones y la actividad adicional, y documenta cada requisito con las evidencias numeradas `E01` a `E20`.
+Actuando como Administrador de Sistemas (SysAdmin), despliega la aplicación `ecommerce_webapp` en una VM Ubuntu en modo puente y publícala en la red local mediante Nginx como proxy inverso, con Python como backend. Realiza todo lo que indica el enunciado y documenta cada requisito con las evidencias numeradas `E01` a `E20`.
 
 ## Modalidad
 
