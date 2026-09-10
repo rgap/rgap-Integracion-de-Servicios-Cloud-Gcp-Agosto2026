@@ -1,0 +1,464 @@
+% Motor: XeLaTeX. Sesion 10 - material docente UTP.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Servidor web y servidor de aplicaciones; Windows Subsystem for Linux}
+\date{Semana 05 - Sesión 10}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{center}
+\includegraphics[height=.80\textheight,keepaspectratio]{repaso-sockets-1.png}
+\end{center}
+\vspace{-1mm}
+\begin{center}\footnotesize Cliente y servidor hechos con sockets (Sesión 07): el intercambio mínimo sobre TCP.\end{center}
+\end{frame}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{center}
+\includegraphics[height=.80\textheight,keepaspectratio]{repaso-sockets-2.png}
+\end{center}
+\vspace{-1mm}
+\begin{center}\footnotesize El mismo intercambio, descrito paso a paso: un socket de escucha, un socket nuevo por conexión.\end{center}
+\end{frame}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{center}
+\includegraphics[height=.80\textheight,keepaspectratio]{repaso-sockets-3.png}
+\end{center}
+\vspace{-1mm}
+\begin{center}\footnotesize Visto en resumen: \texttt{connect}, \texttt{accept} y luego \texttt{send}/\texttt{recv} sobre la misma conexión.\end{center}
+\end{frame}
+
+\begin{frame}{Revisión de la sesión anterior}
+\begin{center}
+\includegraphics[height=.80\textheight,keepaspectratio]{repaso-ecommerce.png}
+\end{center}
+\vspace{-1mm}
+\begin{center}\footnotesize La misma mecánica al servicio de un sitio web: recibe \texttt{GET /productos} y devuelve HTML.\end{center}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás distinguir un \textbf{servidor web} de un \textbf{servidor de aplicaciones}, ubicar a \texttt{nginx} y al programa de Python de la Sesión 09 en ese esquema, explicar qué es el \textbf{Windows Subsystem for Linux (WSL)} y comparar WSL con virtualizar mediante un hipervisor.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item Cuando abres una página, ¿el servidor te envía un archivo ya guardado o arma la respuesta en ese momento?
+  \item ¿Recuerdas qué era un hipervisor y una máquina virtual de la Sesión 02?
+  \item Si trabajas en Windows, ¿cómo has ejecutado hasta ahora comandos de Linux?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Utilidad de esta sesión}
+\begin{block}{¿Para qué te servirá lo aprendido?}
+Toda aplicación en producción combina un servidor web y un servidor de aplicaciones. Saber qué hace cada uno permite ubicar dónde está una falla y por qué se separan. Y WSL te da un entorno Linux dentro de Windows para practicar todo el curso sin cambiar de equipo.
+\end{block}
+\vspace{0.2cm}
+\small Es la misma idea de siempre: cada componente con una única responsabilidad clara.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Servidor web y servidor de aplicaciones}
+\par\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Recordemos qué hizo cada pieza en la Sesión 09}
+\begin{exampleblock}{El recorrido que montamos}
+\begin{terminal}\footnotesize
+Navegador -> nginx :80 -> sitio.py 127.0.0.1:3000\\
+Navegador <- nginx <----- respuesta generada por Python
+\end{terminal}
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{\texttt{nginx}}
+\small Escuchó en el puerto público \texttt{80}, recibió la solicitud HTTP y la reenvió hacia adentro (proxy inverso).
+\end{block}
+\column{.48\textwidth}
+\begin{block}{\texttt{sitio.py}}
+\small Ejecutó código Python en \texttt{127.0.0.1:3000} y devolvió el HTML que \texttt{nginx} entregó al navegador.
+\end{block}
+\end{columns}
+\begin{alertblock}{La pregunta de hoy}
+\centering {\large\bfseries ¿\texttt{nginx} y \texttt{sitio.py} hacen el mismo trabajo?}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{¿Qué es un servidor web?}
+\begin{block}{Idea central}
+\small Es un programa que \textbf{espera solicitudes HTTP} y devuelve una respuesta. En su forma más básica, esa respuesta es un archivo que ya está guardado en el disco: una página \texttt{.html}, una hoja de estilos, una imagen, un archivo de JavaScript. El servidor web solo lo \emph{lee y lo entrega}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{También se encarga de}
+\small Aceptar muchas conexiones a la vez, atender HTTPS, registrar los accesos y aplicar límites. Es la \textbf{puerta de entrada} pública.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Ejemplos}
+\small \texttt{nginx}, Apache HTTP Server. En el curso usamos \texttt{nginx}.
+\end{exampleblock}
+\end{columns}
+\begin{block}{Contenido estático}
+\small Se llama \textbf{estático} porque el archivo es el mismo para todos los visitantes hasta que alguien lo cambia a mano.
+\end{block}
+\end{frame}
+
+\begin{frame}{¿Qué es un servidor de aplicaciones?}
+\begin{block}{Idea central}
+\small Es un programa que \textbf{ejecuta el código de una aplicación} para construir la respuesta en el momento de cada solicitud. No lee un archivo terminado: corre un programa que consulta datos, aplica reglas y \emph{genera} el resultado (una página HTML, o datos en formato JSON).
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Contenido dinámico}
+\small La respuesta puede cambiar según quién pregunta, la hora o lo que haya en la base de datos. Se arma cada vez.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Ejemplos}
+\small En Python: Gunicorn o uWSGI ejecutando una aplicación hecha con un framework (Django, Flask, FastAPI).
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{En la Sesión 09}
+\small \texttt{sitio.py} hizo este papel: ejecutó Python y armó el HTML al vuelo. Usaba \texttt{http.server}, que sirve para aprender el flujo, no para producción.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{La diferencia en una frase}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{3.4cm}p{4.6cm}p{4.6cm}}
+\toprule
+ & Servidor web & Servidor de aplicaciones \\
+\midrule
+Qué devuelve & Un archivo ya guardado & Una respuesta generada en el momento \\
+Qué hace con él & Lo lee y lo entrega & Ejecuta código que lo produce \\
+Tipo de contenido & Estático & Dinámico \\
+Rol habitual & Puerta de entrada, HTTPS, estáticos & Lógica de la aplicación y datos \\
+Ejemplo & \texttt{nginx}, Apache & Gunicorn, uWSGI \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{0.2cm}
+\begin{block}{Matiz honesto}
+\small La frontera no es un muro: un servidor web puede ejecutar algo de lógica y un servidor de aplicaciones puede entregar archivos. Aun así, los roles son distintos y por eso se combinan.
+\end{block}
+\end{frame}
+
+\begin{frame}{Cómo encaja en lo que ya hiciste}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{\texttt{nginx} = servidor web}
+\small Punto de entrada público en el puerto \texttt{80}/\texttt{443}. Entrega archivos estáticos, gestiona HTTPS y, con \texttt{proxy\_pass}, reenvía lo demás hacia adentro.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{\texttt{sitio.py} = servidor de aplicaciones}
+\small Escuchó solo en \texttt{127.0.0.1:3000}, ejecutó la lógica en Python y generó la respuesta dinámica.
+\end{block}
+\end{columns}
+\begin{alertblock}{Precisión para producción}
+\small Una aplicación real no usa \texttt{http.server}. Usa un servidor de aplicaciones especializado (Gunicorn, uWSGI) detrás de \texttt{nginx}. El esquema es el mismo; cambia solo la pieza de atrás.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Diagrama de bloques: web + aplicación}
+\begin{center}
+\includegraphics[height=.82\textheight,keepaspectratio]{diagrama-web-app.png}
+\end{center}
+\vspace{-1mm}
+\begin{center}\footnotesize \texttt{nginx} (\texttt{:80}) recibe la petición y la reenvía a la aplicación Python interna (\texttt{:8000}), que genera el HTML.\end{center}
+\end{frame}
+
+\begin{frame}{¿Por qué separar las dos piezas?}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cada una en lo suyo}
+\small El servidor web está optimizado para muchas conexiones, HTTPS y archivos. El servidor de aplicaciones se concentra en la lógica del negocio.
+\end{exampleblock}
+\begin{exampleblock}{Seguridad}
+\small El puerto de la aplicación queda interno (\texttt{127.0.0.1}). Solo \texttt{nginx} se expone. Es lo que comprobaste en la Sesión 09.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Escalar por separado}
+\small Puedes poner varias copias de la aplicación detrás del mismo \texttt{nginx} y repartir la carga entre ellas.
+\end{exampleblock}
+\begin{exampleblock}{Mantenimiento}
+\small Actualizas o reinicias la aplicación sin tocar la puerta de entrada, y al revés.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Windows Subsystem for Linux}\par
+\vspace{2mm}
+{\small Ejecutar Linux dentro de Windows}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Punto de partida: Windows y Linux no se entienden solos}
+\begin{block}{Recordemos dos términos}
+\small \textbf{Sistema operativo}: el software base que administra el equipo y atiende a los programas. \textbf{Kernel}: su parte central, la que habla directamente con el hardware y responde a lo que los programas piden.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Llamada al sistema}
+\small Cuando un programa necesita algo del sistema (abrir un archivo, usar la red, reservar memoria) se lo \textbf{pide al kernel}. Esa petición se llama \emph{llamada al sistema}.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{El problema}
+\small Windows y Linux tienen kernels distintos y piden esas cosas de forma diferente. Un programa hecho para Linux no corre tal cual en Windows.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Antes de WSL: las dos salidas conocidas}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Arranque dual (\emph{dual boot})}
+\small Instalas Windows y Linux en el mismo equipo y al encender eliges cuál usar. Solo uno funciona a la vez; para cambiar, reinicias.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Máquina virtual con hipervisor}
+\small \textbf{Hipervisor tipo 2} (Sesión 02): un programa sobre Windows que crea una \textbf{máquina virtual}, una computadora simulada por software. Dentro instalas Linux, con recursos asignados y su propio escritorio.
+\end{block}
+\end{columns}
+\begin{alertblock}{El costo de la máquina virtual}
+\small Reservas memoria y núcleos por adelantado, arranca como un equipo aparte, vive aislada de Windows y compartir archivos entre ambos cuesta configurarlo.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{¿Qué es WSL?}
+\begin{block}{Definición}
+\small \textbf{Windows Subsystem for Linux} es una función de Windows que te permite ejecutar un entorno GNU/Linux (la terminal, sus herramientas, paquetes que instalas con \texttt{apt}) \textbf{dentro de Windows}, sin reiniciar y sin que tú tengas que crear una máquina virtual.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{exampleblock}{Cómo se ve}
+\small Después de instalarlo, abres una terminal de Ubuntu como una aplicación más. Los archivos de Windows y los de Linux se ven entre sí.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Cómo se instala}
+\small Un solo comando: \texttt{wsl -{}-install}. Windows descarga y prepara todo lo necesario.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Dos generaciones: WSL 1 y WSL 2}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{WSL 1: una capa de traducción}
+\small Cuando el programa de Linux hace una llamada al sistema, WSL 1 la \textbf{traduce en el acto} a la llamada equivalente de Windows. No hay un kernel de Linux: hay un intérprete en el medio.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{WSL 2: un kernel de Linux real}
+\small Trae un \textbf{kernel de Linux de verdad}, ejecutándose en una \textbf{máquina virtual ligera y optimizada} que gestiona la tecnología de hipervisor de Windows (Hyper-V). Es la opción por defecto y la recomendada.
+\end{block}
+\end{columns}
+\begin{alertblock}{Por qué se pasó a WSL 2}
+\small Traducir cada llamada tenía límites: programas que no funcionaban y accesos a disco lentos. Con un kernel real, la compatibilidad es completa y el rendimiento, mayor.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{¿Es lo mismo que virtualizar con un hipervisor?}
+\begin{alertblock}{Pregunta para discutir}
+\centering {\Large\bfseries WSL 2 usa un hipervisor por debajo. Entonces, ¿es igual que crear una máquina virtual con VirtualBox?}
+\end{alertblock}
+\begin{center}
+\small
+\begin{tabular}{>{\bfseries}p{2.8cm}p{4.6cm}p{4.6cm}}
+\toprule
+ & Máquina virtual tradicional & WSL 2 \\
+\midrule
+Arranque & La enciendes; tarda de segundos a minutos & Casi instantáneo, al abrir la terminal \\
+Recursos & Los fijas por adelantado & Se ajustan solos según el uso \\
+Integración & Aislada; archivos y red aparte & Comparte archivos y red con Windows \\
+Interfaz & Escritorio Linux completo & Una terminal (apps gráficas, opcional) \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{La respuesta: comparten base, pero no se usan igual}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{block}{Lo que comparten}
+\small WSL 2 se apoya en la \textbf{misma tecnología de hipervisor} de Windows que usaría una máquina virtual. En ese sentido, sí hay virtualización debajo.
+\end{block}
+\column{.46\textwidth}
+\begin{block}{Lo que los diferencia}
+\small La máquina virtual está \textbf{aislada} y con recursos fijos. WSL 2 es \textbf{ligero e integrado}: se siente como parte de Windows, no como un equipo aparte.
+\end{block}
+\end{columns}
+\begin{alertblock}{Y WSL 1}
+\small WSL 1 no usa ningún hipervisor: es solo traducción de llamadas al sistema. Ahí la respuesta es un no rotundo.
+\end{alertblock}
+\begin{block}{Conclusión}
+\small WSL 2 \emph{usa} virtualización, pero está tan integrado y es tan liviano que en la práctica lo tratas como una terminal más de Windows.
+\end{block}
+\end{frame}
+
+\begin{frame}{Usos del WSL}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{exampleblock}{Desarrollar con herramientas de Linux}
+\small \texttt{bash}, \texttt{apt}, \texttt{git}, \texttt{python3}, \texttt{ssh}, \texttt{gcloud} y \texttt{docker} desde Windows, sin dejar de usar tus programas de siempre.
+\end{exampleblock}
+\begin{exampleblock}{Probar antes de subir al servidor}
+\small Corres el script en WSL con el mismo Ubuntu que la VM de GCP; si funciona ahí, se comporta casi igual en la nube.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Aprender la CLI de Linux}
+\small Practicar permisos, servicios y \texttt{nginx} sin instalar una máquina virtual completa.
+\end{exampleblock}
+\begin{alertblock}{Qué no es}
+\small WSL es tu \textbf{entorno de trabajo local}. No reemplaza a un servidor de producción, que corre en la nube sobre un hipervisor tipo 1.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Requisitos y comprobación previa}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{block}{Qué necesitas}
+\small
+Windows 10 versión 2004 o superior (compilación \texttt{19041}+), o Windows 11.\par\smallskip
+La virtualización habilitada en el firmware (BIOS/UEFI); en la mayoría de equipos ya lo está.
+\end{block}
+\column{.46\textwidth}
+\begin{exampleblock}{Comprobar si ya está}
+\begin{terminal}\footnotesize
+PS> wsl -{}-version\\
+PS> wsl -{}-status
+\end{terminal}
+\small Muestran la versión de WSL, la del kernel y la distribución por defecto. Si el comando no existe, aún no está instalado.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Laboratorio: instalación de WSL \textnormal{\small(parte 1)}}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{exampleblock}{1. Abre una terminal como administrador}
+\small PowerShell o Símbolo del sistema, con clic derecho \textrightarrow{} \emph{Ejecutar como administrador}.
+\end{exampleblock}
+\begin{exampleblock}{2. Instala WSL}
+\begin{terminal}\footnotesize
+PS> wsl -{}-install
+\end{terminal}
+\small Activa lo necesario, fija \textbf{WSL 2} por defecto y descarga \textbf{Ubuntu}.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{3. Reinicia el equipo}
+\small Al volver, se abre Ubuntu automáticamente y termina de configurarse.
+\end{exampleblock}
+\begin{exampleblock}{4. Crea tu usuario de Linux}
+\begin{terminal}\footnotesize
+Enter new UNIX username: rgap\\
+New password:\\
+Retype new password:
+\end{terminal}
+\small Es una cuenta de Linux, distinta de la de Windows. Este usuario será administrador vía \texttt{sudo}.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Laboratorio: comprobar y usar \textnormal{\small(parte 2)}}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{exampleblock}{Desde Windows (PowerShell)}
+\begin{terminal}\scriptsize
+PS> wsl -l -v\\
+\ \ NAME      STATE      VERSION\\
+* Ubuntu    Running    2\\
+PS> wsl -{}-list -{}-online\\
+PS> wsl -{}-install -d Debian\\
+PS> wsl -{}-shutdown
+\end{terminal}
+\small \texttt{-l -v}: qué hay instalado y en qué versión. \texttt{-{}-shutdown}: lo apaga.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{exampleblock}{Dentro de Ubuntu}
+\begin{terminal}\scriptsize
+\$ whoami\\
+\$ uname -r        \# kernel de Linux\\
+\$ sudo apt update\\
+\$ explorer.exe .  \# abre la carpeta\\
+\quad\quad\quad\quad\quad\quad \# en Windows
+\end{terminal}
+\small \texttt{uname -r} muestra el kernel real de WSL 2. \texttt{explorer.exe} desde Linux: la integración de la que hablamos.
+\end{exampleblock}
+\end{columns}
+\begin{block}{Qué comprobar}
+\small La terminal de Ubuntu responde, \texttt{apt} instala paquetes y los archivos se ven desde ambos lados.
+\end{block}
+\end{frame}
+
+\begin{frame}{Relación con el resto del curso}
+\begin{columns}[T,onlytextwidth]
+\column{.5\textwidth}
+\begin{block}{Misma CLI, distinto lugar}
+\small Lo que practicas en WSL (permisos, usuarios, servicios, \texttt{nginx}, \texttt{gcloud}) se traslada casi igual a la VM de GCP. Cambia dónde corre: WSL en tu PC, la VM en la nube.
+\end{block}
+\column{.46\textwidth}
+\begin{exampleblock}{El esquema completo}
+\begin{terminal}\scriptsize
+Tu PC (Windows)\\
+\ \ WSL 2 -> Ubuntu\\
+Nube (GCP)\\
+\ \ Hipervisor tipo 1 -> VM Ubuntu
+\end{terminal}
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{La idea que se repite}
+\small Servidor web y servidor de aplicaciones, hipervisor y máquina virtual, WSL y VM: en todos los casos, cada capa tiene una responsabilidad y se apoya en la de abajo.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Preguntas de repaso}
+\begin{itemize}\setlength\itemsep{9pt}
+  \item ¿Qué devuelve un servidor web y qué devuelve un servidor de aplicaciones?
+  \item En el diagrama de bloques, ¿por qué el servidor de aplicaciones no se expone al exterior?
+  \item ¿En qué se parecen y en qué se diferencian WSL 2 y una máquina virtual de VirtualBox?
+  \item ¿Por qué WSL 1 sí es distinto de virtualizar con un hipervisor?
+  \item ¿Qué comando instala WSL y qué instala por defecto?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Documentación de NGINX: \emph{Serving Static Content} y \emph{Reverse Proxy}, \texttt{docs.nginx.com/nginx/admin-guide}.
+  \item Documentación de Python: módulo \texttt{http.server} y nota de "no recomendado para producción", \texttt{docs.python.org/3/library/http.server.html}.
+  \item Documentación de Gunicorn: \emph{Deploying Gunicorn} (Gunicorn detrás de un proxy como \texttt{nginx}), \texttt{docs.gunicorn.org}.
+  \item Microsoft Learn: \emph{What is the Windows Subsystem for Linux?}, \texttt{learn.microsoft.com/windows/wsl/about}.
+  \item Microsoft Learn: \emph{Comparing WSL 1 and WSL 2}, \texttt{learn.microsoft.com/windows/wsl/compare-versions}.
+  \item Microsoft Learn: \emph{Install Linux on Windows with WSL} y \emph{Basic commands for WSL}, \texttt{learn.microsoft.com/windows/wsl/install} y \texttt{/basic-commands}.
+  \item Microsoft Learn: \emph{Windows Subsystem for Linux Architecture} (WSL 2 y la máquina virtual ligera con Hyper-V).
+  \item Material base: Sesiones 02 y 09 de este curso; identidad visual UTP y estructura docente reutilizadas sin cambios.
+\end{itemize}
+\end{frame}
+
+\end{document}
