@@ -10,7 +10,7 @@ Los desarrolladores ya codificaron y entregaron [ecommerce_webapp](ecommerce_web
 
 El enunciado se organiza en partes, pero las implementaciones y pruebas deben ejecutarse realmente. Una explicación hipotética, una captura de los diagramas proporcionados o una respuesta generada por IA no reemplazan un servicio funcionando.
 
-### Condiciones del encargo
+### Condiciones de la práctica
 
 - Utiliza `server.py`, `static/index.html` y `static/style.css` del proyecto entregado. Conserva su funcionalidad y diseño; configura el despliegue mediante variables de entorno y archivos de administración.
 - Esta entrega no incluye catálogo, carrito, pagos, panel de administración ni base de datos. No debes instalar MySQL para esta landing.
@@ -229,7 +229,7 @@ El mapa conceptual complementa el diagrama de bloques y los diagramas de secuenc
 
 Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructura:
 
-1. Identificación del estudiante y descripción del encargo.
+1. Identificación del estudiante y descripción de la práctica.
 2. Inventario, ficha de red y relación de materiales previos utilizados. Declara los materiales no disponibles.
 3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
 4. Diagrama de bloques y diagramas de secuencia.
