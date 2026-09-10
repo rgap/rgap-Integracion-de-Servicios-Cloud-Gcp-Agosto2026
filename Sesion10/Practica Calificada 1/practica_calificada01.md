@@ -32,7 +32,7 @@ Consulta las sesiones 00 a 10, sus ejemplos y respuestas disponibles, además de
 | [Sesion04](../Sesion04/)                                                                      | Ubuntu, terminal, shell, sistema de archivos, identificación del sistema y paquetes con `apt`.                                                                                                                       |
 | [Sesion05](../Sesion05/)                                                                      | Interfaces, IP, rutas, DNS, direcciones de escucha, `systemctl`, alias y funciones persistentes.                                                                                                                     |
 | [Sesion06](../Sesion06/)                                                                      | Herramientas de edición y asistencia, obtención de datos reales, observación del tráfico y representación del recorrido de red.                                                                                      |
-| [Sesion07](../Sesion07/)                                                                      | Sockets TCP, cliente y servidor Python, petición HTTP y lectura de una respuesta.                                                                                                                                    |
+| [Sesion07](../Sesion07/)                                                                      | Cliente y servidor TCP en Python, petición HTTP y lectura de una respuesta.                                                                                                                                          |
 | [Sesion08](../Sesion08/)                                                                      | Ciclo de vida de servicios, Nginx, UFW y prueba de bloqueo por IP.                                                                                                                                                   |
 | [Sesion09](../Sesion09/)                                                                      | Proxy inverso, cuentas, permisos, configuración y administración remota por SSH.                                                                                                                  |
 | [Sesion10](../Sesion10/)                                                                      | Diferencia entre servidor web y servidor de aplicaciones; papel de WSL como entorno de trabajo.                                                                                                                      |
@@ -46,8 +46,8 @@ En Windows puedes usar WSL como terminal cliente y documentar su versión, si lo
 | Referencia                                         | Implementación y comprobación obligatoria                                                                                                                                                                         |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [2026-09-10_15-10-25.jpg](2026-09-10_15-10-25.jpg) | Servidor TCP Python en `0.0.0.0:8000`; cliente en `PC_HOST`; envío de `Hola` y respuesta `Hola PC`.                                                                                                               |
-| [2026-09-10_15-11-09.jpg](2026-09-10_15-11-09.jpg) | En la misma demostración, identificar el socket de escucha, el socket aceptado, el puerto efímero del cliente y la conexión que transporta ambos mensajes.                                                        |
-| [2026-09-10_15-11-38.jpg](2026-09-10_15-11-38.jpg) | Verificar el orden `connect` → conexión TCP → `accept` → intercambio con `send`/`recv`, incluyendo la respuesta recibida en el cliente. Puede sustentarse con la misma ejecución de los dos diagramas anteriores. |
+| [2026-09-10_15-11-09.jpg](2026-09-10_15-11-09.jpg) | En la misma demostración, identificar la dirección y el puerto de escucha del servidor, la conexión aceptada, el puerto efímero del cliente y la conexión TCP que transporta ambos mensajes.                      |
+| [2026-09-10_15-11-38.jpg](2026-09-10_15-11-38.jpg) | Verificar el orden: solicitud de conexión del cliente → establecimiento de la conexión TCP → aceptación en el servidor → intercambio de los dos mensajes, incluyendo la respuesta recibida en el cliente. Puede sustentarse con la misma ejecución de los dos diagramas anteriores. |
 | [2026-09-10_15-13-23.jpg](2026-09-10_15-13-23.jpg) | Sustituir el servidor de saludo por `ecommerce_webapp`, accesible directamente en `VM_IP:8000`; realizar una petición HTTP y recibir el HTML de la landing.                                                       |
 | [2026-09-10_15-16-01.jpg](2026-09-10_15-16-01.jpg) | Publicar Nginx en `VM_IP:80` y reenviar hacia Python en `127.0.0.1:8000`; demostrar los dos tramos TCP y el retorno de la respuesta.                                                                              |
 
@@ -58,6 +58,8 @@ Utiliza el servidor HTTP incluido en la webapp, sin reescribirlo. Se evaluarán 
 ## 4. Misiones y capturas obligatorias
 
 Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados en un único informe, con capturas numeradas.
+
+> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E20`, se citan al final de cada misión, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
 
 ### Misión 1 — Recibir el servidor e inventariar el entorno — 1 punto
 
@@ -99,11 +101,11 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 
 **E04:** resolución de nombre y evidencia de la conexión HTTPS al destino real por TCP/443, mediante captura de tráfico o herramienta equivalente.
 
-### Misión 3 — Reproducir los tres diagramas de sockets — 3 puntos
+### Misión 3 — Reproducir los tres diagramas de comunicación TCP — 3 puntos
 
 1. En archivos de laboratorio separados de la webapp, adapta los ejemplos de la sesión 07 para crear un servidor TCP de saludo y un cliente TCP.
-2. En la VM, el servidor debe ejecutar `socket()`, `bind()` sobre `0.0.0.0:8000`, `listen()` y `accept()`.
-3. En `PC_HOST`, el cliente debe crear su socket y conectarse a `VM_IP:8000`. Configura temporalmente el acceso necesario en UFW para ese origen y puerto.
+2. En la VM, el servidor debe quedar a la escucha en `0.0.0.0:8000` y aceptar la conexión entrante del cliente.
+3. En `PC_HOST`, el cliente debe conectarse a `VM_IP:8000`. Configura temporalmente el acceso necesario en UFW para ese origen y puerto.
 4. Envía `Hola` desde el cliente; el servidor debe recibirlo y responder `Hola PC`; el cliente debe mostrar esa respuesta. Ambos mensajes deben viajar sobre la misma conexión aceptada.
 5. Muestra las direcciones y puertos reales de ambos extremos mediante el programa o herramientas del sistema. Registra el puerto del cliente y el puerto de escucha del servidor.
 6. Captura el tráfico de la prueba y guarda evidencia de la comunicación entre el cliente y el servidor.
@@ -119,13 +121,13 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 2. Comprueba desde la VM qué proceso escucha en `8000` y en qué dirección.
 3. Desde el navegador de `PC_HOST`, abre `http://VM_IP:8000/`. Debe verse Estampa, el anuncio de construcción, los estilos y los enlaces de cotización.
 4. Desde el cliente, solicita `/`, `/index.html`, `/style.css` y `/productos`. Registra los códigos HTTP y el tipo de contenido. Para `/productos` el resultado esperado es `404`.
-5. Adapta el cliente HTTP con sockets de la sesión 07 para solicitar `/` a `VM_IP:8000`. Envía una petición HTTP completa, con versión, cabecera `Host` y terminación de cabeceras; lee la respuesta completa y muestra estado, cabeceras y una porción del HTML.
+5. Adapta el cliente HTTP de la sesión 07 para solicitar `/` a `VM_IP:8000` sobre una conexión TCP. Envía una petición HTTP completa, con versión, cabecera `Host` y terminación de cabeceras; lee la respuesta completa y muestra estado, cabeceras y una porción del HTML.
 6. Inspecciona el enlace generado de WhatsApp: verifica número y mensaje codificado. Basta inspeccionar el destino; no envíes mensajes.
 7. Explica por qué `0.0.0.0` es una dirección de escucha y el navegador debe usar la IP real de la VM.
 
 **E07:** landing desde el host, con la URL `http://VM_IP:8000/` visible, y proceso de escucha en la VM.
 
-**E08:** respuestas HTTP de las cuatro rutas y respuesta recibida por el cliente de sockets, incluyendo un fragmento reconocible de la landing.
+**E08:** respuestas HTTP de las cuatro rutas y respuesta recibida por el cliente HTTP de la sesión 07, incluyendo un fragmento reconocible de la landing.
 
 **E09:** enlace de cotización generado con la configuración de prueba, sin marcadores `{{WHATSAPP_LINK}}` pendientes de sustituir.
 
@@ -169,7 +171,7 @@ Ejecuta las misiones en orden. Registra los comandos utilizados y sus resultados
 2. Desde el host, comprueba que `http://VM_IP/` funciona y que `http://VM_IP:8000/` no es accesible. Desde la VM, confirma que `http://127.0.0.1:8000/` sí responde. Usa tiempos de espera limitados para las pruebas negativas.
 3. Explica por separado la restricción por dirección de escucha y la política del firewall: una prueba fallida por sí sola no identifica cuál de las dos impide la conexión.
 4. Reproduce el bloqueo por IP de la sesión 08, limitado al tráfico HTTP del host. Coloca la regla antes de la autorización correspondiente, abre una conexión nueva y demuestra el fallo. Elimina esa regla temporal y demuestra la recuperación. Mantén disponible SSH y la consola.
-5. Simula una incidencia deteniendo únicamente el servicio Python. Solicita de nuevo la landing a través de Nginx, registra el error observado —normalmente `502 Bad Gateway`— y diagnostica usando estado, sockets y logs.
+5. Simula una incidencia deteniendo únicamente el servicio Python. Solicita de nuevo la landing a través de Nginx, registra el error observado —normalmente `502 Bad Gateway`— y diagnostica usando estado del servicio, puertos en escucha y logs.
 6. Recupera el servicio y comprueba una nueva respuesta `200`. Explica por qué Nginx activo no garantiza que el backend funcione.
 7. Reinicia la VM y verifica que Nginx y la aplicación arrancan automáticamente y la landing vuelve a responder. Si cambia la IP por DHCP, actualiza la ficha y los diagramas finales.
 
@@ -212,7 +214,7 @@ Elabora un mapa conceptual que relacione **todos los conceptos que consideres re
 1. Revisa las sesiones 00 a 10 y selecciona los conceptos relevantes de cada material disponible. Si no cuentas con la sesión 03, declara esa limitación; no inventes su contenido.
 2. Organiza el mapa alrededor del despliegue y la administración de la landing ecommerce. Puedes agrupar los conceptos por temas, conservando una referencia a la sesión de origen de cada nodo o grupo.
 3. Conecta los conceptos con flechas etiquetadas que expresen una relación concreta, por ejemplo: «ejecuta», «escucha en», «reenvía a», «controla el acceso a» o «resuelve». Incluye conexiones entre sesiones, no solo listas independientes de términos.
-4. Considera, según su relevancia, sistemas operativos, nube, virtualización, hipervisores, recursos, Linux, terminal y shell, archivos, usuarios, permisos, servicios, systemd, interfaces, IP, subredes, puente, rutas, DNS, NAT, sockets, TCP, HTTP, puertos, Nginx, Python, proxy inverso, UFW, SSH, WSL y herramientas de asistencia. Esta lista orienta la selección; puedes incorporar otros conceptos fundamentados en las sesiones.
+4. Considera, según su relevancia, sistemas operativos, nube, virtualización, hipervisores, recursos, Linux, terminal y shell, archivos, usuarios, permisos, servicios, systemd, interfaces, IP, subredes, puente, rutas, DNS, NAT, TCP, HTTP, puertos, Nginx, Python, proxy inverso, UFW, SSH, WSL y herramientas de asistencia. Esta lista orienta la selección; puedes incorporar otros conceptos fundamentados en las sesiones.
 5. Vincula los conceptos con ejemplos de tu implementación: qué proceso escucha en cada puerto, qué administra systemd, qué controla UFW y cómo llega una petición al backend. Distingue los conceptos introductorios del curso de las tecnologías que efectivamente implementaste.
 6. Guarda el mapa como `PC1_Apellido_Nombre_mapa_conceptual.canvas`, en formato editable compatible con Obsidian Canvas (JSON Canvas). Debe abrirse y mostrar sus nodos y conexiones; cambiar la extensión de una imagen o un PDF no cumple el requisito.
 7. Incluye en el informe una vista general legible y los acercamientos necesarios, junto con un párrafo que justifique tu selección y explique al menos tres relaciones entre contenidos de distintas sesiones.
