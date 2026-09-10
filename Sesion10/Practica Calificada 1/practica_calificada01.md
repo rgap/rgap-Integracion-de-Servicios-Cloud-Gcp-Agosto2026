@@ -237,7 +237,7 @@ Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructur
 6. Tabla final de aceptación y explicación de las decisiones técnicas.
 7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E20`, justificación de la selección y explicación de las relaciones.
 
-Adjunta una carpeta con los programas Python de la prueba TCP y del cliente HTTP, configuración de ejemplo sin secretos, unidad systemd, bloque de Nginx, registro de comandos, capturas originales, fuentes editables de los diagramas y el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
+Entrega junto al informe el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Dentro del informe incluye los programas Python de la prueba TCP y del cliente HTTP, la unidad systemd, el bloque de Nginx y la configuración de ejemplo, sin secretos ni contraseñas. Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
 
 Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener un pie que explique qué requisito demuestra. En el navegador muestra la URL; en terminal muestra comando y resultado. Las capturas de código sin ejecución no acreditan funcionamiento. No reutilices imágenes de clase como evidencia propia.
 
