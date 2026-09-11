@@ -172,9 +172,9 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 
 **E10:** propietario y permisos del código y del archivo `.env`, y usuario efectivo del proceso Python.
 
-**E11:** unidad y configuración de arranque, estados del servicio y alias o función funcionando. No muestres contraseñas ni claves privadas.
+**E11:** contenido de la unidad systemd, su habilitación al arranque (`enable`) y el alias o función de estado funcionando desde una nueva sesión de shell. No muestres contraseñas ni claves privadas.
 
-**E12:** `.env` con el backend cambiado a `HOST=127.0.0.1` y `PORT=8000`, servicio reiniciado, y demostración del ciclo `start` / `status` / `stop` / `restart` / `enable` con la explicación de la diferencia entre `start` y `enable`, y entre `restart` y `reload`.
+**E12:** `.env` con el backend cambiado a `HOST=127.0.0.1` y `PORT=8000`, servicio reiniciado, y demostración del ciclo `start` / `status` / `stop` / `restart`, con la explicación de la diferencia entre `start` y `enable`, y entre `restart` y `reload`.
 
 ### Parte 6 — Publicar mediante Nginx — 3 puntos
 
@@ -254,7 +254,7 @@ El mapa conceptual complementa el diagrama de bloques y los diagramas de secuenc
 Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructura:
 
 1. Identificación del estudiante y descripción de la práctica.
-2. Inventario, ficha de red y relación de materiales previos utilizados. Declara los materiales no disponibles.
+2. Inventario del entorno (VM y host) y ficha de red.
 3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
 4. Diagrama de bloques y diagramas de secuencia.
 5. Incidencia provocada, diagnóstico, corrección y pruebas posteriores al reinicio.
