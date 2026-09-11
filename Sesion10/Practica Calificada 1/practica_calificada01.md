@@ -28,7 +28,7 @@ Consulta las sesiones 00 a 10, sus ejemplos y respuestas disponibles, además de
 | [Sesion00](../../Sesion00/slides/build/slides.pdf) | Contexto del curso, soluciones cloud y relación entre sistemas, GCP y automatización. Vincula este panorama con los fundamentos aplicados en el laboratorio. |
 | [Sesion01](../../Sesion01/slides/build/slides.pdf) | Roles, cliente y servidor, servicios, puertos y asignación de recursos de una VM. |
 | [Sesion02](../../Sesion02/slides/build/slides.pdf) | Tipo de hipervisor, virtualización, diseño y justificación de arquitectura. |
-| Sesion03 · [Sesion04](../../Sesion04/slides/build/slides.pdf) | Sesión 03 no está incluida en esta copia del material: si la recibiste por otro medio, identifícala en el informe y vincula sus contenidos pertinentes, sin presuponer contenido no disponible. Sesión 04: Ubuntu, terminal, shell, sistema de archivos, identificación del sistema y paquetes con `apt`. |
+| [Sesion03_Sesion04](../../Sesion03_Sesion04/slides/build/slides.pdf) | Las sesiones 03 y 04 se dictaron con un solo archivo de diapositivas. Ubuntu, terminal, shell, sistema de archivos, identificación del sistema y paquetes con `apt`. |
 | [Sesion05](../../Sesion05/slides/build/slides.pdf) | Interfaces, IP, rutas, DNS, direcciones de escucha, `systemctl`, alias y funciones persistentes. |
 | [Sesion06](../../Sesion06/slides/build/slides.pdf) | Herramientas de edición y asistencia, obtención de datos reales, observación del tráfico y representación del recorrido de red. |
 | [Sesion07](../../Sesion07/slides/build/slides.pdf) | Cliente y servidor TCP en Python, petición HTTP y lectura de una respuesta. |
@@ -211,7 +211,7 @@ Puedes utilizar Mermaid, draw.io u otra herramienta. Entrega el archivo editable
 
 Elabora un mapa conceptual que relacione **todos los conceptos que consideres relevantes desde la sesión 00 hasta la sesión 10**. Selecciona los conceptos con criterio y explica sus conexiones con el despliegue realizado. Esta actividad forma parte de la calificación sobre **20 puntos**; no otorga puntos por encima de ese total.
 
-1. Revisa las sesiones 00 a 10 y selecciona los conceptos relevantes de cada material disponible. Si no cuentas con la sesión 03, declara esa limitación; no inventes su contenido.
+1. Revisa las sesiones 00 a 10 y selecciona los conceptos relevantes de cada material disponible. Las sesiones 03 y 04 comparten un solo archivo de diapositivas.
 2. Organiza el mapa alrededor del despliegue y la administración de la landing ecommerce. Puedes agrupar los conceptos por temas, conservando una referencia a la sesión de origen de cada nodo o grupo.
 3. Conecta los conceptos con flechas etiquetadas que expresen una relación concreta, por ejemplo: «ejecuta», «escucha en», «reenvía a», «controla el acceso a» o «resuelve». Incluye conexiones entre sesiones, no solo listas independientes de términos.
 4. Considera, según su relevancia, sistemas operativos, nube, virtualización, hipervisores, recursos, Linux, terminal y shell, archivos, usuarios, permisos, servicios, systemd, interfaces, IP, subredes, puente, rutas, DNS, NAT, TCP, HTTP, puertos, Nginx, Python, proxy inverso, UFW, SSH y herramientas de asistencia. Esta lista orienta la selección; puedes incorporar otros conceptos fundamentados en las sesiones.
