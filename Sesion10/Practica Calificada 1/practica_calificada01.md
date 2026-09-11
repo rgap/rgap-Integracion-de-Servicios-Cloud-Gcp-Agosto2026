@@ -21,23 +21,21 @@ El enunciado se organiza en partes, pero las implementaciones y pruebas deben ej
 
 ## 2. Material previo que debes aplicar
 
-Consulta las sesiones 00 a 10, sus ejemplos y respuestas disponibles, además de `solucion` y `tarea`. La siguiente relación establece cómo se aplican al caso:
+Consulta las sesiones 00 a 10, sus ejemplos y respuestas disponibles, además de la `tarea` de análisis de flujo de red. La siguiente relación establece cómo se aplican al caso:
 
-| Material                                                                                      | Aplicación en esta práctica                                                                                                                                                                                          |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Sesion00](../Sesion00/)                                                                      | Contexto del curso, soluciones cloud y relación entre sistemas, GCP y automatización. Vincula este panorama con los fundamentos aplicados en el laboratorio.                                                         |
-| [Sesion01](../Sesion01/)                                                                      | Roles, cliente y servidor, servicios, puertos y asignación de recursos de una VM.                                                                                                                                    |
-| [Sesion02](../Sesion02/)                                                                      | Tipo de hipervisor, virtualización, diseño y justificación de arquitectura.                                                                                                                                          |
-| Sesion03                                                                                      | No está incluida en esta copia del material. Si fue proporcionada por otro medio, identifícala en el informe y vincula sus contenidos pertinentes con la implementación. No se presupone un contenido no disponible. |
-| [Sesion04](../Sesion04/)                                                                      | Ubuntu, terminal, shell, sistema de archivos, identificación del sistema y paquetes con `apt`.                                                                                                                       |
-| [Sesion05](../Sesion05/)                                                                      | Interfaces, IP, rutas, DNS, direcciones de escucha, `systemctl`, alias y funciones persistentes.                                                                                                                     |
-| [Sesion06](../Sesion06/)                                                                      | Herramientas de edición y asistencia, obtención de datos reales, observación del tráfico y representación del recorrido de red.                                                                                      |
-| [Sesion07](../Sesion07/)                                                                      | Cliente y servidor TCP en Python, petición HTTP y lectura de una respuesta.                                                                                                                                          |
-| [Sesion08](../Sesion08/)                                                                      | Ciclo de vida de servicios, Nginx, UFW y prueba de bloqueo por IP.                                                                                                                                                   |
-| [Sesion09](../Sesion09/)                                                                      | Proxy inverso, cuentas, permisos, configuración y administración remota por SSH.                                                                                                                  |
-| [Sesion10](../Sesion10/)                                                                      | Diferencia entre servidor web y servidor de aplicaciones; elección del entorno de trabajo desde el que administras la VM.                                                                                            |
-| [solucion](../solucion/)                                                                      | Revisar los recursos disponibles. En esta copia solo contiene `.vscode/project-favorites.json`, sin una solución técnica; no constituye una implementación de referencia.                                            |
-| [Tarea de análisis de flujo de red](../tarea/Tarea%20-%20Analisis%20de%20Flujo%20de%20Red.md) | Modo puente, datos reales de red, DNS, salida a Internet, NAT del router y diagramas de secuencia y bloques.                                                                                                         |
+| Material | Aplicación en esta práctica |
+| --- | --- |
+| [Sesion00](../../Sesion00/slides/build/slides.pdf) | Contexto del curso, soluciones cloud y relación entre sistemas, GCP y automatización. Vincula este panorama con los fundamentos aplicados en el laboratorio. |
+| [Sesion01](../../Sesion01/slides/build/slides.pdf) | Roles, cliente y servidor, servicios, puertos y asignación de recursos de una VM. |
+| [Sesion02](../../Sesion02/slides/build/slides.pdf) | Tipo de hipervisor, virtualización, diseño y justificación de arquitectura. |
+| Sesion03 · [Sesion04](../../Sesion04/slides/build/slides.pdf) | Sesión 03 no está incluida en esta copia del material: si la recibiste por otro medio, identifícala en el informe y vincula sus contenidos pertinentes, sin presuponer contenido no disponible. Sesión 04: Ubuntu, terminal, shell, sistema de archivos, identificación del sistema y paquetes con `apt`. |
+| [Sesion05](../../Sesion05/slides/build/slides.pdf) | Interfaces, IP, rutas, DNS, direcciones de escucha, `systemctl`, alias y funciones persistentes. |
+| [Sesion06](../../Sesion06/slides/build/slides.pdf) | Herramientas de edición y asistencia, obtención de datos reales, observación del tráfico y representación del recorrido de red. |
+| [Sesion07](../../Sesion07/slides/build/slides.pdf) | Cliente y servidor TCP en Python, petición HTTP y lectura de una respuesta. |
+| [Sesion08](../../Sesion08/slides/build/slides.pdf) | Ciclo de vida de servicios, Nginx, UFW y prueba de bloqueo por IP. |
+| [Sesion09](../../Sesion09/slides/build/slides.pdf) | Proxy inverso, cuentas, permisos, configuración y administración remota por SSH. |
+| [Sesion10](../../Sesion10/slides/build/slides.pdf) | Diferencia entre servidor web y servidor de aplicaciones; elección del entorno de trabajo desde el que administras la VM. |
+| [Tarea de análisis de flujo de red](../../tarea/Tarea%20-%20Analisis%20de%20Flujo%20de%20Red.md) | Modo puente, datos reales de red, DNS, salida a Internet, NAT del router y diagramas de secuencia y bloques. |
 
 Utiliza la terminal de tu sistema como cliente y documenta el entorno que empleas. La VM Ubuntu en modo puente sigue siendo el servidor del caso. Explica esta elección con lo visto en la sesión 10.
 
@@ -95,7 +93,7 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
    PORT =
    ```
 
-4. Reproduce el análisis de `tarea`: resuelve el nombre de destino y realiza desde la VM una conexión HTTPS sobre TCP, por ejemplo con `curl -4 --http1.1 -I https://www.google.com`. Observa el destino efectivo de esa conexión y su puerto; no copies la IP del ejemplo de clase.
+4. Reproduce el análisis de `tarea`: resuelve el nombre de destino y realiza desde la VM una conexión HTTPS sobre TCP, por ejemplo con `curl -I https://www.google.com`. Observa el destino efectivo de esa conexión y su puerto; no copies la IP del ejemplo de clase.
 5. Explica dónde intervienen DNS y el NAT de salida del router. No confundas el puente del hipervisor con el NAT del router. Puedes representar la dirección WAN como `IP pública`, sin registrar su valor.
 6. Diferencia esa salida a Internet del acceso local `PC_HOST → VM`: en la misma subred no se necesita NAT ni una ruta por Internet para consultar la landing. Un `ping` no demuestra por sí solo que HTTP funcione.
 
@@ -119,7 +117,7 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 
 ### Parte 4 — Desplegar la landing directamente en Python — 3 puntos
 
-1. Inicia el proyecto entregado con Python 3 y las variables `HOST=0.0.0.0` y `PORT=8000`. Usa las variables de WhatsApp con valores de prueba identificados como tales.
+1. Inicia el proyecto entregado con Python 3 y las variables `HOST=0.0.0.0` y `PORT=8000`. Usa las variables de WhatsApp con valores de prueba identificados como tales. Coloca la configuración en un archivo `.env` junto a `server.py`: el servidor lo carga automáticamente al arrancar (las variables ya definidas en el entorno tienen prioridad).
 2. Comprueba desde la VM qué proceso escucha en `8000` y en qué dirección.
 3. Desde el navegador de `PC_HOST`, abre `http://VM_IP:8000/`. Debe verse Estampa, el anuncio de construcción, los estilos y los enlaces de cotización.
 4. Desde el cliente, solicita `/`, `/index.html`, `/style.css` y `/productos`. Registra los códigos HTTP y el tipo de contenido. Para `/productos` el resultado esperado es `404`.
@@ -136,16 +134,16 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 ### Parte 5 — Administrar usuarios, permisos y servicio — 2 puntos
 
 1. Define una cuenta sin privilegios administrativos para ejecutar la aplicación. Documenta propietario, grupo y permisos de los archivos y directorios necesarios.
-2. Configura las variables de entorno mediante `Environment` en la unidad systemd o un archivo declarado con `EnvironmentFile`: `server.py` no carga `.env` automáticamente.
-3. Aplica permisos mínimos al código y a la configuración. No uses `chmod 777`.
-4. Restringe la configuración a las cuentas que necesiten leerla. La cuenta del servicio debe poder leer el código y los recursos estáticos, y recorrer sus directorios. No necesita permisos administrativos para escuchar en `8000`.
-5. Detén la ejecución manual y configura una unidad systemd para la aplicación, con usuario, directorio de trabajo, comando de inicio que invoque directamente Python 3 con la ruta de `server.py`, y variables. El nombre del servicio debe quedar registrado en el informe.
-6. Cambia el backend a `HOST=127.0.0.1` y `PORT=8000`, como requiere la arquitectura final.
+2. Mantén el archivo `.env` con las variables `HOST`, `PORT`, `WHATSAPP_NUMBER` y `WHATSAPP_MESSAGE` en el directorio de la aplicación, junto a `server.py` (el mismo que usaste en la parte 4). Es la única fuente de configuración del servicio: `server.py` lo carga al arrancar.
+3. Aplica permisos mínimos al código y al archivo `.env`. No uses `chmod 777`.
+4. Restringe el `.env` a las cuentas que necesiten leerlo (por ejemplo propietario administrativo y grupo del servicio, sin acceso para el resto). La cuenta del servicio debe poder leer el código, el `.env` y los recursos estáticos, y recorrer sus directorios. No necesita permisos administrativos para escuchar en `8000`.
+5. Detén la ejecución manual y configura una unidad systemd para la aplicación, con usuario, directorio de trabajo y comando de inicio que invoque directamente Python 3 con la ruta de `server.py`. `server.py` carga el `.env` que está junto a él, así que no necesitas declarar variables en la unidad. El nombre del servicio debe quedar registrado en el informe.
+6. Cambia en el `.env` el backend a `HOST=127.0.0.1` y `PORT=8000`, como requiere la arquitectura final, y reinicia el servicio.
 7. Demuestra inicio, consulta de estado, parada, reinicio y habilitación al arranque. Diferencia `start` de `enable`, y `restart` de `reload`; no presupongas que tu unidad Python soporta recarga.
 8. Crea un alias o función persistente para consultar el estado del servicio y demuéstralo desde una nueva sesión de shell.
 9. Comprueba administración por SSH desde el host con una cuenta normal. Restringe su acceso en UFW al origen administrativo y conserva acceso a la consola de la VM durante las pruebas de firewall.
 
-**E10:** propietario y permisos del código y de la configuración, y usuario efectivo del proceso Python.
+**E10:** propietario y permisos del código y del archivo `.env`, y usuario efectivo del proceso Python.
 
 **E11:** unidad y configuración de arranque, estados del servicio y alias o función funcionando. No muestres contraseñas ni claves privadas.
 
@@ -237,7 +235,7 @@ Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructur
 6. Tabla final de aceptación y explicación de las decisiones técnicas.
 7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E20`, justificación de la selección y explicación de las relaciones.
 
-Entrega junto al informe el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Dentro del informe incluye los programas Python de la prueba TCP y del cliente HTTP, la unidad systemd, el bloque de Nginx y la configuración de ejemplo, sin secretos ni contraseñas. Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
+Entrega junto al informe el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Dentro del informe incluye los programas Python de la prueba TCP y del cliente HTTP, la unidad systemd, el bloque de Nginx y el `.env` de ejemplo (con valores de prueba, sin secretos ni contraseñas). Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
 
 Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener un pie que explique qué requisito demuestra. En el navegador muestra la URL; en terminal muestra comando y resultado. Las capturas de código sin ejecución no acreditan funcionamiento. No reutilices imágenes de clase como evidencia propia.
 

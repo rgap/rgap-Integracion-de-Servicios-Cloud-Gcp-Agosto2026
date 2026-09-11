@@ -6,6 +6,10 @@ de datos. La única acción es contactar por WhatsApp para cotizar.
 Uso:
     python server.py
     PORT=3000 WHATSAPP_NUMBER=51987654321 python server.py
+
+La configuración se toma de variables de entorno. Si existe un archivo .env
+junto a server.py, se carga automáticamente al arrancar; las variables que ya
+estén definidas en el entorno tienen prioridad y no se sobrescriben.
 """
 
 import os
@@ -14,6 +18,28 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
+
+
+def load_dotenv(path: Path) -> None:
+    """Carga un archivo .env sencillo (CLAVE=valor por línea) al entorno.
+
+    No pisa variables ya definidas, ignora líneas vacías y comentarios (#),
+    y quita comillas envolventes del valor.
+    """
+    if not path.is_file():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            os.environ.setdefault(key, value)
+
+
+load_dotenv(BASE_DIR / ".env")
 
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8000"))
