@@ -29,7 +29,7 @@ El enunciado se organiza en partes, pero las implementaciones y pruebas deben ej
 - Esta entrega no incluye catálogo, carrito, pagos, panel de administración ni base de datos. No debes instalar MySQL para esta landing.
 - El entorno de evaluación será una VM Ubuntu con adaptador puente y un cliente en el equipo físico, denominado `PC_HOST`.
 - La publicación final será `http://VM_IP/`, en la red local. No se exige dominio, HTTPS del sitio, despliegue en GCP ni apertura de puertos en el router hacia Internet.
-- Implementa todas las operaciones de los cinco diagramas de esta carpeta mediante las etapas indicadas. Los escenarios son sucesivos: no deben competir por el puerto `8000`.
+- Implementa todas las operaciones de los cuatro diagramas de esta carpeta mediante las etapas indicadas. Los escenarios son sucesivos: no deben competir por el puerto `8000`.
 - Puedes adaptar los ejemplos de clase y utilizar herramientas de asistencia. Debes comprender, explicar y comprobar lo que ejecutes.
 
 ## 2. Material previo que debes aplicar
@@ -59,8 +59,7 @@ Utiliza la terminal de tu sistema como cliente y documenta el entorno que emplea
 | Referencia                                         | Implementación y comprobación obligatoria                                                                                                                                                                         |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [2026-09-10_15-10-25.jpg](2026-09-10_15-10-25.jpg) | Servidor TCP Python en `0.0.0.0:8000`; cliente en `PC_HOST`; envío de `Hola` y respuesta `Hola PC`.                                                                                                               |
-| [2026-09-10_15-11-09.jpg](2026-09-10_15-11-09.jpg) | En la misma demostración, identificar la dirección y el puerto de escucha del servidor, la conexión aceptada, el puerto efímero del cliente y la conexión TCP que transporta ambos mensajes.                      |
-| [2026-09-10_15-11-38.jpg](2026-09-10_15-11-38.jpg) | Verificar el orden: solicitud de conexión del cliente → establecimiento de la conexión TCP → aceptación en el servidor → intercambio de los dos mensajes, incluyendo la respuesta recibida en el cliente. Puede sustentarse con la misma ejecución de los dos diagramas anteriores. |
+| [2026-09-10_15-11-09.jpg](2026-09-10_15-11-09.jpg) | En la misma demostración, identificar la dirección y el puerto de escucha del servidor, la conexión aceptada, el puerto efímero del cliente y la conexión TCP que transporta ambos mensajes. Verificar además el orden: solicitud de conexión del cliente → establecimiento de la conexión TCP → aceptación en el servidor → intercambio de los dos mensajes, incluyendo la respuesta recibida en el cliente. |
 | [2026-09-10_15-13-23.jpg](2026-09-10_15-13-23.jpg) | Sustituir el servidor de saludo por `ecommerce_webapp`, accesible directamente en `VM_IP:8000`; realizar una petición HTTP y recibir el HTML de la landing.                                                       |
 | [2026-09-10_15-16-01.jpg](2026-09-10_15-16-01.jpg) | Publicar Nginx en `VM_IP:80` y reenviar hacia Python en `127.0.0.1:8000`; demostrar los dos tramos TCP y el retorno de la respuesta.                                                                              |
 
@@ -142,7 +141,7 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 
 **E04:** resolución de nombre y evidencia de la conexión HTTPS al destino real por TCP/443, mediante captura de tráfico o herramienta equivalente.
 
-### Parte 3 — Reproducir los tres diagramas de comunicación TCP — 3 puntos
+### Parte 3 — Reproducir los diagramas de comunicación TCP — 3 puntos
 
 1. En archivos de laboratorio separados de la webapp, adapta los ejemplos de la sesión 07 para crear un servidor TCP de saludo y un cliente TCP.
 2. En la VM, el servidor debe quedar a la escucha en `0.0.0.0:8000` y aceptar la conexión entrante del cliente.
@@ -237,7 +236,7 @@ Representa correctamente la pertenencia de componentes: Nginx y Python son proce
 
 Además, entrega cuatro diagramas de secuencia propios:
 
-1. Intercambio TCP `Hola` / `Hola PC`, cubriendo los tres diagramas de saludo proporcionados.
+1. Intercambio TCP `Hola` / `Hola PC`, cubriendo los dos diagramas de saludo proporcionados.
 2. Acceso HTTP directo a Python durante la etapa temporal, usando `GET /`.
 3. Acceso HTTP final mediante Nginx, con los dos tramos TCP y el retorno del HTML.
 4. Salida HTTPS desde la VM hacia Internet, retomando `tarea`, con DNS, puente y NAT del router.
