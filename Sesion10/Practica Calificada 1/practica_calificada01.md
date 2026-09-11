@@ -272,6 +272,4 @@ Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener 
 | Actividad adicional — Mapa conceptual editable en `.canvas`. | E20 | 2 |
 | **Total** | | **20** |
 
-En el mapa conceptual se asignan 0,5 puntos a la selección fundamentada de conceptos de las sesiones 00 a 10; 1 punto a las relaciones correctas y etiquetadas entre sesiones y con la práctica; y 0,5 puntos al archivo `.canvas` editable y legible con su evidencia E20. El informe sustenta el puntaje de cada sección mediante las evidencias correspondientes.
-
 Se evalúa la implementación demostrada y la capacidad de explicarla. Una landing accesible no acredita por sí sola las etapas TCP, la configuración de seguridad, la persistencia del servicio ni el análisis de red. Al cerrar el simulador, deja la arquitectura final operativa, sin el servidor de saludo ni las reglas temporales de prueba.
