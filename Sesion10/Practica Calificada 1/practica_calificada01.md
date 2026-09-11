@@ -59,7 +59,7 @@ Utiliza el servidor HTTP incluido en la webapp, sin reescribirlo. Se evaluarán 
 
 Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados en un único informe, con capturas numeradas.
 
-> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E19`, se citan al final de cada parte, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
+> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E20`, se citan al final de cada parte, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
 
 ### Parte 1 — Recibir el servidor e inventariar el entorno — 1 punto
 
@@ -146,6 +146,8 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 
 **E11:** unidad y configuración de arranque, estados del servicio y alias o función funcionando. No muestres contraseñas ni claves privadas.
 
+**E12:** `.env` con el backend cambiado a `HOST=127.0.0.1` y `PORT=8000`, servicio reiniciado, y demostración del ciclo `start` / `status` / `stop` / `restart` / `enable` con la explicación de la diferencia entre `start` y `enable`, y entre `restart` y `reload`.
+
 ### Parte 6 — Publicar mediante Nginx — 3 puntos
 
 1. Adapta la configuración de proxy inverso de la sesión 09. Nginx debe escuchar en el puerto `80` y reenviar las rutas del sitio hacia `http://127.0.0.1:8000`.
@@ -156,11 +158,11 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 6. Observa una solicitud en la interfaz de red de la VM y en loopback. Identifica los dos tramos TCP: `HOST_IP:puerto_efimero → VM_IP:80` y `127.0.0.1:otro_puerto_efimero → 127.0.0.1:8000`.
 7. Relaciona la petición y respuesta con los registros de Nginx y del backend. Explica que Nginx establece una conexión al backend: no es una sola conexión TCP que atraviesa ambos procesos.
 
-**E12:** configuración activa del proxy, validación satisfactoria de Nginx y listeners finales.
+**E13:** configuración activa del proxy, validación satisfactoria de Nginx y listeners finales.
 
-**E13:** landing final en `http://VM_IP/`, respuestas de las cuatro rutas y registros de ambos servicios correspondientes a las pruebas.
+**E14:** landing final en `http://VM_IP/`, respuestas de las cuatro rutas y registros de ambos servicios correspondientes a las pruebas.
 
-**E14:** tráfico de los dos tramos, con extremos, petición y respuesta identificados. Presenta varios recortes legibles si una sola imagen no permite verlos.
+**E15:** tráfico de los dos tramos, con extremos, petición y respuesta identificados. Presenta varios recortes legibles si una sola imagen no permite verlos.
 
 ### Parte 7 — Controlar el acceso y recuperar una falla — 2 puntos
 
@@ -172,11 +174,11 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 6. Recupera el servicio y comprueba una nueva respuesta `200`. Explica por qué Nginx activo no garantiza que el backend funcione.
 7. Reinicia la VM y verifica que Nginx y la aplicación arrancan automáticamente y la landing vuelve a responder. Si cambia la IP por DHCP, actualiza la ficha y los diagramas finales.
 
-**E15:** UFW activo, reglas finales y pruebas comparadas de acceso al puerto `80`, rechazo o falta de acceso externo a `8000`, y respuesta local del backend.
+**E16:** UFW activo, reglas finales y pruebas comparadas de acceso al puerto `80`, rechazo o falta de acceso externo a `8000`, y respuesta local del backend.
 
-**E16:** bloqueo HTTP temporal por origen, fallo desde el cliente, eliminación de la regla y recuperación.
+**E17:** bloqueo HTTP temporal por origen, fallo desde el cliente, eliminación de la regla y recuperación.
 
-**E17:** incidencia del backend, diagnóstico, recuperación y verificación de ambos servicios después del reinicio de la VM.
+**E18:** incidencia del backend, diagnóstico, recuperación y verificación de ambos servicios después del reinicio de la VM.
 
 ### Parte 8 — Documentar la arquitectura implementada — 2 puntos
 
@@ -201,7 +203,7 @@ Además, entrega cuatro diagramas de secuencia propios:
 
 Puedes utilizar Mermaid, draw.io u otra herramienta. Entrega el archivo editable y su representación legible en el informe. Rotula el acceso directo a `8000` como **etapa temporal** para no confundirlo con la arquitectura final.
 
-**E18:** diagrama de bloques y cuatro diagramas de secuencia con IP reales, puertos, protocolos y leyenda.
+**E19:** diagrama de bloques y cuatro diagramas de secuencia con IP reales, puertos, protocolos y leyenda.
 
 ### Actividad adicional obligatoria — Mapa conceptual en `.canvas` — 2 puntos
 
@@ -217,7 +219,7 @@ Elabora un mapa conceptual que relacione **todos los conceptos que consideres re
 
 El mapa conceptual complementa el diagrama de bloques y los diagramas de secuencia: explica relaciones entre conocimientos, mientras los otros representan la arquitectura y sus comunicaciones. Debes entregar los tres tipos de representación.
 
-**E19:** mapa conceptual abierto en una herramienta compatible, con conceptos, conexiones etiquetadas y referencias a las sesiones visibles; adjunta también el archivo `.canvas` original.
+**E20:** mapa conceptual abierto en una herramienta compatible, con conceptos, conexiones etiquetadas y referencias a las sesiones visibles; adjunta también el archivo `.canvas` original.
 
 ## 5. Documento y archivos que debes entregar
 
@@ -225,11 +227,11 @@ Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructur
 
 1. Identificación del estudiante y descripción de la práctica.
 2. Inventario, ficha de red y relación de materiales previos utilizados. Declara los materiales no disponibles.
-3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E18`.
+3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
 4. Diagrama de bloques y diagramas de secuencia.
 5. Incidencia provocada, diagnóstico, corrección y pruebas posteriores al reinicio.
 6. Tabla final de aceptación y explicación de las decisiones técnicas.
-7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E19`, justificación de la selección y explicación de las relaciones.
+7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E20`, justificación de la selección y explicación de las relaciones.
 
 Entrega junto al informe el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Dentro del informe incluye los programas Python de la prueba TCP y del cliente HTTP, la unidad systemd, el bloque de Nginx y el `.env` de ejemplo (con valores de prueba, sin secretos ni contraseñas). Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
 
@@ -261,11 +263,11 @@ Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener 
 | Parte 2 — Datos reales de red y salida a Internet. | E03–E04 | 2 |
 | Parte 3 — Implementación TCP e intercambio de mensajes. | E05–E06 | 3 |
 | Parte 4 — Landing en Python, rutas, cliente HTTP y cotización. | E07–E09 | 3 |
-| Parte 5 — Usuarios, permisos y systemd. | E10–E11 | 2 |
-| Parte 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E12–E14 | 3 |
-| Parte 7 — UFW, control de acceso, recuperación y reinicio. | E15–E17 | 2 |
-| Parte 8 — Diagrama de bloques y diagramas de secuencia. | E18 | 2 |
-| Actividad adicional — Mapa conceptual editable en `.canvas`. | E19 | 2 |
+| Parte 5 — Usuarios, permisos y systemd. | E10–E12 | 2 |
+| Parte 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E13–E15 | 3 |
+| Parte 7 — UFW, control de acceso, recuperación y reinicio. | E16–E18 | 2 |
+| Parte 8 — Diagrama de bloques y diagramas de secuencia. | E19 | 2 |
+| Actividad adicional — Mapa conceptual editable en `.canvas`. | E20 | 2 |
 | **Total** | | **20** |
 
 Se evalúa la implementación demostrada y la capacidad de explicarla. Una landing accesible no acredita por sí sola las etapas TCP, la configuración de seguridad, la persistencia del servicio ni el análisis de red. Al cerrar el simulador, deja la arquitectura final operativa, sin el servidor de saludo ni las reglas temporales de prueba.
