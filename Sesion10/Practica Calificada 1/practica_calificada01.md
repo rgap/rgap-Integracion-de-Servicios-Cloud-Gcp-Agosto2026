@@ -78,7 +78,20 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 
 1. Obtén `VM_IP`, prefijo de red, interfaz activa y `ROUTER_IP` desde Ubuntu, mediante `ip addr` e `ip route` o comandos equivalentes.
 2. Obtén `HOST_IP` desde el equipo físico. Comprueba con el prefijo que cliente y VM pertenecen a la misma subred.
-3. Registra los siguientes datos con el comando o pantalla que sustenta cada uno:
+3. Registra los siguientes datos con el comando o pantalla que sustenta cada uno. Qué significa cada campo:
+
+   - `HOST_IP`: dirección IPv4 del equipo físico (`PC_HOST`) en la red local. Se obtiene en el host con `ipconfig` (Windows) o `ip addr` (Linux/macOS).
+   - `VM_IP`: dirección IPv4 de la VM Ubuntu en la misma red local, asignada gracias al adaptador en modo puente. Se obtiene en la VM con `ip addr`.
+   - `PREFIJO_RED`: longitud de prefijo de la subred en notación CIDR (por ejemplo `/24`, equivalente a `255.255.255.0`). Indica qué parte de la IP identifica la red; sirve para comprobar que `HOST_IP` y `VM_IP` están en la misma subred.
+   - `INTERFAZ_VM`: nombre de la interfaz de red activa dentro de la VM (la que tiene `VM_IP`), por ejemplo `enp0s3` o `ens33`. Se ve en `ip addr` o `ip route`.
+   - `ROUTER_IP`: dirección IP de la puerta de enlace predeterminada (el router de la LAN). Es el `default via ...` de `ip route`.
+   - `MODE`: modo del adaptador de red del hipervisor. En esta práctica siempre es `Bridged` (puente): la VM aparece como un equipo más de la LAN.
+   - `DEST_NAME`: nombre de dominio del destino en Internet que se usará para la prueba de salida. Fijo: `www.google.com`.
+   - `DEST_IP`: dirección IP a la que resuelve `DEST_NAME` mediante DNS y a la que la VM se conecta realmente. Se obtiene con `dig`, `nslookup`, `getent hosts` o mirando la conexión con `curl -v` / captura de tráfico. No copies la IP del ejemplo de clase.
+   - `PROTOCOL`: protocolo de la conexión de salida observada (transporte y aplicación), por ejemplo `TCP` con `HTTPS` encima.
+   - `PORT`: puerto de destino de esa conexión. Para HTTPS es `443`.
+
+   Plantilla para completar con tus valores:
 
    ```text
    HOST_IP =
@@ -91,6 +104,21 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
    DEST_IP =
    PROTOCOL =
    PORT =
+   ```
+
+   Ejemplo de llenado (valores ilustrativos, no los copies: usa los de tu entorno):
+
+   ```text
+   HOST_IP = 192.168.1.45
+   VM_IP = 192.168.1.60
+   PREFIJO_RED = /24
+   INTERFAZ_VM = enp0s3
+   ROUTER_IP = 192.168.1.1
+   MODE = Bridged
+   DEST_NAME = www.google.com
+   DEST_IP = 142.250.78.196
+   PROTOCOL = TCP / HTTPS
+   PORT = 443
    ```
 
 4. Reproduce el análisis de `tarea`: resuelve el nombre de destino y realiza desde la VM una conexión HTTPS sobre TCP, por ejemplo con `curl -I https://www.google.com`. Observa el destino efectivo de esa conexión y su puerto; no copies la IP del ejemplo de clase.
