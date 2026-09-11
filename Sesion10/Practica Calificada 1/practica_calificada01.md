@@ -2,6 +2,18 @@
 
 Actua como un sysadmin responsable de preparar el servidor de una tienda ecommerce. En este simulador asumirás el turno de implementación: recibirás una aplicación desarrollada por otro equipo, configurarás su entorno, comprobarás las comunicaciones y entregarás el servicio funcionando con evidencias verificables.
 
+**Video explicativo en NotebookLM:** https://notebook.google.com/notebook/3cb09ba9-be59-44b7-9a31-ce6737e7b041/artifact/d82f91c2-fd31-4b60-a15b-0a275aa604bf
+**Prompt mejorable:** 
+```bash
+Explícame este caso de estudio desde cero enfocándote en qué tengo que hacer como SysAdmin.
+
+Indica paso a paso qué debo configurar, ejecutar, comprobar y demostrar en cada etapa. Explica también todos los tecnicismos y conceptos técnicos que aparezcan, qué significan, para qué sirven y cómo se relacionan con lo que estoy haciendo.
+
+Aclara qué resultado debería obtener, qué evidencias debo mostrar y qué errores o confusiones debo evitar.
+
+No inventes información que no esté en el documento.
+```
+
 ## 1. Caso de estudio: el lanzamiento de ESTAMPA
 
 Estampa es un emprendimiento de polos temáticos que prepara su tienda en línea. Mientras el equipo de desarrollo termina el catálogo, el negocio necesita una landing page que anuncie que el sitio está en construcción y permita solicitar cotizaciones por WhatsApp.
