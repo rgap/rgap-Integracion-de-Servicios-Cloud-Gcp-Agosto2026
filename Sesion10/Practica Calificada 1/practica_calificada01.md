@@ -3,6 +3,7 @@
 Actua como un sysadmin responsable de preparar el servidor de una tienda ecommerce. En este simulador asumirás el turno de implementación: recibirás una aplicación desarrollada por otro equipo, configurarás su entorno, comprobarás las comunicaciones y entregarás el servicio funcionando con evidencias verificables.
 
 **Video explicativo en NotebookLM:** https://notebook.google.com/notebook/3cb09ba9-be59-44b7-9a31-ce6737e7b041/artifact/d82f91c2-fd31-4b60-a15b-0a275aa604bf
+
 **Prompt mejorable:** 
 ```bash
 Explícame este caso de estudio desde cero enfocándote en qué tengo que hacer como SysAdmin.
