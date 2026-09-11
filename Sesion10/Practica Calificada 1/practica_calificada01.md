@@ -33,7 +33,7 @@ Consulta las sesiones 00 a 10, sus ejemplos y respuestas disponibles, además de
 | [Sesion06](../../Sesion06/slides/build/slides.pdf) | Herramientas de edición y asistencia, obtención de datos reales, observación del tráfico y representación del recorrido de red. |
 | [Sesion07](../../Sesion07/slides/build/slides.pdf) | Cliente y servidor TCP en Python, petición HTTP y lectura de una respuesta. |
 | [Sesion08](../../Sesion08/slides/build/slides.pdf) | Ciclo de vida de servicios, Nginx, UFW y prueba de bloqueo por IP. |
-| [Sesion09](../../Sesion09/slides/build/slides.pdf) | Proxy inverso, cuentas, permisos, configuración y administración remota por SSH. |
+| [Sesion09](../../Sesion09/slides/build/slides.pdf) | Proxy inverso, cuentas, permisos y configuración. |
 | [Sesion10](../../Sesion10/slides/build/slides.pdf) | Diferencia entre servidor web y servidor de aplicaciones; elección del entorno de trabajo desde el que administras la VM. |
 | [Tarea de análisis de flujo de red](../../tarea/Tarea%20-%20Analisis%20de%20Flujo%20de%20Red.md) | Modo puente, datos reales de red, DNS, salida a Internet, NAT del router y diagramas de secuencia y bloques. |
 
@@ -59,7 +59,7 @@ Utiliza el servidor HTTP incluido en la webapp, sin reescribirlo. Se evaluarán 
 
 Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados en un único informe, con capturas numeradas.
 
-> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E20`, se citan al final de cada parte, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
+> **Qué son `E01`, `E02`, …:** son las **evidencias obligatorias** de la práctica. Cada `Exx` es un elemento concreto —normalmente una o varias capturas de pantalla con su pie explicativo— que demuestra que un requisito específico se ejecutó realmente y funcionó. Están numeradas de `E01` a `E19`, se citan al final de cada parte, se incorporan en el informe en el orden indicado en la sección 5 y se califican según la tabla de criterios de la sección 6. Una evidencia solo cuenta si es legible, indica si corresponde al host o a la VM y muestra el comando y su resultado (o la URL en el navegador).
 
 ### Parte 1 — Recibir el servidor e inventariar el entorno — 1 punto
 
@@ -141,13 +141,10 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 6. Cambia en el `.env` el backend a `HOST=127.0.0.1` y `PORT=8000`, como requiere la arquitectura final, y reinicia el servicio.
 7. Demuestra inicio, consulta de estado, parada, reinicio y habilitación al arranque. Diferencia `start` de `enable`, y `restart` de `reload`; no presupongas que tu unidad Python soporta recarga.
 8. Crea un alias o función persistente para consultar el estado del servicio y demuéstralo desde una nueva sesión de shell.
-9. Comprueba administración por SSH desde el host con una cuenta normal. Restringe su acceso en UFW al origen administrativo y conserva acceso a la consola de la VM durante las pruebas de firewall.
 
 **E10:** propietario y permisos del código y del archivo `.env`, y usuario efectivo del proceso Python.
 
 **E11:** unidad y configuración de arranque, estados del servicio y alias o función funcionando. No muestres contraseñas ni claves privadas.
-
-**E12:** sesión SSH desde el host, usuario e identificación de la VM de destino.
 
 ### Parte 6 — Publicar mediante Nginx — 3 puntos
 
@@ -159,27 +156,27 @@ Ejecuta las partes en orden. Registra los comandos utilizados y sus resultados e
 6. Observa una solicitud en la interfaz de red de la VM y en loopback. Identifica los dos tramos TCP: `HOST_IP:puerto_efimero → VM_IP:80` y `127.0.0.1:otro_puerto_efimero → 127.0.0.1:8000`.
 7. Relaciona la petición y respuesta con los registros de Nginx y del backend. Explica que Nginx establece una conexión al backend: no es una sola conexión TCP que atraviesa ambos procesos.
 
-**E13:** configuración activa del proxy, validación satisfactoria de Nginx y listeners finales.
+**E12:** configuración activa del proxy, validación satisfactoria de Nginx y listeners finales.
 
-**E14:** landing final en `http://VM_IP/`, respuestas de las cuatro rutas y registros de ambos servicios correspondientes a las pruebas.
+**E13:** landing final en `http://VM_IP/`, respuestas de las cuatro rutas y registros de ambos servicios correspondientes a las pruebas.
 
-**E15:** tráfico de los dos tramos, con extremos, petición y respuesta identificados. Presenta varios recortes legibles si una sola imagen no permite verlos.
+**E14:** tráfico de los dos tramos, con extremos, petición y respuesta identificados. Presenta varios recortes legibles si una sola imagen no permite verlos.
 
 ### Parte 7 — Controlar el acceso y recuperar una falla — 2 puntos
 
-1. Deja UFW activo: permite el acceso HTTP de la red de evaluación y SSH desde el origen administrativo; retira el permiso temporal de `8000` y registra las reglas finales.
+1. Deja UFW activo: permite el acceso HTTP de la red de evaluación; retira el permiso temporal de `8000` y registra las reglas finales.
 2. Desde el host, comprueba que `http://VM_IP/` funciona y que `http://VM_IP:8000/` no es accesible. Desde la VM, confirma que `http://127.0.0.1:8000/` sí responde. Usa tiempos de espera limitados para las pruebas negativas.
 3. Explica por separado la restricción por dirección de escucha y la política del firewall: una prueba fallida por sí sola no identifica cuál de las dos impide la conexión.
-4. Reproduce el bloqueo por IP de la sesión 08, limitado al tráfico HTTP del host. Coloca la regla antes de la autorización correspondiente, abre una conexión nueva y demuestra el fallo. Elimina esa regla temporal y demuestra la recuperación. Mantén disponible SSH y la consola.
+4. Reproduce el bloqueo por IP de la sesión 08, limitado al tráfico HTTP del host. Coloca la regla antes de la autorización correspondiente, abre una conexión nueva y demuestra el fallo. Elimina esa regla temporal y demuestra la recuperación. Mantén disponible la consola de la VM.
 5. Simula una incidencia deteniendo únicamente el servicio Python. Solicita de nuevo la landing a través de Nginx, registra el error observado —normalmente `502 Bad Gateway`— y diagnostica usando estado del servicio, puertos en escucha y logs.
 6. Recupera el servicio y comprueba una nueva respuesta `200`. Explica por qué Nginx activo no garantiza que el backend funcione.
 7. Reinicia la VM y verifica que Nginx y la aplicación arrancan automáticamente y la landing vuelve a responder. Si cambia la IP por DHCP, actualiza la ficha y los diagramas finales.
 
-**E16:** UFW activo, reglas finales y pruebas comparadas de acceso al puerto `80`, rechazo o falta de acceso externo a `8000`, y respuesta local del backend.
+**E15:** UFW activo, reglas finales y pruebas comparadas de acceso al puerto `80`, rechazo o falta de acceso externo a `8000`, y respuesta local del backend.
 
-**E17:** bloqueo HTTP temporal por origen, fallo desde el cliente, eliminación de la regla y recuperación.
+**E16:** bloqueo HTTP temporal por origen, fallo desde el cliente, eliminación de la regla y recuperación.
 
-**E18:** incidencia del backend, diagnóstico, recuperación y verificación de ambos servicios después del reinicio de la VM.
+**E17:** incidencia del backend, diagnóstico, recuperación y verificación de ambos servicios después del reinicio de la VM.
 
 ### Parte 8 — Documentar la arquitectura implementada — 2 puntos
 
@@ -191,7 +188,6 @@ Elabora **un diagrama de bloques propio de la arquitectura de red final**, con l
 - UFW como control de acceso de la VM y las reglas relevantes.
 - Nginx en `VM_IP:80`, Python en `127.0.0.1:8000` y archivos de `ecommerce_webapp` dentro de la VM.
 - Flujo HTTP del cliente a Nginx y del proxy al backend, con flechas de respuesta, protocolos y puertos.
-- Acceso administrativo SSH al puerto `22`, limitado a su origen.
 - Salida de la VM hacia Internet usada en la parte 2: resolución DNS, destino observado y NAT del router, diferenciada del acceso local a la landing.
 
 Representa correctamente la pertenencia de componentes: Nginx y Python son procesos dentro de la misma VM; `127.0.0.1` pertenece a esa VM. El host aporta la interfaz física al puente, pero su IP no reemplaza la IP de origen de la VM. No dibujes el router como salto obligatorio de la petición local si ambos equipos comparten subred.
@@ -205,7 +201,7 @@ Además, entrega cuatro diagramas de secuencia propios:
 
 Puedes utilizar Mermaid, draw.io u otra herramienta. Entrega el archivo editable y su representación legible en el informe. Rotula el acceso directo a `8000` como **etapa temporal** para no confundirlo con la arquitectura final.
 
-**E19:** diagrama de bloques y cuatro diagramas de secuencia con IP reales, puertos, protocolos y leyenda.
+**E18:** diagrama de bloques y cuatro diagramas de secuencia con IP reales, puertos, protocolos y leyenda.
 
 ### Actividad adicional obligatoria — Mapa conceptual en `.canvas` — 2 puntos
 
@@ -214,14 +210,14 @@ Elabora un mapa conceptual que relacione **todos los conceptos que consideres re
 1. Revisa las sesiones 00 a 10 y selecciona los conceptos relevantes de cada material disponible. Las sesiones 03 y 04 comparten un solo archivo de diapositivas.
 2. Organiza el mapa alrededor del despliegue y la administración de la landing ecommerce. Puedes agrupar los conceptos por temas, conservando una referencia a la sesión de origen de cada nodo o grupo.
 3. Conecta los conceptos con flechas etiquetadas que expresen una relación concreta, por ejemplo: «ejecuta», «escucha en», «reenvía a», «controla el acceso a» o «resuelve». Incluye conexiones entre sesiones, no solo listas independientes de términos.
-4. Considera, según su relevancia, sistemas operativos, nube, virtualización, hipervisores, recursos, Linux, terminal y shell, archivos, usuarios, permisos, servicios, systemd, interfaces, IP, subredes, puente, rutas, DNS, NAT, TCP, HTTP, puertos, Nginx, Python, proxy inverso, UFW, SSH y herramientas de asistencia. Esta lista orienta la selección; puedes incorporar otros conceptos fundamentados en las sesiones.
+4. Considera, según su relevancia, sistemas operativos, nube, virtualización, hipervisores, recursos, Linux, terminal y shell, archivos, usuarios, permisos, servicios, systemd, interfaces, IP, subredes, puente, rutas, DNS, NAT, TCP, HTTP, puertos, Nginx, Python, proxy inverso, UFW y herramientas de asistencia. Esta lista orienta la selección; puedes incorporar otros conceptos fundamentados en las sesiones.
 5. Vincula los conceptos con ejemplos de tu implementación: qué proceso escucha en cada puerto, qué administra systemd, qué controla UFW y cómo llega una petición al backend. Distingue los conceptos introductorios del curso de las tecnologías que efectivamente implementaste.
 6. Guarda el mapa como `PC1_Apellido_Nombre_mapa_conceptual.canvas`, en formato editable compatible con Obsidian Canvas (JSON Canvas). Debe abrirse y mostrar sus nodos y conexiones; cambiar la extensión de una imagen o un PDF no cumple el requisito.
 7. Incluye en el informe una vista general legible y los acercamientos necesarios, junto con un párrafo que justifique tu selección y explique al menos tres relaciones entre contenidos de distintas sesiones.
 
 El mapa conceptual complementa el diagrama de bloques y los diagramas de secuencia: explica relaciones entre conocimientos, mientras los otros representan la arquitectura y sus comunicaciones. Debes entregar los tres tipos de representación.
 
-**E20:** mapa conceptual abierto en una herramienta compatible, con conceptos, conexiones etiquetadas y referencias a las sesiones visibles; adjunta también el archivo `.canvas` original.
+**E19:** mapa conceptual abierto en una herramienta compatible, con conceptos, conexiones etiquetadas y referencias a las sesiones visibles; adjunta también el archivo `.canvas` original.
 
 ## 5. Documento y archivos que debes entregar
 
@@ -229,11 +225,11 @@ Presenta un único informe llamado `PC1_Apellido_Nombre.pdf`, con esta estructur
 
 1. Identificación del estudiante y descripción de la práctica.
 2. Inventario, ficha de red y relación de materiales previos utilizados. Declara los materiales no disponibles.
-3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E19`.
+3. Desarrollo de las ocho partes: acción, comando o configuración, resultado esperado, resultado observado y capturas `E01` a `E18`.
 4. Diagrama de bloques y diagramas de secuencia.
 5. Incidencia provocada, diagnóstico, corrección y pruebas posteriores al reinicio.
 6. Tabla final de aceptación y explicación de las decisiones técnicas.
-7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E20`, justificación de la selección y explicación de las relaciones.
+7. Actividad adicional: mapa conceptual de las sesiones 00 a 10, evidencia `E19`, justificación de la selección y explicación de las relaciones.
 
 Entrega junto al informe el archivo `PC1_Apellido_Nombre_mapa_conceptual.canvas`. Dentro del informe incluye los programas Python de la prueba TCP y del cliente HTTP, la unidad systemd, el bloque de Nginx y el `.env` de ejemplo (con valores de prueba, sin secretos ni contraseñas). Identifica la ubicación donde desplegaste la aplicación y cualquier cambio realizado; el código funcional de la landing debe seguir siendo el entregado por desarrollo.
 
@@ -250,7 +246,7 @@ Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener 
 | Ruta no implementada     | `/productos` devuelve `404`, explicado según el código.                                                             | Completar.                      |
 | Cotización               | Número y mensaje de prueba correctamente incorporados al enlace.                                                    | Completar.                      |
 | Backend aislado          | Responde en loopback y no es accesible desde el host en `8000`.                                                     | Completar.                      |
-| Administración           | Usuario sin privilegios para Python, permisos justificados y SSH restringido.                                       | Completar.                      |
+| Administración           | Usuario sin privilegios para Python y permisos justificados.                                                        | Completar.                      |
 | Firewall                 | Activo; prueba de bloqueo y recuperación demostrada.                                                                | Completar.                      |
 | Recuperación             | Falla del backend diagnosticada y corregida.                                                                        | Completar.                      |
 | Reinicio de la VM        | Servicios arrancan automáticamente y la landing responde.                                                           | Completar.                      |
@@ -265,11 +261,11 @@ Cada captura debe ser legible, mostrar si corresponde al host o a la VM y tener 
 | Parte 2 — Datos reales de red y salida a Internet. | E03–E04 | 2 |
 | Parte 3 — Implementación TCP e intercambio de mensajes. | E05–E06 | 3 |
 | Parte 4 — Landing en Python, rutas, cliente HTTP y cotización. | E07–E09 | 3 |
-| Parte 5 — Usuarios, permisos, systemd y SSH. | E10–E12 | 2 |
-| Parte 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E13–E15 | 3 |
-| Parte 7 — UFW, control de acceso, recuperación y reinicio. | E16–E18 | 2 |
-| Parte 8 — Diagrama de bloques y diagramas de secuencia. | E19 | 2 |
-| Actividad adicional — Mapa conceptual editable en `.canvas`. | E20 | 2 |
+| Parte 5 — Usuarios, permisos y systemd. | E10–E11 | 2 |
+| Parte 6 — Nginx, backend en loopback y ambos tramos de comunicación. | E12–E14 | 3 |
+| Parte 7 — UFW, control de acceso, recuperación y reinicio. | E15–E17 | 2 |
+| Parte 8 — Diagrama de bloques y diagramas de secuencia. | E18 | 2 |
+| Actividad adicional — Mapa conceptual editable en `.canvas`. | E19 | 2 |
 | **Total** | | **20** |
 
 Se evalúa la implementación demostrada y la capacidad de explicarla. Una landing accesible no acredita por sí sola las etapas TCP, la configuración de seguridad, la persistencia del servicio ni el análisis de red. Al cerrar el simulador, deja la arquitectura final operativa, sin el servidor de saludo ni las reglas temporales de prueba.
