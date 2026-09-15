@@ -1,0 +1,17 @@
+[Unit]
+Description=Python Sesion11
+After=network.target
+
+[Service]
+Type=simple
+User=sesion11
+Group=sesion11
+WorkingDirectory=/opt/sesion11
+ExecStart=/opt/sesion11/.venv/bin/python -u /opt/sesion11/app.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

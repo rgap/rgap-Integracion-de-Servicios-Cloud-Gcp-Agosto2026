@@ -1,0 +1,22 @@
+% Misma identidad visual y dimensiones que Sesion10.
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{../../Sesion05/slides/assets/}}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=6pt,belowskip=6pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+\setbeamerfont{normal text}{size=\large}
+\setbeamerfont{frametitle}{series=\bfseries,size=\fontsize{19}{22}\selectfont}
+\newcommand{\tema}[1]{%
+  {\setbeamertemplate{footline}{}%
+   \setbeamercolor{background canvas}{bg=utpNegro}%
+   \setbeamertemplate{background canvas}{\color{utpNegro}\rule{\paperwidth}{\paperheight}}%
+   \begin{frame}[plain,c]
+   \centering\color{white}\fontsize{32}{38}\selectfont\bfseries #1
+   \end{frame}}%
+}
+\newcommand{\idea}[1]{{\large #1}\par\vspace{4mm}}
+\newcommand{\etiqueta}[1]{\par{\color{utpRojo}\bfseries #1}\par\vspace{2mm}}
+\newcommand{\detalle}[1]{\par{\small\color{utpGris}#1}\par}
+\newcommand{\paso}[2]{\noindent{\color{utpRojo}\bfseries #1}\hspace{3mm}#2\par\vspace{4mm}}

@@ -1,0 +1,516 @@
+% Motor: XeLaTeX. 30 diapositivas, incluidos portada y separadores.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Configuración, servicios Linux y proxy inverso}
+\date{Semana 06 - Sesión 11}
+\author{Rel Guzman}
+\begin{document}
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 02
+\tema{Python y configuración}
+
+% 03
+\begin{frame}[fragile]{Python lee un archivo .env}
+\idea{Una \textbf{variable de entorno} es un valor con nombre que un programa puede leer. \texttt{.env} guarda esos valores en texto.}
+\begin{columns}[T,onlytextwidth]
+\column{.38\textwidth}
+\etiqueta{La configuración}
+\begin{lstlisting}
+# .env
+APP_MESSAGE=Hola
+\end{lstlisting}
+\detalle{\texttt{load\_dotenv} carga el archivo. \texttt{os.environ} recupera el valor por su nombre.}
+\par\vspace{4mm}
+\etiqueta{La respuesta}
+{\LARGE\ttfamily Hola}
+\column{.58\textwidth}
+\etiqueta{El programa}
+\begin{lstlisting}
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(
+    Path(__file__).with_name(".env")
+)
+print(os.environ["APP_MESSAGE"])
+\end{lstlisting}
+\detalle{\texttt{Path} localiza \texttt{.env} junto al programa. Python necesita esta carga explícita.}
+\end{columns}
+\end{frame}
+
+% 04
+\begin{frame}[fragile]{Preparación del ejemplo}
+\idea{Una \textbf{biblioteca} es código reutilizable. Un \textbf{entorno virtual} reúne las bibliotecas de un proyecto en su propia carpeta.}
+\begin{columns}[T,onlytextwidth]
+\column{.60\textwidth}
+\begin{lstlisting}
+sudo apt update
+sudo apt install python3-venv curl
+cd ~/sesion11
+python3 -m venv .venv
+.venv/bin/python -m pip install \
+  -r requirements.txt
+cp .env.example .env
+\end{lstlisting}
+\column{.36\textwidth}
+\etiqueta{Qué hace cada herramienta}
+\small
+\texttt{sudo}: permisos de administrador.\par\par\vspace{2mm}
+\texttt{apt}: instala paquetes Ubuntu.\par\par\vspace{2mm}
+\texttt{pip}: instala bibliotecas Python.\par\par\vspace{2mm}
+\texttt{cd}: cambia de carpeta.\par
+\texttt{cp}: copia archivos.
+\end{columns}
+\par\vspace{3mm}
+\detalle{Ubuntu 24.04. Copia antes \texttt{demo/} a \texttt{\textasciitilde/sesion11}. \texttt{\textasciitilde} es tu carpeta personal. \texttt{-m} ejecuta un módulo, \texttt{-r} lee la lista y \texttt{\textbackslash} continúa la orden en la siguiente línea.}
+\end{frame}
+
+% 05
+\begin{frame}[fragile]{La dirección del servidor}
+\idea{Un \textbf{servidor} espera solicitudes y devuelve respuestas. \textbf{HTTP} define ese intercambio y \textbf{TCP} transporta sus datos en orden.}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\etiqueta{.env del servidor}
+\begin{lstlisting}
+APP_HOST=127.0.0.1
+APP_PORT=8000
+APP_MESSAGE=Hola desde Sesion11
+\end{lstlisting}
+\column{.51\textwidth}
+\etiqueta{Dirección IP}
+\texttt{127.0.0.1}: esta misma máquina. Se llama \textbf{loopback}.
+\par\vspace{4mm}
+\etiqueta{Puerto}
+\texttt{8000}: el punto de entrada al programa dentro de esa máquina.
+\end{columns}
+\par\vspace{3mm}
+\detalle{\texttt{app.py} usa \texttt{http.server}, la biblioteca didáctica de Python. Lee estos valores y devuelve el mensaje. Código completo en \texttt{demo/app.py}. \texttt{.env} es texto sin cifrar.}
+\end{frame}
+
+% 06
+\begin{frame}[fragile]{Una petición, una respuesta}
+\idea{\texttt{curl} es un cliente HTTP de consola: pide una respuesta al servidor.}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\etiqueta{Terminal 1: el servidor}
+\begin{lstlisting}
+.venv/bin/python app.py
+\end{lstlisting}
+\detalle{Queda esperando solicitudes. Ctrl+C lo detiene.}
+\column{.49\textwidth}
+\etiqueta{Terminal 2: el cliente}
+\begin{lstlisting}
+curl http://127.0.0.1:8000/
+\end{lstlisting}
+\detalle{La ruta \texttt{/} pide el recurso inicial.}
+\end{columns}
+\par\vspace{3mm}
+\etiqueta{Resultado esperado}
+{\LARGE\ttfamily Hola desde Sesion11}
+\par\vspace{6mm}
+\detalle{Cambiar \texttt{APP\_MESSAGE} requiere volver a ejecutar Python. La configuración se lee al iniciar. Una variable ya existente en el entorno tiene prioridad sobre \texttt{.env}.}
+\end{frame}
+
+% 07
+\tema{Puertos y procesos}
+
+% 08
+\begin{frame}{Quién está escuchando}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\etiqueta{Proceso}
+{\Large Un programa en ejecución.}
+\par\vspace{3mm}
+Python está ejecutando \texttt{app.py}. Su \textbf{PID} es el número que lo identifica en Linux.
+\column{.46\textwidth}
+\etiqueta{Socket}
+{\Large Un extremo de comunicación.}
+\par\vspace{3mm}
+Un socket \textbf{en escucha} espera conexiones en una dirección y un puerto.
+\end{columns}
+\par\vspace{3mm}
+\begin{center}
+{\fontsize{24}{28}\selectfont\ttfamily 127.0.0.1\textcolor{utpRojo}{:8000}}
+\par\par\vspace{3mm}
+La recepción está abierta. Falta identificar quién la abrió.
+\end{center}
+\end{frame}
+
+% 09
+\begin{frame}[fragile]{ss -ltnp, letra por letra}
+\idea{\texttt{ss} consulta los sockets que conoce Linux. \texttt{-ltnp} reúne cuatro opciones.}
+\begin{lstlisting}[basicstyle=\ttfamily\Large]
+sudo ss -ltnp
+\end{lstlisting}
+\par\vspace{4mm}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\paso{\Large -l}{Escuchas abiertas.}
+\paso{\Large -t}{Conexiones TCP.}
+\column{.46\textwidth}
+\paso{\Large -n}{Direcciones y puertos numéricos.}
+\paso{\Large -p}{Proceso asociado.}
+\end{columns}
+\par\vspace{3mm}
+\detalle{Equivale a \texttt{ss -l -t -n -p}. \texttt{sudo} permite ver procesos de otros usuarios. El comando consulta el estado; no abre puertos.}
+\end{frame}
+
+% 10
+\begin{frame}[fragile]{La evidencia de la escucha}
+\etiqueta{Fragmento ilustrativo de la salida}
+\begin{lstlisting}
+LISTEN ... 127.0.0.1:8000 ... ("python",pid=2451,fd=3)
+\end{lstlisting}
+\par\vspace{4mm}
+\paso{LISTEN}{Hay un socket esperando conexiones.}
+\paso{127.0.0.1:8000}{Recibe únicamente dentro de esta máquina.}
+\paso{pid=2451}{Python es el proceso responsable.}
+\detalle{\texttt{fd=3} identifica ese recurso abierto dentro del proceso. Los números variarán.}
+\par\vspace{3mm}
+\detalle{En la columna local, \texttt{0.0.0.0:8000} significaría todas las direcciones IPv4 de la máquina. Un \textbf{firewall}, un filtro de tráfico, aún puede impedir el acceso externo.}
+\end{frame}
+
+% 11
+\tema{Servicios y registros}
+
+% 12
+\begin{frame}{Administrador y herramientas}
+\idea{Un \textbf{servicio} es un programa administrado por el sistema, incluso sin una terminal abierta. Un \textbf{log} registra lo que ocurrió.}
+\par\vspace{2mm}
+\begin{tabular}{@{}m{3.3cm}m{9.8cm}@{}}
+{\Large\ttfamily\color{utpRojo}systemd} & {\Large El administrador.}\\[6mm]
+{\Large\ttfamily\color{utpRojo}systemctl} & {\Large El comando para hablar con él.}\\[6mm]
+{\Large\ttfamily\color{utpRojo}journalctl} & {\Large El comando para consultar sus logs.}
+\end{tabular}
+\par\vspace{3mm}
+\detalle{El administrador systemd inicia con PID 1. Su componente \texttt{systemd-journald} recoge mensajes en el \textbf{journal}, el registro central.}
+\end{frame}
+
+% 13
+\begin{frame}[fragile]{Qué hace realmente systemctl}
+\idea{Una \textbf{unidad} es algo que systemd administra. Un archivo \texttt{.service} describe cómo ejecutar un servicio.}
+\begin{lstlisting}[basicstyle=\ttfamily\large]
+sudo systemctl start sesion11
+\end{lstlisting}
+\par\vspace{3mm}
+\paso{1}{\texttt{systemctl} envía la petición de inicio.}
+\paso{2}{\texttt{systemd} lee la unidad y lanza Python.}
+\paso{3}{\texttt{systemd} sigue supervisándolo cuando el comando termina.}
+\par\vspace{3mm}
+\detalle{\texttt{sesion11} equivale aquí a \texttt{sesion11.service}. \texttt{status} consulta su estado y \texttt{stop} pide detenerlo. Primero crearemos esa unidad.}
+\end{frame}
+
+% 14
+\begin{frame}[fragile]{journalctl: consultar lo ocurrido}
+\idea{Podemos empezar por los logs del sistema. Un \textbf{arranque} es el período que comienza al encender o reiniciar la máquina.}
+\begin{lstlisting}
+sudo journalctl -b -n 20 --no-pager
+\end{lstlisting}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\paso{-b}{Solo el arranque actual.}
+\paso{-n 20}{Los últimos veinte registros.}
+\column{.47\textwidth}
+\paso{--no-pager}{Salida directa, sin visor.}
+\paso{-u}{Filtra por una unidad.}
+\end{columns}
+\par\vspace{2mm}
+\etiqueta{Cuando nuestro servicio esté creado}
+\begin{lstlisting}
+sudo journalctl -u sesion11 -f
+\end{lstlisting}
+\detalle{\texttt{-f} sigue mostrando nuevos mensajes. Ctrl+C termina la consulta y el servicio continúa.}
+\end{frame}
+
+% 15
+\begin{frame}[fragile]{La receta del servicio}
+\idea{\texttt{[Unit]} describe el servicio. \texttt{[Service]} define su ejecución. \texttt{[Install]} indica cómo incorporarlo al arranque.}
+\begin{columns}[T,onlytextwidth]
+\column{.57\textwidth}
+\etiqueta{Fragmento de sesion11.service}
+\begin{lstlisting}
+[Service]
+User=sesion11
+WorkingDirectory=/opt/sesion11
+ExecStart=/opt/sesion11/.venv/bin/python -u /opt/sesion11/app.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+\end{lstlisting}
+\column{.39\textwidth}
+\small
+\textbf{User}: cuenta que lo ejecuta.\par\par\vspace{2mm}
+\textbf{WorkingDirectory}: carpeta de trabajo.\par\par\vspace{2mm}
+\textbf{ExecStart}: comando exacto. \texttt{-u} escribe los mensajes sin demora.\par\par\vspace{2mm}
+\textbf{Restart}: reintenta tras un fallo, esperando 3 segundos.\par\par\vspace{2mm}
+\textbf{StandardOutput/Error}: envían salida y errores al journal.
+\end{columns}
+\par\vspace{2mm}
+\detalle{La unidad completa está en \texttt{demo/sesion11.service}. \texttt{ExecStart} es una sola línea. Python carga \texttt{/opt/sesion11/.env} al iniciar.}
+\end{frame}
+
+% 16
+\begin{frame}[fragile]{Creación e inicio del servicio}
+\idea{La cuenta \texttt{sesion11} debe existir y poder leer la aplicación instalada en \texttt{/opt/sesion11}. La guía incluye esa preparación.}
+\begin{lstlisting}
+# Desde ~/sesion11, con la preparacion terminada
+sudo cp sesion11.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start sesion11
+sudo systemctl status sesion11 --no-pager
+sudo systemctl enable sesion11
+\end{lstlisting}
+\par\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\etiqueta{daemon-reload}
+Relee las definiciones de unidades.
+\column{.47\textwidth}
+\etiqueta{start / enable}
+Inicia ahora / prepara futuros arranques.
+\end{columns}
+\par\vspace{4mm}
+\detalle{Detén antes el Python manual con Ctrl+C para liberar 8000. \texttt{active (running)} confirma el proceso; \texttt{curl} comprueba que además responde.}
+\end{frame}
+
+% 17
+\begin{frame}{La orden depende del cambio}
+\idea{En cada caso, \texttt{systemctl} comunica la acción al administrador.}
+\renewcommand{\arraystretch}{1.55}
+\begin{tabular}{@{}p{5.8cm}p{7.2cm}@{}}
+\textbf{Qué necesitas} & \textbf{Orden después de \texttt{sudo systemctl}}\\
+\midrule
+Releer \texttt{.env} o código Python & \texttt{restart sesion11}\\
+Aplicar cambios al archivo \texttt{.service} & \texttt{daemon-reload}, luego \texttt{restart sesion11}\\
+Detener ahora & \texttt{stop sesion11}\\
+Quitar inicio automático y detener & \texttt{disable --now sesion11}\\
+\end{tabular}
+\par\vspace{6mm}
+\detalle{\texttt{restart} detiene e inicia. \texttt{reload} pide al programa releer su configuración si lo admite. Nuestro Python necesita reinicio. NGINX, que veremos a continuación, sí admite recarga.}
+\end{frame}
+
+% 18
+\tema{NGINX y proxy inverso}
+
+% 19
+\begin{frame}{Un intermediario delante de Python}
+\idea{\textbf{NGINX} es un servidor web. Como \textbf{proxy inverso}, recibe las peticiones del sitio y las entrega a la aplicación interna.}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.28\textwidth}
+\etiqueta{Cliente}
+{\Large Pide la página.}
+\column{.31\textwidth}
+\etiqueta{NGINX :80}
+{\Large Recibe y reenvía.}
+\column{.33\textwidth}
+\etiqueta{Python :8000}
+{\Large Genera la respuesta.}
+\end{columns}
+\par\vspace{6mm}
+\paso{Conexión 1}{El cliente se comunica con NGINX.}
+\paso{Conexión 2}{NGINX se comunica con Python en \texttt{127.0.0.1}.}
+\detalle{La respuesta vuelve por esas conexiones. El navegador conserva su dirección original.}
+\end{frame}
+
+% 20
+\begin{frame}[fragile]{Las carpetas de NGINX}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\etiqueta{sites-available}
+{\Large Configuraciones disponibles.}
+\par\vspace{3mm}
+Aquí guardamos el archivo original.
+\column{.47\textwidth}
+\etiqueta{sites-enabled}
+{\Large Configuraciones habilitadas.}
+\par\vspace{3mm}
+Aquí colocamos un \textbf{enlace simbólico}: una referencia al original.
+\end{columns}
+\par\vspace{3mm}
+\begin{lstlisting}
+sudo apt install nginx
+ls /etc/nginx/sites-available
+ls -l /etc/nginx/sites-enabled
+\end{lstlisting}
+\detalle{\texttt{ls} lista archivos; \texttt{-l} muestra detalles y destinos de enlaces. Son carpetas de la organización Ubuntu. \texttt{nginx.conf} las incorpora mediante \texttt{include}, la instrucción para leer otros archivos.}
+\end{frame}
+
+% 21
+\begin{frame}[fragile]{La configuración del proxy}
+\idea{\texttt{server} define un sitio y \texttt{location /} aplica sus reglas a las rutas que empiezan con \texttt{/}.}
+\begin{columns}[T,onlytextwidth]
+\column{.60\textwidth}
+\begin{lstlisting}
+server {
+    listen 80;
+    server_name sesion11.local;
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+\end{lstlisting}
+\column{.36\textwidth}
+\small
+\etiqueta{Entrada}
+\texttt{listen}: puerto.\par
+\texttt{server\_name}: nombre del sitio.
+\par\vspace{3mm}
+\etiqueta{Destino}
+\texttt{proxy\_pass}: aplicación interna.
+\par\vspace{3mm}
+\etiqueta{Cabeceras}
+Datos que acompañan la petición. \texttt{proxy\_set\_header} los ajusta.
+\end{columns}
+\par\vspace{3mm}
+\detalle{\texttt{\$host} y \texttt{\$remote\_addr} son variables de NGINX: nombre pedido e IP del cliente. Las llaves agrupan instrucciones y el punto y coma las termina.}
+\end{frame}
+
+% 22
+\begin{frame}[fragile]{Activación del sitio}
+\idea{\texttt{ln -s} crea el enlace. \texttt{nginx -t} valida la configuración. \texttt{reload} hace que NGINX la lea de nuevo.}
+\begin{lstlisting}
+cd ~/sesion11
+sudo cp nginx-sesion11.conf /etc/nginx/sites-available/sesion11
+sudo ln -s /etc/nginx/sites-available/sesion11 \
+  /etc/nginx/sites-enabled/sesion11
+sudo nginx -t
+sudo systemctl enable --now nginx
+sudo systemctl reload nginx
+\end{lstlisting}
+\par\vspace{3mm}
+\etiqueta{La configuración se aplica al recargar}
+El enlace se aplica cuando NGINX relee su configuración.
+\par\vspace{3mm}
+\detalle{Crea el enlace una sola vez. Continúa con la recarga únicamente si la validación es correcta. \texttt{enable --now} habilita e inicia el servicio.}
+\end{frame}
+
+% 23
+\begin{frame}[fragile]{Prueba de los dos caminos}
+\idea{La cabecera HTTP \texttt{Host} indica el sitio pedido. \texttt{curl -H} la agrega y \texttt{-i} muestra las cabeceras de respuesta.}
+\etiqueta{Directo a Python}
+\begin{lstlisting}
+curl http://127.0.0.1:8000/
+\end{lstlisting}
+\etiqueta{A través de NGINX}
+\begin{lstlisting}
+curl -i -H "Host: sesion11.local" http://127.0.0.1/
+\end{lstlisting}
+\par\vspace{3mm}
+{\Large Esperamos \texttt{200 OK} y el mismo mensaje.}
+\par\vspace{4mm}
+\detalle{\texttt{200 OK} significa éxito. Si solo funciona el acceso directo, revisa NGINX y el nombre del sitio. Para probar desde fuera, usa la IP de la máquina y permite TCP 80 en sus reglas de red.}
+\end{frame}
+
+% 24
+\tema{Captura de tráfico}
+
+% 25
+\begin{frame}{Herramientas de captura}
+\idea{Un \textbf{paquete} lleva datos de red. Una \textbf{interfaz} es el punto por el que pasan. Un capturador observa esos paquetes.}
+\par\vspace{3mm}
+\begin{tabular}{@{}m{3.1cm}m{10cm}@{}}
+{\Large\color{utpRojo}\bfseries tcpdump} & Captura sencilla desde la consola.\\[6mm]
+{\Large\color{utpRojo}\bfseries Wireshark} & Analiza paquetes con interfaz gráfica.\\[6mm]
+{\Large\color{utpRojo}\bfseries TShark} & Wireshark desde la consola, sin escritorio.\\
+\end{tabular}
+\par\vspace{3mm}
+\detalle{En Linux, \texttt{lo} es la interfaz interna o loopback. Ahí veremos el intercambio entre NGINX y Python. Un \textbf{filtro} selecciona los paquetes que nos interesan.}
+\end{frame}
+
+% 26
+\begin{frame}[fragile]{La captura más sencilla: tcpdump}
+\etiqueta{Terminal 1: observar}
+\begin{lstlisting}
+sudo apt install tcpdump
+sudo tcpdump -i lo -nn 'tcp port 8000'
+\end{lstlisting}
+\begin{columns}[T,onlytextwidth]
+\column{.29\textwidth}
+\etiqueta{-i lo}
+Interfaz interna.
+\column{.29\textwidth}
+\etiqueta{-nn}
+IP y puertos numéricos.
+\column{.34\textwidth}
+\etiqueta{tcp port 8000}
+Puerto de origen o destino.
+\end{columns}
+\par\vspace{3mm}
+\etiqueta{Terminal 2: generar tráfico}
+\begin{lstlisting}
+curl -H "Host: sesion11.local" http://127.0.0.1/
+\end{lstlisting}
+\detalle{La petición entra por 80, pero observamos el tramo interno en 8000. Ctrl+C detiene la captura. Sin peticiones, es normal que espere sin mostrar paquetes.}
+\end{frame}
+
+% 27
+\begin{frame}[fragile]{Del paquete al texto HTTP}
+\idea{En TCP, un \textbf{puerto temporal} identifica al cliente. El servidor conserva su puerto de escucha.}
+\begin{lstlisting}
+127.0.0.1.53012 > 127.0.0.1.8000: Flags [S]
+127.0.0.1.8000 > 127.0.0.1.53012: Flags [S.]
+\end{lstlisting}
+\detalle{Salida ilustrativa. \texttt{>} indica dirección. Las marcas \texttt{S} y \texttt{S.} solicitan y aceptan abrir la conexión. Después viaja HTTP.}
+\par\vspace{3mm}
+\etiqueta{Para leer el contenido}
+\begin{lstlisting}
+sudo tcpdump -i lo -nn -s 0 -A 'tcp port 8000'
+\end{lstlisting}
+\detalle{\texttt{-A} muestra texto y \texttt{-s 0} evita un límite de captura pequeño. Busca \texttt{GET /}, la solicitud de un recurso. \textbf{HTTPS} cifra el contenido: en ese tramo no verías el texto. Usa tráfico de laboratorio sin secretos.}
+\end{frame}
+
+% 28
+\begin{frame}[fragile]{TShark: Wireshark en la terminal}
+\idea{TShark captura paquetes y muestra un resumen interpretado de cada uno.}
+\begin{lstlisting}
+sudo apt install tshark
+sudo tshark -i lo -n -f "tcp port 8000"
+\end{lstlisting}
+\par\vspace{4mm}
+\paso{-i lo}{Escoge la interfaz interna.}
+\paso{-n}{Conserva las direcciones numéricas.}
+\paso{-f}{Introduce el filtro que decide qué capturar.}
+\par\vspace{2mm}
+\detalle{Genera otra petición con curl en una segunda terminal. Ctrl+C termina. Si la instalación pregunta por capturas sin administrador, puedes elegir No y usar \texttt{sudo} en este laboratorio.}
+\end{frame}
+
+% 29
+\begin{frame}[fragile]{Guardar y revisar una captura}
+\idea{\textbf{pcapng} es un formato de archivo para paquetes. \texttt{-w} guarda, \texttt{-r} lee y \texttt{-Y} elige qué mostrar al analizar.}
+\etiqueta{Capturar, generar peticiones y detener con Ctrl+C}
+\begin{lstlisting}
+sudo tshark -i lo -f "tcp port 8000" \
+  -w /tmp/sesion11.pcapng
+\end{lstlisting}
+\etiqueta{Mostrar únicamente HTTP}
+\begin{lstlisting}
+sudo tshark -r /tmp/sesion11.pcapng -Y "http"
+\end{lstlisting}
+\par\vspace{4mm}
+\detalle{El filtro \texttt{-f} decide qué guardar; \texttt{-Y}, qué mostrar. Si no reconoce HTTP, agrega \texttt{-d tcp.port==8000,http} al leer: indica cómo interpretar ese puerto. También puedes abrir el archivo en Wireshark.}
+\end{frame}
+
+% 30
+\begin{frame}{Dónde buscar cuando algo falla}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{@{}p{5.4cm}p{7.6cm}@{}}
+\textbf{La evidencia} & \textbf{La siguiente comprobación}\\
+\midrule
+No hay escucha en 8000 & \texttt{systemctl status sesion11} y \texttt{journalctl -u sesion11}.\\
+Python funciona, aparece otro sitio & Cabecera \texttt{Host} y enlace en \texttt{sites-enabled}.\\
+NGINX devuelve \texttt{502} & No obtuvo respuesta válida de Python. Revisa su escucha y \texttt{/var/log/nginx/error.log}.\\
+Captura vacía & Genera una petición. Comprueba interfaz y filtro.\\
+\end{tabular}
+\par\vspace{3mm}
+\detalle{Código, preparación completa y comandos: \texttt{Sesion11/README.md} y \texttt{demo/}.}
+\par\vspace{2mm}
+\detalle{Referencias: \href{https://bbc2.github.io/python-dotenv/}{python-dotenv}, \href{https://docs.python.org/3/library/http.server.html}{Python}, \href{https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html}{ss}, \href{https://manpages.ubuntu.com/manpages/noble/man1/systemctl.1.html}{systemctl}, \href{https://manpages.ubuntu.com/manpages/noble/man1/journalctl.1.html}{journalctl}, \href{https://nginx.org/en/docs/http/ngx_http_proxy_module.html}{NGINX}, \href{https://manpages.ubuntu.com/manpages/noble/man8/tcpdump.8.html}{tcpdump} y \href{https://www.wireshark.org/docs/man-pages/tshark}{TShark}.}
+\end{frame}
+\end{document}
