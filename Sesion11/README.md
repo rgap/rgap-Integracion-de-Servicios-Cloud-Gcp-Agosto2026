@@ -1,6 +1,6 @@
 # Sesión 11 — Configuración, servicios Linux y proxy inverso
 
-Continuación de [Sesion10](../Sesion10/slides/slides.tex). Presentación de **30 diapositivas**, con cinco separadores de tema de solo título. La teoría empieza con Python y `.env`, y sigue un mismo programa hasta observar sus peticiones detrás de NGINX. Las diapositivas priorizan ejemplos y explicaciones breves; esta guía conserva la preparación y los comandos completos.
+Continuación de [Sesion10](../Sesion10/slides/slides.tex). Presentación de **30 diapositivas**, con seis separadores de tema de solo título. La teoría empieza con usuarios, grupos, permisos, `chown` y `chmod`. Después presenta Python y `.env`, y sigue un mismo programa hasta observar sus peticiones detrás de NGINX. Las diapositivas priorizan ejemplos y explicaciones breves; esta guía conserva la preparación y los comandos completos.
 
 - [Diapositivas PDF](slides/build/slides.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
@@ -8,14 +8,56 @@ Continuación de [Sesion10](../Sesion10/slides/slides.tex). Presentación de **3
 
 ## Orden de la teoría
 
-1. Python, variables de entorno y `.env`.
-2. Servidor HTTP, procesos y sockets. Lectura de `ss -ltnp`.
-3. `systemd`, `systemctl`, `journalctl` y creación de un servicio.
-4. NGINX, `sites-available`, `sites-enabled` y proxy inverso.
-5. Captura de tráfico con tcpdump y TShark, la herramienta de consola de Wireshark.
-6. Interpretación del recorrido y diagnóstico de fallos.
+1. Usuarios y grupos, lectura de permisos, `chown` y `chmod`.
+2. Python, variables de entorno y `.env`.
+3. Servidor HTTP, procesos y sockets. Lectura de `ss -ltnp`.
+4. `systemd`, `systemctl`, `journalctl` y creación de un servicio.
+5. NGINX, `sites-available`, `sites-enabled` y proxy inverso.
+6. Captura de tráfico con tcpdump y TShark, la herramienta de consola de Wireshark.
+7. Interpretación del recorrido y diagnóstico de fallos.
 
 Las diapositivas desarrollan los conceptos y las opciones de los comandos. Esta guía reúne las instrucciones para reproducirlos. El ejemplo usa `http.server` con fines didácticos.
+
+## 0. Usuarios, grupos y permisos
+
+Un **usuario** es una cuenta de Linux. Un **grupo** reúne cuentas que pueden compartir acceso. Cada archivo tiene un usuario propietario y un grupo propietario. Un usuario tiene un grupo principal y puede pertenecer a grupos adicionales.
+
+```bash
+whoami
+id
+groups
+```
+
+`whoami` muestra tu usuario, `id` muestra sus identificadores y grupos, y `groups` lista sus grupos. `root` es la cuenta administradora; `sudo` permite ejecutar una orden con sus privilegios si tu cuenta está autorizada.
+
+### Lectura de permisos
+
+`ls -l mensaje.txt` muestra los permisos, propietario y grupo del archivo. Ejemplo ilustrativo:
+
+```text
+-rw-r----- 1 alumno curso 24 sep 15 10:00 mensaje.txt
+```
+
+- El primer `-` indica archivo. Una `d` indica directorio.
+- `rw-`: el propietario `alumno` puede leer y escribir.
+- `r--`: los miembros del grupo `curso` pueden leer.
+- `---`: los demás no tienen acceso.
+
+`r` significa leer, `w` escribir y `x` ejecutar. En un directorio, `r` permite listar nombres, `x` atravesarlo y `w`, junto con `x`, modificar sus entradas. Linux evalúa primero si eres el propietario; si no, si perteneces al grupo del archivo; si tampoco, usa los permisos de otros. No suma las tres categorías.
+
+### chown y chmod
+
+Ejemplo con el usuario `alumno`, grupo `curso` y archivo `mensaje.txt` **ya existentes**. Sustituye esos nombres por los de tu laboratorio:
+
+```bash
+sudo chown alumno:curso mensaje.txt
+sudo chmod 640 mensaje.txt
+ls -l mensaje.txt
+```
+
+`chown` cambia el usuario y grupo propietarios. No agrega miembros a un grupo. `chmod` cambia los permisos: cada cifra corresponde a propietario, grupo y otros, en ese orden. Leer vale 4, escribir 2 y ejecutar 1; por eso `640` representa `rw-r-----`.
+
+Más adelante, tras crear la cuenta de servicio `sesion11`, aplicaremos la misma idea con `chown root:sesion11` y `chmod 640` a `/opt/sesion11/.env`: el administrador podrá editarlo y el servicio podrá leerlo.
 
 ## 1. Python y configuración
 
@@ -127,7 +169,7 @@ El enlace se crea una sola vez. Si ya existe, revisa su destino con `ls -l`. `si
 
 Para una prueba desde otro equipo, usa la IP de la máquina en lugar de `127.0.0.1` y conserva la cabecera `Host`. Permite TCP 80 desde el equipo de prueba en las reglas de red aplicables de Ubuntu y GCP. El puerto 8000 permanece ligado a loopback.
 
-## 5. Captura de tráfico
+## 6. Captura de tráfico
 
 Instala los capturadores. Si la instalación de TShark pregunta por captura para usuarios no administradores, puedes elegir **No** y usar `sudo` en este laboratorio.
 
@@ -212,4 +254,12 @@ xelatex -interaction=nonstopmode -halt-on-error -output-directory=build slides.t
 xelatex -interaction=nonstopmode -halt-on-error -output-directory=build slides.tex
 ```
 
-La plantilla y las imágenes UTP se comparten con las sesiones anteriores. Conserva la estructura del repositorio. Las referencias técnicas están enlazadas en la última diapositiva.
+La plantilla y las imágenes UTP se comparten con las sesiones anteriores. Conserva la estructura del repositorio. Las referencias técnicas están enlazadas a continuación.
+
+## Referencias técnicas
+
+- Ubuntu: [chown](https://manpages.ubuntu.com/manpages/noble/man1/chown.1.html), [chmod](https://manpages.ubuntu.com/manpages/noble/man1/chmod.1.html), [id](https://manpages.ubuntu.com/manpages/noble/man1/id.1.html) y [ss](https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html).
+- [python-dotenv](https://bbc2.github.io/python-dotenv/) y [Python: http.server](https://docs.python.org/3/library/http.server.html).
+- Ubuntu: [systemctl](https://manpages.ubuntu.com/manpages/noble/man1/systemctl.1.html), [systemd.service](https://manpages.ubuntu.com/manpages/noble/man5/systemd.service.5.html) y [journalctl](https://manpages.ubuntu.com/manpages/noble/man1/journalctl.1.html).
+- [Configuración de NGINX en Ubuntu](https://ubuntu.com/server/docs/how-to/web-services/configure-nginx/) y [módulo proxy de NGINX](https://nginx.org/en/docs/http/ngx_http_proxy_module.html).
+- [tcpdump](https://manpages.ubuntu.com/manpages/noble/man8/tcpdump.8.html) y [TShark](https://www.wireshark.org/docs/man-pages/tshark).

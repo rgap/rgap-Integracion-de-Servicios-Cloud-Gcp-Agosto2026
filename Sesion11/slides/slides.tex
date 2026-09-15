@@ -8,10 +8,80 @@
 \begin{document}
 {\setbeamertemplate{footline}{}\maketitle}
 
-% 02
+
+\tema{Usuarios, grupos y permisos}
+
+\begin{frame}[fragile]{Usuario, grupo y propietario}
+\idea{Un \textbf{usuario} es una cuenta de Linux. Un \textbf{grupo} reúne cuentas para compartir acceso a archivos.}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\etiqueta{Cada archivo tiene}
+Un usuario \textbf{propietario} y un \textbf{grupo propietario}. Sus permisos pueden ser distintos.
+\par\vspace{4mm}
+\etiqueta{Cada usuario pertenece a}
+Un grupo principal y, posiblemente, otros grupos adicionales.
+\column{.47\textwidth}
+\etiqueta{Consultar tu identidad}
+\begin{lstlisting}
+whoami
+id
+groups
+\end{lstlisting}
+\detalle{\texttt{whoami}: tu usuario. \texttt{id}: sus identificadores y grupos. \texttt{groups}: los grupos a los que perteneces.}
+\end{columns}
+\par\vspace{4mm}
+\detalle{\texttt{root} es la cuenta administradora. \texttt{sudo} permite ejecutar una orden con sus privilegios, si tu cuenta está autorizada.}
+\end{frame}
+
+\begin{frame}[fragile]{Cómo leer los permisos}
+\idea{Los \textbf{permisos} indican qué puede hacer el propietario, el grupo y el resto de usuarios. \texttt{ls -l} muestra esos datos.}
+\begin{lstlisting}
+# Ejemplo ilustrativo de ls -l mensaje.txt
+-rw-r----- 1 alumno curso 24 sep 15 10:00 mensaje.txt
+\end{lstlisting}
+\begin{columns}[T,onlytextwidth]
+\column{.29\textwidth}
+\etiqueta{\texttt{rw-}: propietario}
+\texttt{alumno} puede leer y escribir.
+\column{.29\textwidth}
+\etiqueta{\texttt{r-{}-}: grupo}
+Los miembros de \texttt{curso} pueden leer.
+\column{.34\textwidth}
+\etiqueta{\texttt{-{}-{}-}: otros}
+El resto no tiene acceso.
+\end{columns}
+\par\vspace{2mm}
+\detalle{\texttt{r} = leer, \texttt{w} = escribir, \texttt{x} = ejecutar; \texttt{-} = permiso ausente. El primer carácter indica el tipo: \texttt{-} es archivo y \texttt{d} es directorio. En un directorio, \texttt{r} permite listar nombres, \texttt{x} atravesarlo y \texttt{w} modificar sus entradas junto con \texttt{x}.}
+\end{frame}
+
+\begin{frame}[fragile]{chown y chmod: dueño y permisos}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\etiqueta{chown: quién es el dueño}
+\begin{lstlisting}
+sudo chown alumno:curso mensaje.txt
+\end{lstlisting}
+\texttt{alumno} es el nuevo propietario. \texttt{curso} es el grupo del archivo.
+\par\vspace{4mm}
+\detalle{Ejemplo con cuenta, grupo y archivo ya existentes. Cambiar el grupo del archivo no agrega usuarios a ese grupo.}
+\column{.48\textwidth}
+\etiqueta{chmod: qué pueden hacer}
+\begin{lstlisting}
+sudo chmod 640 mensaje.txt
+\end{lstlisting}
+\texttt{6}: dueño lee y escribe.\par
+\texttt{4}: grupo solo lee.\par
+\texttt{0}: otros no acceden.
+\par\vspace{4mm}
+\detalle{Cada cifra suma permisos: leer = 4, escribir = 2, ejecutar = 1. Por eso 6 = 4 + 2.}
+\end{columns}
+\par\vspace{2mm}
+\etiqueta{Comprobación}
+\texttt{ls -l mensaje.txt} debe mostrar \texttt{-rw-r----- alumno curso} entre sus datos. Luego aplicaremos esta idea a la configuración de Python.
+\end{frame}
+
 \tema{Python y configuración}
 
-% 03
 \begin{frame}[fragile]{Python lee un archivo .env}
 \idea{Una \textbf{variable de entorno} es un valor con nombre que un programa puede leer. \texttt{.env} guarda esos valores en texto.}
 \begin{columns}[T,onlytextwidth]
@@ -41,7 +111,6 @@ print(os.environ["APP_MESSAGE"])
 \end{columns}
 \end{frame}
 
-% 04
 \begin{frame}[fragile]{Preparación del ejemplo}
 \idea{Una \textbf{biblioteca} es código reutilizable. Un \textbf{entorno virtual} reúne las bibliotecas de un proyecto en su propia carpeta.}
 \begin{columns}[T,onlytextwidth]
@@ -58,9 +127,9 @@ cp .env.example .env
 \column{.36\textwidth}
 \etiqueta{Qué hace cada herramienta}
 \small
-\texttt{sudo}: permisos de administrador.\par\par\vspace{2mm}
-\texttt{apt}: instala paquetes Ubuntu.\par\par\vspace{2mm}
-\texttt{pip}: instala bibliotecas Python.\par\par\vspace{2mm}
+\texttt{sudo}: permisos de administrador.\par\vspace{2mm}
+\texttt{apt}: instala paquetes Ubuntu.\par\vspace{2mm}
+\texttt{pip}: instala bibliotecas Python.\par\vspace{2mm}
 \texttt{cd}: cambia de carpeta.\par
 \texttt{cp}: copia archivos.
 \end{columns}
@@ -68,78 +137,56 @@ cp .env.example .env
 \detalle{Ubuntu 24.04. Copia antes \texttt{demo/} a \texttt{\textasciitilde/sesion11}. \texttt{\textasciitilde} es tu carpeta personal. \texttt{-m} ejecuta un módulo, \texttt{-r} lee la lista y \texttt{\textbackslash} continúa la orden en la siguiente línea.}
 \end{frame}
 
-% 05
-\begin{frame}[fragile]{La dirección del servidor}
-\idea{Un \textbf{servidor} espera solicitudes y devuelve respuestas. \textbf{HTTP} define ese intercambio y \textbf{TCP} transporta sus datos en orden.}
+\begin{frame}[fragile]{Dirección y prueba del servidor}
+\idea{Un \textbf{servidor} responde solicitudes. \textbf{HTTP} define el intercambio y \textbf{TCP} transporta sus datos en orden.}
 \begin{columns}[T,onlytextwidth]
-\column{.44\textwidth}
-\etiqueta{.env del servidor}
+\column{.46\textwidth}
+\etiqueta{Configuración .env}
 \begin{lstlisting}
 APP_HOST=127.0.0.1
 APP_PORT=8000
 APP_MESSAGE=Hola desde Sesion11
 \end{lstlisting}
-\column{.51\textwidth}
-\etiqueta{Dirección IP}
-\texttt{127.0.0.1}: esta misma máquina. Se llama \textbf{loopback}.
-\par\vspace{4mm}
-\etiqueta{Puerto}
-\texttt{8000}: el punto de entrada al programa dentro de esa máquina.
-\end{columns}
-\par\vspace{3mm}
-\detalle{\texttt{app.py} usa \texttt{http.server}, la biblioteca didáctica de Python. Lee estos valores y devuelve el mensaje. Código completo en \texttt{demo/app.py}. \texttt{.env} es texto sin cifrar.}
-\end{frame}
-
-% 06
-\begin{frame}[fragile]{Una petición, una respuesta}
-\idea{\texttt{curl} es un cliente HTTP de consola: pide una respuesta al servidor.}
-\begin{columns}[T,onlytextwidth]
-\column{.47\textwidth}
-\etiqueta{Terminal 1: el servidor}
+\detalle{La \textbf{IP} indica el destino. \texttt{127.0.0.1} es esta máquina, o \textbf{loopback}. El \textbf{puerto} 8000 es la entrada al programa.}
+\column{.50\textwidth}
+\etiqueta{Terminal 1: iniciar Python}
 \begin{lstlisting}
 .venv/bin/python app.py
 \end{lstlisting}
-\detalle{Queda esperando solicitudes. Ctrl+C lo detiene.}
-\column{.49\textwidth}
-\etiqueta{Terminal 2: el cliente}
+\etiqueta{Terminal 2: pedir la respuesta}
 \begin{lstlisting}
 curl http://127.0.0.1:8000/
 \end{lstlisting}
-\detalle{La ruta \texttt{/} pide el recurso inicial.}
+\detalle{\texttt{curl} es un cliente HTTP de consola. Esperamos \texttt{Hola desde Sesion11}.}
 \end{columns}
 \par\vspace{3mm}
-\etiqueta{Resultado esperado}
-{\LARGE\ttfamily Hola desde Sesion11}
-\par\vspace{6mm}
-\detalle{Cambiar \texttt{APP\_MESSAGE} requiere volver a ejecutar Python. La configuración se lee al iniciar. Una variable ya existente en el entorno tiene prioridad sobre \texttt{.env}.}
+\detalle{El código didáctico está en \texttt{demo/app.py}. Ctrl+C lo detiene. Al cambiar \texttt{.env}, vuelve a iniciarlo: la configuración se lee al arrancar y no está cifrada.}
 \end{frame}
 
-% 07
+
+
 \tema{Puertos y procesos}
 
-% 08
-\begin{frame}{Quién está escuchando}
+\begin{frame}[fragile]{Proceso, socket y escucha}
 \begin{columns}[T,onlytextwidth]
-\column{.46\textwidth}
+\column{.47\textwidth}
 \etiqueta{Proceso}
-{\Large Un programa en ejecución.}
-\par\vspace{3mm}
-Python está ejecutando \texttt{app.py}. Su \textbf{PID} es el número que lo identifica en Linux.
-\column{.46\textwidth}
+Un programa en ejecución. Su \textbf{PID} es el número que lo identifica en Linux.
+\column{.47\textwidth}
 \etiqueta{Socket}
-{\Large Un extremo de comunicación.}
-\par\vspace{3mm}
-Un socket \textbf{en escucha} espera conexiones en una dirección y un puerto.
+Un extremo de comunicación. En \textbf{escucha}, espera conexiones en una dirección y puerto.
 \end{columns}
-\par\vspace{3mm}
-\begin{center}
-{\fontsize{24}{28}\selectfont\ttfamily 127.0.0.1\textcolor{utpRojo}{:8000}}
-\par\par\vspace{3mm}
-La recepción está abierta. Falta identificar quién la abrió.
-\end{center}
+\par\vspace{2mm}
+\etiqueta{Fragmento ilustrativo de una consulta de sockets}
+\begin{lstlisting}
+LISTEN ... 127.0.0.1:8000 ... ("python",pid=2451)
+\end{lstlisting}
+\paso{LISTEN}{Hay una escucha abierta.}
+\paso{127.0.0.1:8000}{Recibe dentro de esta máquina.}
+\paso{pid=2451}{El proceso responsable es Python.}
+\detalle{Veremos esta información con \texttt{ss}, el comando para consultar sockets. Los números de proceso variarán.}
 \end{frame}
 
-% 09
 \begin{frame}[fragile]{ss -ltnp, letra por letra}
 \idea{\texttt{ss} consulta los sockets que conoce Linux. \texttt{-ltnp} reúne cuatro opciones.}
 \begin{lstlisting}[basicstyle=\ttfamily\Large]
@@ -158,25 +205,10 @@ sudo ss -ltnp
 \detalle{Equivale a \texttt{ss -l -t -n -p}. \texttt{sudo} permite ver procesos de otros usuarios. El comando consulta el estado; no abre puertos.}
 \end{frame}
 
-% 10
-\begin{frame}[fragile]{La evidencia de la escucha}
-\etiqueta{Fragmento ilustrativo de la salida}
-\begin{lstlisting}
-LISTEN ... 127.0.0.1:8000 ... ("python",pid=2451,fd=3)
-\end{lstlisting}
-\par\vspace{4mm}
-\paso{LISTEN}{Hay un socket esperando conexiones.}
-\paso{127.0.0.1:8000}{Recibe únicamente dentro de esta máquina.}
-\paso{pid=2451}{Python es el proceso responsable.}
-\detalle{\texttt{fd=3} identifica ese recurso abierto dentro del proceso. Los números variarán.}
-\par\vspace{3mm}
-\detalle{En la columna local, \texttt{0.0.0.0:8000} significaría todas las direcciones IPv4 de la máquina. Un \textbf{firewall}, un filtro de tráfico, aún puede impedir el acceso externo.}
-\end{frame}
 
-% 11
+
 \tema{Servicios y registros}
 
-% 12
 \begin{frame}{Administrador y herramientas}
 \idea{Un \textbf{servicio} es un programa administrado por el sistema, incluso sin una terminal abierta. Un \textbf{log} registra lo que ocurrió.}
 \par\vspace{2mm}
@@ -189,7 +221,6 @@ LISTEN ... 127.0.0.1:8000 ... ("python",pid=2451,fd=3)
 \detalle{El administrador systemd inicia con PID 1. Su componente \texttt{systemd-journald} recoge mensajes en el \textbf{journal}, el registro central.}
 \end{frame}
 
-% 13
 \begin{frame}[fragile]{Qué hace realmente systemctl}
 \idea{Una \textbf{unidad} es algo que systemd administra. Un archivo \texttt{.service} describe cómo ejecutar un servicio.}
 \begin{lstlisting}[basicstyle=\ttfamily\large]
@@ -203,7 +234,6 @@ sudo systemctl start sesion11
 \detalle{\texttt{sesion11} equivale aquí a \texttt{sesion11.service}. \texttt{status} consulta su estado y \texttt{stop} pide detenerlo. Primero crearemos esa unidad.}
 \end{frame}
 
-% 14
 \begin{frame}[fragile]{journalctl: consultar lo ocurrido}
 \idea{Podemos empezar por los logs del sistema. Un \textbf{arranque} es el período que comienza al encender o reiniciar la máquina.}
 \begin{lstlisting}
@@ -225,7 +255,6 @@ sudo journalctl -u sesion11 -f
 \detalle{\texttt{-f} sigue mostrando nuevos mensajes. Ctrl+C termina la consulta y el servicio continúa.}
 \end{frame}
 
-% 15
 \begin{frame}[fragile]{La receta del servicio}
 \idea{\texttt{[Unit]} describe el servicio. \texttt{[Service]} define su ejecución. \texttt{[Install]} indica cómo incorporarlo al arranque.}
 \begin{columns}[T,onlytextwidth]
@@ -243,17 +272,16 @@ StandardError=journal
 \end{lstlisting}
 \column{.39\textwidth}
 \small
-\textbf{User}: cuenta que lo ejecuta.\par\par\vspace{2mm}
-\textbf{WorkingDirectory}: carpeta de trabajo.\par\par\vspace{2mm}
-\textbf{ExecStart}: comando exacto. \texttt{-u} escribe los mensajes sin demora.\par\par\vspace{2mm}
-\textbf{Restart}: reintenta tras un fallo, esperando 3 segundos.\par\par\vspace{2mm}
+\textbf{User}: cuenta que lo ejecuta.\par\vspace{2mm}
+\textbf{WorkingDirectory}: carpeta de trabajo.\par\vspace{2mm}
+\textbf{ExecStart}: comando exacto. \texttt{-u} escribe los mensajes sin demora.\par\vspace{2mm}
+\textbf{Restart}: reintenta tras un fallo, esperando 3 segundos.\par\vspace{2mm}
 \textbf{StandardOutput/Error}: envían salida y errores al journal.
 \end{columns}
 \par\vspace{2mm}
 \detalle{La unidad completa está en \texttt{demo/sesion11.service}. \texttt{ExecStart} es una sola línea. Python carga \texttt{/opt/sesion11/.env} al iniciar.}
 \end{frame}
 
-% 16
 \begin{frame}[fragile]{Creación e inicio del servicio}
 \idea{La cuenta \texttt{sesion11} debe existir y poder leer la aplicación instalada en \texttt{/opt/sesion11}. La guía incluye esa preparación.}
 \begin{lstlisting}
@@ -277,7 +305,6 @@ Inicia ahora / prepara futuros arranques.
 \detalle{Detén antes el Python manual con Ctrl+C para liberar 8000. \texttt{active (running)} confirma el proceso; \texttt{curl} comprueba que además responde.}
 \end{frame}
 
-% 17
 \begin{frame}{La orden depende del cambio}
 \idea{En cada caso, \texttt{systemctl} comunica la acción al administrador.}
 \renewcommand{\arraystretch}{1.55}
@@ -293,10 +320,8 @@ Quitar inicio automático y detener & \texttt{disable --now sesion11}\\
 \detalle{\texttt{restart} detiene e inicia. \texttt{reload} pide al programa releer su configuración si lo admite. Nuestro Python necesita reinicio. NGINX, que veremos a continuación, sí admite recarga.}
 \end{frame}
 
-% 18
 \tema{NGINX y proxy inverso}
 
-% 19
 \begin{frame}{Un intermediario delante de Python}
 \idea{\textbf{NGINX} es un servidor web. Como \textbf{proxy inverso}, recibe las peticiones del sitio y las entrega a la aplicación interna.}
 \par\vspace{3mm}
@@ -317,7 +342,6 @@ Quitar inicio automático y detener & \texttt{disable --now sesion11}\\
 \detalle{La respuesta vuelve por esas conexiones. El navegador conserva su dirección original.}
 \end{frame}
 
-% 20
 \begin{frame}[fragile]{Las carpetas de NGINX}
 \begin{columns}[T,onlytextwidth]
 \column{.47\textwidth}
@@ -340,7 +364,6 @@ ls -l /etc/nginx/sites-enabled
 \detalle{\texttt{ls} lista archivos; \texttt{-l} muestra detalles y destinos de enlaces. Son carpetas de la organización Ubuntu. \texttt{nginx.conf} las incorpora mediante \texttt{include}, la instrucción para leer otros archivos.}
 \end{frame}
 
-% 21
 \begin{frame}[fragile]{La configuración del proxy}
 \idea{\texttt{server} define un sitio y \texttt{location /} aplica sus reglas a las rutas que empiezan con \texttt{/}.}
 \begin{columns}[T,onlytextwidth]
@@ -372,7 +395,6 @@ Datos que acompañan la petición. \texttt{proxy\_set\_header} los ajusta.
 \detalle{\texttt{\$host} y \texttt{\$remote\_addr} son variables de NGINX: nombre pedido e IP del cliente. Las llaves agrupan instrucciones y el punto y coma las termina.}
 \end{frame}
 
-% 22
 \begin{frame}[fragile]{Activación del sitio}
 \idea{\texttt{ln -s} crea el enlace. \texttt{nginx -t} valida la configuración. \texttt{reload} hace que NGINX la lea de nuevo.}
 \begin{lstlisting}
@@ -391,7 +413,6 @@ El enlace se aplica cuando NGINX relee su configuración.
 \detalle{Crea el enlace una sola vez. Continúa con la recarga únicamente si la validación es correcta. \texttt{enable --now} habilita e inicia el servicio.}
 \end{frame}
 
-% 23
 \begin{frame}[fragile]{Prueba de los dos caminos}
 \idea{La cabecera HTTP \texttt{Host} indica el sitio pedido. \texttt{curl -H} la agrega y \texttt{-i} muestra las cabeceras de respuesta.}
 \etiqueta{Directo a Python}
@@ -408,10 +429,8 @@ curl -i -H "Host: sesion11.local" http://127.0.0.1/
 \detalle{\texttt{200 OK} significa éxito. Si solo funciona el acceso directo, revisa NGINX y el nombre del sitio. Para probar desde fuera, usa la IP de la máquina y permite TCP 80 en sus reglas de red.}
 \end{frame}
 
-% 24
 \tema{Captura de tráfico}
 
-% 25
 \begin{frame}{Herramientas de captura}
 \idea{Un \textbf{paquete} lleva datos de red. Una \textbf{interfaz} es el punto por el que pasan. Un capturador observa esos paquetes.}
 \par\vspace{3mm}
@@ -424,7 +443,6 @@ curl -i -H "Host: sesion11.local" http://127.0.0.1/
 \detalle{En Linux, \texttt{lo} es la interfaz interna o loopback. Ahí veremos el intercambio entre NGINX y Python. Un \textbf{filtro} selecciona los paquetes que nos interesan.}
 \end{frame}
 
-% 26
 \begin{frame}[fragile]{La captura más sencilla: tcpdump}
 \etiqueta{Terminal 1: observar}
 \begin{lstlisting}
@@ -450,7 +468,6 @@ curl -H "Host: sesion11.local" http://127.0.0.1/
 \detalle{La petición entra por 80, pero observamos el tramo interno en 8000. Ctrl+C detiene la captura. Sin peticiones, es normal que espere sin mostrar paquetes.}
 \end{frame}
 
-% 27
 \begin{frame}[fragile]{Del paquete al texto HTTP}
 \idea{En TCP, un \textbf{puerto temporal} identifica al cliente. El servidor conserva su puerto de escucha.}
 \begin{lstlisting}
@@ -466,51 +483,25 @@ sudo tcpdump -i lo -nn -s 0 -A 'tcp port 8000'
 \detalle{\texttt{-A} muestra texto y \texttt{-s 0} evita un límite de captura pequeño. Busca \texttt{GET /}, la solicitud de un recurso. \textbf{HTTPS} cifra el contenido: en ese tramo no verías el texto. Usa tráfico de laboratorio sin secretos.}
 \end{frame}
 
-% 28
-\begin{frame}[fragile]{TShark: Wireshark en la terminal}
-\idea{TShark captura paquetes y muestra un resumen interpretado de cada uno.}
+\begin{frame}[fragile]{TShark: captura y lectura}
+\idea{TShark es Wireshark de consola. \textbf{pcapng} es su formato de archivo para guardar paquetes.}
+\etiqueta{Instalar y capturar mientras generas peticiones}
 \begin{lstlisting}
 sudo apt install tshark
-sudo tshark -i lo -n -f "tcp port 8000"
-\end{lstlisting}
-\par\vspace{4mm}
-\paso{-i lo}{Escoge la interfaz interna.}
-\paso{-n}{Conserva las direcciones numéricas.}
-\paso{-f}{Introduce el filtro que decide qué capturar.}
-\par\vspace{2mm}
-\detalle{Genera otra petición con curl en una segunda terminal. Ctrl+C termina. Si la instalación pregunta por capturas sin administrador, puedes elegir No y usar \texttt{sudo} en este laboratorio.}
-\end{frame}
-
-% 29
-\begin{frame}[fragile]{Guardar y revisar una captura}
-\idea{\textbf{pcapng} es un formato de archivo para paquetes. \texttt{-w} guarda, \texttt{-r} lee y \texttt{-Y} elige qué mostrar al analizar.}
-\etiqueta{Capturar, generar peticiones y detener con Ctrl+C}
-\begin{lstlisting}
 sudo tshark -i lo -f "tcp port 8000" \
   -w /tmp/sesion11.pcapng
 \end{lstlisting}
-\etiqueta{Mostrar únicamente HTTP}
+\detalle{\texttt{-i}: interfaz. \texttt{-f}: filtro de captura. \texttt{-w}: archivo de salida. Genera peticiones con curl en otra terminal y detén la captura con Ctrl+C.}
+\par\vspace{3mm}
+\vspace{-1mm}\etiqueta{Leer el archivo y mostrar HTTP}
 \begin{lstlisting}
 sudo tshark -r /tmp/sesion11.pcapng -Y "http"
 \end{lstlisting}
-\par\vspace{4mm}
-\detalle{El filtro \texttt{-f} decide qué guardar; \texttt{-Y}, qué mostrar. Si no reconoce HTTP, agrega \texttt{-d tcp.port==8000,http} al leer: indica cómo interpretar ese puerto. También puedes abrir el archivo en Wireshark.}
+\detalle{\texttt{-r} lee; \texttt{-Y} filtra lo que muestra. Si HTTP no se reconoce, agrega \texttt{-d tcp.port==8000,http} al leer. Sin \texttt{-w}, TShark muestra los paquetes en directo.}
 \end{frame}
 
-% 30
-\begin{frame}{Dónde buscar cuando algo falla}
-\renewcommand{\arraystretch}{1.6}
-\begin{tabular}{@{}p{5.4cm}p{7.6cm}@{}}
-\textbf{La evidencia} & \textbf{La siguiente comprobación}\\
-\midrule
-No hay escucha en 8000 & \texttt{systemctl status sesion11} y \texttt{journalctl -u sesion11}.\\
-Python funciona, aparece otro sitio & Cabecera \texttt{Host} y enlace en \texttt{sites-enabled}.\\
-NGINX devuelve \texttt{502} & No obtuvo respuesta válida de Python. Revisa su escucha y \texttt{/var/log/nginx/error.log}.\\
-Captura vacía & Genera una petición. Comprueba interfaz y filtro.\\
-\end{tabular}
-\par\vspace{3mm}
-\detalle{Código, preparación completa y comandos: \texttt{Sesion11/README.md} y \texttt{demo/}.}
-\par\vspace{2mm}
-\detalle{Referencias: \href{https://bbc2.github.io/python-dotenv/}{python-dotenv}, \href{https://docs.python.org/3/library/http.server.html}{Python}, \href{https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html}{ss}, \href{https://manpages.ubuntu.com/manpages/noble/man1/systemctl.1.html}{systemctl}, \href{https://manpages.ubuntu.com/manpages/noble/man1/journalctl.1.html}{journalctl}, \href{https://nginx.org/en/docs/http/ngx_http_proxy_module.html}{NGINX}, \href{https://manpages.ubuntu.com/manpages/noble/man8/tcpdump.8.html}{tcpdump} y \href{https://www.wireshark.org/docs/man-pages/tshark}{TShark}.}
-\end{frame}
+
+
+
+% Referencias: README.md, sección Referencias técnicas.
 \end{document}
