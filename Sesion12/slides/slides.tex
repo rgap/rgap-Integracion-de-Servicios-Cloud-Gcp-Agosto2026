@@ -1,0 +1,559 @@
+% Motor: XeLaTeX. Sesion 12 - material docente UTP.
+% Misma estructura docente que la Sesion 09.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Computación en la nube, modelos de servicio y despliegue de aplicaciones}
+\date{Semana 06 - Sesión 12}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}[c]{Revisión de la sesión anterior}
+\begin{center}
+{\fontsize{20}{25}\selectfont La sesión anterior fue la}\par\vspace{4mm}
+{\fontsize{27}{32}\selectfont\bfseries Práctica Calificada 1}
+\end{center}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás distinguir \textbf{on-premise}, \textbf{IaaS}, \textbf{PaaS} y \textbf{SaaS} según quién administra cada parte, y reconocer cuál usas al desplegar una aplicación.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item Cuando usas Gmail, ¿dónde se está ejecutando ese programa?
+  \item Si tu laptop tarda tres horas en exportar un video, ¿qué otra opción tienes?
+  \item ¿Publicaste alguna vez una página para que otros la usen? ¿Dónde quedó?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.86\textwidth}
+{\large Todo el curso siguiente ocurre en Google Cloud. Antes de abrir la consola conviene saber qué se alquila, qué se administra y qué se paga.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries La historia de un clipero}\par
+\vspace{2mm}
+{\small Un mismo trabajo, resuelto de cuatro maneras}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{El trabajo que vamos a seguir}
+\begin{block}{El personaje}
+\small Un \textbf{clipero}: toma la transmisión de un streamer, de cuatro horas, y publica \textbf{clips} de treinta segundos en redes sociales.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Sus cuatro pasos}
+\small
+1. \textbf{Buscar} las partes relevantes.\par\smallskip
+2. \textbf{Cortar} cada fragmento.\par\smallskip
+3. Ponerle \textbf{subtítulos}.\par\smallskip
+4. \textbf{Exportar} y publicar.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Por qué sirve este ejemplo}
+\small Pide mucho cómputo, se repite todos los días y crece cuando llegan más clientes.
+\end{block}
+\begin{alertblock}{La pregunta de la sesión}
+\small ¿Dónde se ejecuta ese trabajo y quién mantiene esa máquina?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Etapa 1: todo ocurre en su laptop}
+\begin{block}{Cómo empezó}
+\small Compró una laptop e instaló un editor de video. Descarga la transmisión, la revisa, corta, escribe los subtítulos y exporta.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Un día normal}
+\small
+Descargar la transmisión: 20 min.\par\smallskip
+Revisarla y marcar momentos: 2 h.\par\smallskip
+Cortar y subtitular 5 clips: 1 h.\par\smallskip
+Exportar cada clip: 8 min, con la laptop ocupada.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Todo es suyo}
+\small La laptop, el sistema operativo, el editor y el disco con los videos. Si algo falla, lo arregla él.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Esto se llama on-premise}
+\begin{block}{Definición}
+\small \textbf{On-premise} = el equipo que hace el trabajo es tuyo y está contigo. Tu laptop, o el servidor de una oficina.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Por qué lo es}
+\small Todo el trabajo ocurre en su laptop. Nadie más interviene y nadie le cobra por ejecutarlo.
+\end{exampleblock}
+\begin{block}{Lo bueno}
+\small Control total y sin pagos mensuales.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El problema}
+\small
+\textbf{Tarda:} exportar ocupa la laptop.\par\smallskip
+\textbf{Es repetitivo:} los mismos cuatro pasos, todos los días.\par\smallskip
+\textbf{No escala:} con tres streamers necesitaría tres laptops, y no puede comprarlas hoy y devolverlas mañana.\par\smallskip
+\textbf{Es frágil:} si la laptop se malogra, todo se detiene.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{La nube, en una frase}
+\begin{block}{Computación en la nube}
+\small Usar computadoras de \textbf{otra persona} ---un \textbf{proveedor}--- por internet y \textbf{pagando por lo que usas}. Se piden cuando hacen falta y se devuelven cuando ya no.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Qué cambia}
+\small
+\textbf{No compras:} alquilas.\par\smallskip
+\textbf{No es una sola:} si hoy necesitas diez máquinas, las pides hoy.\par\smallskip
+\textbf{No está en tu casa:} está en un centro de datos.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Los tres proveedores grandes}
+\small Google Cloud, Amazon Web Services y Microsoft Azure. En el curso usaremos \textbf{Google Cloud}.
+\end{block}
+\begin{alertblock}{Falta decidir algo}
+\small ¿\textbf{Cuánto} te entrega el proveedor ya resuelto? Eso separa a IaaS, PaaS y SaaS.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Etapa 2: una página web le hace los clips}
+\begin{block}{Cómo trabaja ahora}
+\small Le recomiendan una página que hace clips. Sube la transmisión, la página busca sola las partes relevantes y genera los clips con subtítulos. Él solo los descarga.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Su día ahora}
+\small
+Subir la transmisión: 15 min.\par\smallskip
+Esperar: 20 min, con la laptop libre.\par\smallskip
+Revisar y descargar: 20 min.\par\smallskip
+Paga una suscripción mensual.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Lo que no sabe ni necesita saber}
+\small En qué máquina se ejecutó, qué sistema operativo tenía ni quién la actualizó.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Esto se llama SaaS}
+\begin{block}{Definición}
+\small \textbf{SaaS} es \emph{Software as a Service}: usas un programa \textbf{ya terminado} por internet. El proveedor hace todo lo demás.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Por qué lo es}
+\small No instaló ni configuró nada. Solo abrió una página. Lo único suyo son sus videos.
+\end{exampleblock}
+\begin{block}{Lo bueno}
+\small Funciona desde el primer día y cuesta siempre lo mismo.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El problema}
+\small
+\textbf{Hace lo que el producto decide:} no puede cambiar cómo se eligen los momentos buenos ni el estilo de los subtítulos.\par\smallskip
+\textbf{Tiene límites:} pasadas las horas del plan, paga más.\par\smallskip
+\textbf{Depende del proveedor:} si sube el precio o cierra, no puede hacer nada.\par\smallskip
+\textbf{Entrega su material:} sus videos quedan en un servicio ajeno.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Etapa 3: su propio programa en una plataforma}
+\begin{block}{Qué decidió hacer}
+\small Ninguna página elige los clips como él quiere, así que escribe su propio programa. Funciona en su laptop, pero quiere que sus clientes suban videos desde una página web.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Cómo lo publica}
+\small
+1. Guarda su código con \texttt{git}.\par\smallskip
+2. Conecta ese repositorio a una plataforma.\par\smallskip
+3. La plataforma lo ejecuta y le da una dirección web.\par\smallskip
+4. Cada cambio se publica solo.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Lo que no tuvo que hacer}
+\small Crear cuentas, configurar el servidor web ni instalar actualizaciones de seguridad. Ya venía resuelto.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Esto se llama PaaS}
+\begin{block}{Definición}
+\small \textbf{PaaS} es \emph{Platform as a Service}: tú pones el \textbf{código} y el proveedor pone todo lo necesario para ejecutarlo.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Por qué lo es}
+\small El programa es suyo, porque lo escribió él. La máquina que lo ejecuta ni se ve: él nunca entra en ella.
+\end{exampleblock}
+\begin{block}{Lo bueno}
+\small Controla el resultado sin administrar un servidor.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El problema}
+\small
+\textbf{Se ajusta a la plataforma:} hay un tiempo máximo por ejecución, y cuatro horas de video se pasan de ese límite.\par\smallskip
+\textbf{No instala lo que quiere:} necesita \texttt{ffmpeg}, un programa que corta video, en una versión concreta.\par\smallskip
+\textbf{No elige el equipo:} iría diez veces más rápido con una \textbf{GPU}, la tarjeta gráfica que hace muchos cálculos a la vez.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Etapa 4: alquila una máquina y la administra él}
+\begin{block}{El último paso}
+\small Le pide al proveedor una \textbf{máquina virtual}: una computadora completa alquilada, con su procesador, su memoria, su disco y su dirección IP. Elige una con GPU y la configura él mismo.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Lo que instala y configura él}
+\begin{terminal}\footnotesize
+\$ sudo apt install ffmpeg python3-venv nginx\\
+\$ sudo systemctl enable --now clipper\\
+\$ sudo nginx -t \&\& sudo systemctl reload nginx
+\end{terminal}
+\small Cuentas, permisos, el servicio que arranca solo, el servidor web y el firewall.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Qué ganó}
+\small La GPU que necesitaba, la versión de \texttt{ffmpeg} que quería y sin límite de tiempo. Además, apaga la máquina cuando no hay trabajo.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Esto se llama IaaS}
+\begin{block}{Definición}
+\small \textbf{IaaS} es \emph{Infrastructure as a Service}: el proveedor te alquila el \textbf{equipo} y todo lo que va encima lo administras tú.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Por qué lo es}
+\small Recibió una máquina vacía y desde ahí hizo todo: instalar, configurar y abrir los puertos.
+\end{exampleblock}
+\begin{block}{Lo bueno}
+\small El control de su laptop, con equipos que no podría comprar.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El problema}
+\small
+\textbf{Vuelve el trabajo de administrar:} actualizaciones, revisar registros, copias de respaldo y arreglar lo que se rompa.\par\smallskip
+\textbf{Se paga aunque no se use:} una máquina encendida cuesta igual.\par\smallskip
+\textbf{Escalar es cosa suya:} si llegan diez clientes a la vez, alguien crea más máquinas.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El recorrido completo}
+\begin{block}{La misma tarea, delegada en distintos grados}
+\small Mientras más delega, menos trabajo técnico hace y menos control tiene sobre los detalles.
+\end{block}
+\renewcommand{\arraystretch}{1.25}
+\centering\small
+\begin{tabular}{@{}p{2.2cm}p{3.5cm}p{3.4cm}p{3.6cm}@{}}
+\toprule
+\textbf{Etapa} & \textbf{Qué usó} & \textbf{Qué administró él} & \textbf{Por qué cambió}\\
+\midrule
+On-premise & Su laptop y un editor & La máquina y todo el proceso & Lento, repetitivo y no escalaba\\
+SaaS & Una web que hace clips & Solo sus videos & No podía cambiar el criterio ni el estilo\\
+PaaS & Su código en una plataforma & Solo su código & Necesitaba \texttt{ffmpeg}, GPU y más tiempo\\
+IaaS & Una máquina virtual con GPU & El sistema entero & ---\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\footnotesize No es una escalera de mejora: nadie ``asciende'' a IaaS. Cada etapa resolvió el problema que tenía delante.
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Modelos de servicio en la nube}\par
+\vspace{2mm}
+{\small Los mismos cuatro casos, con ejemplos conocidos}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Los cuatro modelos y sus ejemplos clásicos}
+\small La pregunta siempre es la misma: \textbf{¿hasta dónde llega el proveedor y dónde empiezas tú?}
+\par\vspace{2mm}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{1.9cm}p{4.4cm}p{6.6cm}@{}}
+\toprule
+\textbf{Modelo} & \textbf{Tú te encargas de} & \textbf{Ejemplos que reconoces}\\
+\midrule
+On-premise & Todo & Tu laptop, un servidor propio en la oficina\\
+IaaS & Sistema operativo, programas y aplicación & Compute Engine (GCP), EC2 (AWS), Droplets (DigitalOcean)\\
+PaaS & Tu código y tus datos & App Engine y Cloud Run (GCP), Heroku, Render, Vercel\\
+SaaS & Solo tus datos & Gmail, Google Drive, GitHub, Figma, Notion, Slack\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Un detalle que confunde}
+\footnotesize Un mismo proveedor vende los tres: Google Cloud alquila máquinas (IaaS) y ejecuta tu código (PaaS), y Google te da Gmail (SaaS).
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Y hay más nombres}
+\footnotesize Verás \emph{Function as a Service} o \emph{serverless}: la misma idea, alguien más administra una capa por ti.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Quién administra cada capa}
+\begin{block}{Toda aplicación se apoya en la misma pila}
+\small Equipo físico, máquina virtual, sistema operativo, bibliotecas, programa y datos. Lo que cambia es \textbf{hasta dónde llega el proveedor}.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{5.4cm}cccc@{}}
+\toprule
+\textbf{Capa} & \textbf{On-premise} & \textbf{IaaS} & \textbf{PaaS} & \textbf{SaaS}\\
+\midrule
+Tus datos & Tú & Tú & Tú & Tú\\
+Tu aplicación & Tú & Tú & Tú & Proveedor\\
+Bibliotecas y dependencias & Tú & Tú & Proveedor & Proveedor\\
+Sistema operativo & Tú & Tú & Proveedor & Proveedor\\
+Máquina virtual y red & Tú & Proveedor & Proveedor & Proveedor\\
+Equipo físico y centro de datos & Tú & Proveedor & Proveedor & Proveedor\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\small La primera fila nunca cambia: \textbf{los datos siempre son tu responsabilidad}.
+\end{frame}
+
+\begin{frame}{¿Qué modelo es cada uno?}
+\begin{block}{Para responder en voz alta}
+\small Di el modelo y \textbf{justifica con la capa}: ¿hasta dónde llega el proveedor?
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1}
+\small Alquilan una máquina en Google Cloud, instalan Ubuntu y publican el sitio ahí.
+\end{exampleblock}
+\begin{exampleblock}{2}
+\small Usas Google Docs para escribir el informe.
+\end{exampleblock}
+\begin{exampleblock}{3}
+\small Subes tu código a una plataforma que lo publica en una dirección web, sin saber en qué máquina quedó.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{4}
+\small La universidad tiene un servidor en el campus, atendido por su propio personal.
+\end{exampleblock}
+\begin{alertblock}{Las dos difíciles}
+\small
+\textbf{5.} Contratas una base de datos que el proveedor instala, respalda y actualiza; tú solo escribes consultas.\par\smallskip
+\textbf{6.} Tu programa se ejecuta solo cuando llega una petición, y el proveedor decide dónde.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Las cuatro piezas de un despliegue}\par
+\vspace{2mm}
+{\small Frontend, backend, base de datos y almacenamiento}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Práctica: ¿con qué han desplegado? \textnormal{\small(15 min)}}
+\begin{block}{Qué significa desplegar}
+\small \textbf{Desplegar} es dejar un programa funcionando donde otras personas puedan usarlo. Trabajen en parejas y anoten sus respuestas.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{1. Frontend}
+\small Lo que se ve en el navegador. ¿Dónde publicaron una página?
+\end{exampleblock}
+\begin{exampleblock}{2. Backend}
+\small El programa que recibe peticiones y responde. ¿Dónde lo pusieron a funcionar?
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{3. Base de datos}
+\small Donde quedan los datos: usuarios, pedidos, comentarios. ¿Cuál usaron?
+\end{exampleblock}
+\begin{exampleblock}{4. Almacenamiento}
+\small Donde quedan los archivos grandes: imágenes, PDF, videos. ¿Dónde los guardaron?
+\end{exampleblock}
+\end{columns}
+\begin{alertblock}{La pregunta que cierra cada respuesta}
+\small \textbf{¿Ese servicio era IaaS, PaaS o SaaS?} Si nunca desplegaron nada, digan qué usarían hoy y por qué.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Frontend: archivos que el navegador descarga}
+\begin{block}{Qué necesita}
+\small Son archivos ya listos ---HTML, CSS, imágenes--- que alguien debe entregar rápido a cualquier navegador. No ejecuta nada en el servidor.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Opciones frecuentes}
+\small
+\textbf{Un servicio de hosting:} Vercel, Netlify, GitHub Pages, Cloudflare Pages, Firebase Hosting.\par\smallskip
+\textbf{Un almacén de archivos:} Cloud Storage de Google Cloud, S3 de AWS.\par\smallskip
+\textbf{Tú mismo, con \texttt{nginx} en una máquina virtual.}
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Cómo se clasifica}
+\small Los dos primeros son PaaS: subes los archivos y no ves la máquina. El tercero es IaaS y el mantenimiento es tuyo.
+\end{block}
+\begin{alertblock}{Una palabra que verás}
+\small Estos servicios reparten copias de tus archivos por varios países para que carguen rápido. Esa red se llama \textbf{CDN}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Backend: un programa siempre encendido}
+\begin{block}{Qué necesita}
+\small Alguien tiene que ejecutarlo, reiniciarlo si se cae y poner más copias si llegan muchas peticiones.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Opciones, de más trabajo a menos}
+\small
+\textbf{Máquina virtual (IaaS):} Compute Engine, EC2, Droplets. Instalas y administras todo.\par\smallskip
+\textbf{Plataforma que ejecuta tu código (PaaS):} Cloud Run y App Engine; también Render, Railway o Heroku.\par\smallskip
+\textbf{Funciones sueltas:} Cloud Functions o AWS Lambda ejecutan tu código solo cuando llega una petición.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Una palabra que verás}
+\small Un \textbf{contenedor} es un paquete con tu programa y todo lo que necesita, para que funcione igual en cualquier máquina.
+\end{block}
+\begin{alertblock}{Ojo con \emph{serverless}}
+\small ``Sin servidor'' no significa que no haya servidores: no son tuyos y solo pagas mientras tu código se ejecuta.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Base de datos: los datos deben sobrevivir}
+\begin{block}{Qué necesita}
+\small Guardar los datos para siempre y no perder nada: ni al reiniciar la máquina, ni al borrar la aplicación. Por eso vive aparte del programa.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Opciones frecuentes}
+\small
+\textbf{Instalada por ti en una máquina virtual (IaaS):} MySQL o PostgreSQL. Las copias de respaldo son tuyas.\par\smallskip
+\textbf{Administrada por el proveedor:} Cloud SQL en Google Cloud, RDS en AWS, o Neon, Supabase y PlanetScale.\par\smallskip
+\textbf{Sin tablas fijas:} Firestore o MongoDB Atlas guardan documentos.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Qué compras al pagar ``administrada''}
+\small Instalación, actualizaciones y copias de respaldo automáticas. Tú solo te conectas y consultas.
+\end{block}
+\begin{alertblock}{La pregunta de examen}
+\small ¿Una base de datos administrada es PaaS o SaaS? Hay argumentos para ambos lados. Lo importante es saber \textbf{qué capa dejaste de administrar}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Almacenamiento: los archivos grandes van aparte}
+\begin{block}{Qué necesita}
+\small Las imágenes y los videos son pesados y no se consultan como una tabla: se suben, se descargan y se borran. Guardarlos en la base de datos la vuelve lenta y cara.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Opciones frecuentes}
+\small
+\textbf{Almacenamiento de objetos:} Cloud Storage, S3 o R2. Cada archivo recibe su propia dirección y pagas por lo guardado y lo descargado.\par\smallskip
+\textbf{El disco de tu máquina virtual:} funciona, pero se llena y desaparece si borras la máquina.
+\end{exampleblock}
+\column{.46\textwidth}
+\begin{block}{Por qué importa aquí}
+\small El clipero sube videos de varios gigabytes. El video va al almacenamiento; en la base de datos solo queda su dirección y quién lo subió.
+\end{block}
+\begin{alertblock}{Se paga según el uso}
+\small Hay precios más baratos para archivos que casi nunca se leen, como respaldos antiguos.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Las cuatro piezas en la aplicación del clipero}
+\begin{exampleblock}{El recorrido de una transmisión}
+\begin{terminal}\footnotesize
+Navegador -> Frontend (pagina de subida)\\
+\qquad\qquad -> Backend (recibe el video y encola el trabajo)\\
+\qquad\qquad -> Almacenamiento (guarda el video y los clips)\\
+\qquad\qquad -> Base de datos (quien subio que, cuando y en que estado)
+\end{terminal}
+\end{exampleblock}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{No se elige un solo modelo}
+\small Cada pieza puede usar uno distinto: frontend en un hosting (PaaS), backend con GPU en una máquina virtual (IaaS), base de datos administrada y archivos en almacenamiento de objetos.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{Criterio para elegir}
+\small Delega todo lo que no te distinga de los demás. Administra tú solo donde necesitas control: aquí, la GPU y el criterio para elegir los clips.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cierre: tres preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. Tu compañero dice que la nube es ``un disco en internet''. ¿Qué le corriges y qué le concedes?\par\medskip
+2. Un proyecto tiene tres meses y dos personas sin experiencia en Linux. ¿Qué modelo eliges para el backend y qué renuncias aceptas?\par\medskip
+3. Administrar una máquina virtual tiene tareas propias. Nombra dos que desaparecen con PaaS y una que no desaparece nunca.
+\end{block}
+\begin{alertblock}{Lo que viene}
+\small En la siguiente sesión entramos a la consola de Google Cloud: proyectos, facturación y creación de recursos.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item NIST Special Publication 800-145: \emph{The NIST Definition of Cloud Computing}, definiciones de IaaS, PaaS y SaaS, \texttt{csrc.nist.gov}.
+  \item Google Cloud: \emph{¿Qué es la computación en la nube?} y \emph{IaaS vs. PaaS vs. SaaS}, \texttt{cloud.google.com/learn}.
+  \item Google Cloud: documentación de Compute Engine, Cloud Run, App Engine, Cloud Storage y Cloud SQL, \texttt{cloud.google.com/docs}.
+  \item Amazon Web Services: \emph{Types of Cloud Computing}, \texttt{aws.amazon.com/types-of-cloud-computing}.
+  \item Microsoft Azure: \emph{What is IaaS / PaaS / SaaS}, \texttt{azure.microsoft.com/resources/cloud-computing-dictionary}.
+  \item Documentación de NGINX y de \texttt{systemd}, usadas para describir el caso IaaS, \texttt{docs.nginx.com} y \texttt{freedesktop.org/wiki/Software/systemd}.
+  \item Identidad visual UTP y estructura docente del curso, reutilizadas sin cambios.
+  \item Las respuestas de todas las preguntas y prácticas de esta sesión están en \texttt{respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
