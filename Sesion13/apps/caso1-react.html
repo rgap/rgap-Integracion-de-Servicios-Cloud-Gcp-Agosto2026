@@ -1,0 +1,584 @@
+<title>Selector en React</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F1F4F8; --surface:#FFFFFF; --ink:#16213A; --ink-2:#4A5672; --ink-3:#7A86A0;
+  --line:#D5DDE8; --cobalt:#2B59E0; --cobalt-soft:#E3EAFD; --btn:#2B59E0; --mint:#0E9F74; --mint-soft:#DDF4EC;
+  --rose:#C93C53; --rose-soft:#FBE3E7; --amber:#F2B43A;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Onest",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  /* colores de la app (su hoja de estilos) */
+  --app-bg:#f7f8fa; --app-surface:#ffffff; --app-border:#d3d9de; --app-text:#1f2933; --app-muted:#6b7280;
+  --app-accent:#7c3aed; --app-accent-hover:#6d28d9; --app-danger:#b91c1c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0F1524; --surface:#172035; --ink:#E6ECF7; --ink-2:#A3AFC8; --ink-3:#74809B;
+    --line:#2A3654; --cobalt:#7C9BFF; --cobalt-soft:#1E2B52; --btn:#3558D8; --mint:#3CCB9C; --mint-soft:#12382E;
+    --rose:#FF7389; --rose-soft:#3D1A22;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F1524; --surface:#172035; --ink:#E6ECF7; --ink-2:#A3AFC8; --ink-3:#74809B;
+  --line:#2A3654; --cobalt:#7C9BFF; --cobalt-soft:#1E2B52; --btn:#3558D8; --mint:#3CCB9C; --mint-soft:#12382E;
+  --rose:#FF7389; --rose-soft:#3D1A22;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{margin:0;color:var(--ink);font:400 17px/1.55 var(--body);padding-inline:16px;padding-block:24px 56px}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance}
+p,ul,ol{margin:0}
+.shell{--side:420px;display:grid;grid-template-columns:minmax(0,1fr) 14px var(--side);max-width:1600px;margin:0 auto;align-items:start}
+.shell.nosde{grid-template-columns:minmax(0,1fr)}
+.main{display:flex;flex-direction:column;gap:18px;min-width:0;container-type:inline-size}
+.resizer{align-self:stretch;cursor:col-resize;position:relative;touch-action:none}
+.resizer::after{content:"";position:absolute;left:5px;top:0;bottom:0;width:4px;border-radius:2px;background:transparent;transition:background .15s}
+.resizer:hover::after,.resizer:focus-visible::after,.resizer.drag::after{background:var(--cobalt)}
+.resizer:focus-visible{outline:none}
+.side{position:sticky;top:env(safe-area-inset-top,0px);max-height:100vh;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:16px;min-width:0}
+.side > *{flex-shrink:0}
+.side-head{display:flex;align-items:center;gap:10px}
+.side-head h2{font:700 16px var(--display);margin-right:auto}
+.hide{border:0;background:var(--surface);border:1px solid var(--line);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;color:var(--ink-2)}
+.hide:hover{color:var(--ink);border-color:var(--ink-3)}
+.shell.nosde .resizer,.shell.nosde .side{display:none}
+.btn{border:0;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer;background:var(--btn);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.muted{color:var(--ink-2);font-size:15.5px}
+
+/* cabecera + misiones */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font:700 20px var(--display);margin-right:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand small{font:600 13px var(--body);padding:3px 10px;border-radius:99px;background:var(--cobalt-soft);color:var(--cobalt)}
+.casebtn{border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 16px;cursor:pointer;font-weight:600;font-size:15.5px}
+.casebtn:hover{border-color:var(--cobalt)}
+.mlist{list-style:none;padding:0;display:flex;gap:6px;flex-wrap:wrap}
+.mlist li{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:99px;background:var(--surface);border:1.5px solid var(--line);font-size:14.5px;color:var(--ink-3)}
+.mlist li b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--paper);font:600 12px var(--display)}
+.mlist li.done{color:var(--ink-2)}
+.mlist li.done b{background:var(--mint);color:var(--surface)}
+.mlist li.now{border-color:var(--cobalt);color:var(--ink);font-weight:600}
+.mlist li.now b{background:var(--btn);color:#fff}
+.hintline{font-size:16.5px;font-weight:500;height:7.7em;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;line-height:1.5}
+.hintline span{color:var(--cobalt);font-weight:600}
+
+/* laboratorio */
+.lab{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:18px}
+@container (max-width:760px){.lab{grid-template-columns:minmax(0,1fr)}}
+.browser{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.chrome{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--paper);border-bottom:1px solid var(--line)}
+.chrome .dots{display:flex;gap:6px}
+.chrome .dots i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.reload{border:0;background:none;cursor:pointer;font-size:19px;line-height:1;padding:4px 8px;border-radius:8px;color:var(--ink-2)}
+.reload:hover{background:var(--surface);color:var(--ink)}
+.url{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:5px 14px;font:13.5px var(--mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.url b{color:var(--ink);font-weight:500}
+
+/* la app real, tal cual (siempre en claro, como el sitio) */
+.app{position:relative;background:var(--app-bg);color:var(--app-text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:1.6rem 1rem;flex:1;min-height:400px}
+.app main{max-width:520px;margin:0 auto}
+.app h1{margin:0 0 .5rem;font-size:1.45rem;font-weight:700}
+.app .intro{margin:0 0 1rem;color:var(--app-muted)}
+.app .card{padding:1.5rem;border:1px solid var(--app-border);border-radius:12px;background:var(--app-surface)}
+.app label{display:block;margin-bottom:.5rem;font-weight:600}
+.app textarea{display:block;width:100%;margin-bottom:1rem;padding:.75rem;resize:vertical;border:1px solid var(--app-border);border-radius:6px;color:var(--app-text);background:#fff;font:inherit}
+.app textarea:focus,.app button:focus-visible{outline:3px solid rgb(124 58 237 / 25%);outline-offset:2px}
+.app .actions{display:flex;flex-wrap:wrap;gap:.65rem}
+.app button{padding:.65rem 1.2rem;border:0;border-radius:6px;background:var(--app-accent);color:#fff;cursor:pointer;font:inherit;font-weight:600}
+.app button:hover{background:var(--app-accent-hover)}
+.app button.secondary{border:1px solid var(--app-border);background:var(--app-surface);color:var(--app-text)}
+.app button.secondary:hover{background:var(--app-bg)}
+.app .result{margin-top:.75rem;padding:.6rem 1rem;border:1px solid var(--app-border);border-radius:12px;background:var(--app-surface);text-align:center}
+.app .result span,.app .result strong{display:block}
+.app .result strong{margin-top:.1rem;font-size:1.2rem}
+.app .error{color:var(--app-danger);margin-top:1rem}
+.app .paused{position:absolute;inset:0;background:var(--app-bg);text-align:center;padding:1rem;display:flex;flex-direction:column;justify-content:center;gap:.6rem}
+.app .paused b{font-size:1.4rem;color:var(--app-danger)}
+.app .paused p{color:var(--app-muted);max-width:34ch;margin:0 auto}
+
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.arch-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.arch-head h2{font:700 16px var(--display);margin-right:auto}
+.arch-head .done{font-size:14.5px;font-weight:600;color:var(--mint)}
+#dia{width:100%;max-width:520px;height:auto;display:block;margin:4px auto}
+#dia .n{cursor:pointer}
+#dia .n rect{fill:var(--surface);stroke:var(--line);stroke-width:2}
+#dia .n:hover rect{stroke:var(--cobalt)}
+#dia .n:focus-visible{outline:none}
+#dia .n:focus-visible rect{stroke:var(--cobalt);stroke-width:3}
+#dia .n text{text-anchor:middle}
+#dia .n .t{font:600 15px var(--body);fill:var(--ink)}
+#dia .n .s{font:400 12.5px var(--body);fill:var(--ink-2)}
+#dia .n .i{font:600 12px var(--body);fill:var(--ink-3)}
+#dia .n.host rect{fill:var(--cobalt-soft);stroke:var(--cobalt)}
+#dia .n.local rect{stroke-dasharray:6 5}
+#dia .n.paused rect{fill:var(--rose-soft);stroke:var(--rose)}
+#dia .n.flash rect{stroke:var(--amber);stroke-width:3}
+#dia line{stroke:var(--line);stroke-width:2.5}
+#dia line.dash{stroke-dasharray:6 6}
+#dia .d{fill:var(--cobalt)}
+#dia .d.ok{fill:var(--mint)}
+#dia .d.bad{fill:var(--rose)}
+#dia .dl{font:600 12.5px var(--body);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:5px}
+.tip{font-size:14px;color:var(--ink-3)}
+.net{border-radius:10px;background:var(--paper);padding:10px 14px 12px;display:flex;flex-direction:column;gap:4px}
+.net h3{font-size:14px;font-weight:600;color:var(--ink-2)}
+.net-row{display:grid;grid-template-columns:3.2em minmax(0,1fr) 3em 4.6em;gap:10px;font:13px/1.6 var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.net-row > :nth-child(3),.net-row > :nth-child(4){text-align:right}
+.net-row > :nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.net-head{font:12.5px var(--body);color:var(--ink-3);border-bottom:1px solid var(--line);padding-bottom:3px}
+.log{list-style:none;padding:0;margin:0;font-size:13px;line-height:1.6;height:12.8em;overflow:auto}
+.log:empty::before{content:"Aún no hay peticiones. Pulsa ↻ en el navegador para cargar la página.";display:block;font:13.5px/1.5 var(--body);color:var(--ink-3);padding-top:4px}
+.log li.fresh{animation:fresh .8s ease}
+@keyframes fresh{from{background:var(--cobalt-soft)}}
+.st-200{color:var(--mint)} .st-304{color:var(--ink-3)} .st-402{color:var(--rose);font-weight:600}
+
+/* límites */
+.limits{display:flex;flex-direction:column;gap:12px}
+.limits > .col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.limits h2{font:700 16px var(--display)}
+.col{display:flex;flex-direction:column;gap:14px}
+.slider label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-weight:500}
+.slider label > span{font-size:14px;color:var(--ink-2)}
+.slider output{font:700 24px var(--display);font-variant-numeric:tabular-nums}
+.slider input{width:100%;margin:10px 0 4px;-webkit-appearance:none;appearance:none;height:10px;border-radius:5px;background:var(--track,var(--line));cursor:pointer}
+.slider input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--surface);border:3px solid var(--ink);cursor:grab}
+.slider input::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--surface);border:3px solid var(--ink);cursor:grab}
+.legend{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-3)}
+.legend .z{display:flex;gap:6px;align-items:center}
+.legend .z i{width:10px;height:10px;border-radius:3px;background:var(--mint)}
+.legend .z.r i{background:var(--rose)}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn.plus{font:700 16px var(--display);padding:10px 20px}
+.btn.plus:active{transform:scale(.96)}
+.verdict{border-radius:12px;padding:14px 16px;background:var(--mint-soft);display:flex;flex-direction:column;gap:2px}
+.verdict b{font:700 18px var(--display)}
+.verdict.bad{background:var(--rose-soft)}
+.verdict.bad b{color:var(--rose)}
+.lrow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15.5px}
+.lrow .v{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:14.5px}
+.lrow .sub{grid-column:1/-1;font-size:14px;color:var(--ink-3)}
+.lrow.first .sub{color:var(--rose);font-weight:600}
+.meter{grid-column:1/-1;height:10px;border-radius:5px;background:var(--paper);overflow:hidden}
+.meter span{display:block;height:100%;background:var(--mint)}
+.meter.warn span{background:var(--amber)}
+.meter.bad span{background:var(--rose)}
+.visit{border-top:1px dashed var(--line);padding-top:12px;font-size:15px;color:var(--ink-2)}
+.visit table{width:100%;border-collapse:collapse;margin-top:6px;font-size:14.5px}
+.visit td{padding:3px 0;font-variant-numeric:tabular-nums}
+.visit td:first-child{font-family:var(--mono);font-size:13px}
+.visit td+td{text-align:right}
+.visit td{white-space:nowrap}
+.visit td:first-child{max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+.visit td+td{padding-left:14px}
+.visit thead td{font-size:13px;color:var(--ink-3);font-family:var(--body)}
+.visit tr.tot td{border-top:1px solid var(--line);padding-top:6px;font-weight:600;color:var(--ink)}
+.note{font-size:13.5px;color:var(--ink-3)}
+.locked{color:var(--ink-2)}
+
+/* modal */
+dialog{border:0;border-radius:16px;padding:0;max-width:min(680px,calc(100% - 32px));width:100%;background:var(--surface);color:var(--ink);box-shadow:0 24px 60px rgba(10,20,40,.25)}
+dialog::backdrop{background:rgba(15,21,36,.45)}
+.mhead{display:flex;align-items:center;gap:10px;padding:18px 22px 0}
+.mhead h2{font:700 20px/1.25 var(--display);margin-right:auto}
+.x{border:0;background:var(--paper);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;flex:none}
+.mbody{padding:14px 22px 22px;display:flex;flex-direction:column;gap:14px;max-height:70vh;overflow:auto}
+.mbody h3{font-size:15px;font-weight:600;margin-bottom:2px}
+.mbody p,.mbody li{color:var(--ink-2)}
+.mbody ul{padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.mbody .out{font-size:15px;color:var(--ink-3)}
+.mbody code{font:14px var(--mono);color:var(--ink)}
+.mbody a{color:var(--cobalt)}
+.mfoot{padding:0 22px 20px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:99px;font-weight:600;font-size:15px;transition:.25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:900px){
+  .shell,.shell.nosde{grid-template-columns:minmax(0,1fr);gap:18px}
+  .resizer{display:none}
+  .side{position:static;max-height:none}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell" id="shell">
+  <div class="main">
+    <div class="top">
+      <div class="brand">Arma tu Despliegue <small>Versión React</small></div>
+      <button class="casebtn" id="casebtn">Ver caso</button>
+      <button class="casebtn" id="showside" hidden>Mostrar panel</button>
+    </div>
+    <div class="lab">
+      <section class="browser" aria-label="La app del caso">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <button class="reload" id="reload" aria-label="Recargar la página" title="Recargar">↻</button>
+          <div class="url" id="url"></div>
+        </div>
+        <div class="app" id="app"></div>
+      </section>
+      <section class="arch" aria-label="Arquitectura">
+        <div class="arch-head"><h2>Arquitectura</h2><span id="archaction"></span></div>
+        <svg id="dia" viewBox="0 0 370 192" role="group" aria-label="Diagrama de arquitectura. Toca una caja para saber qué es."><g id="base"></g><g id="dots"></g></svg>
+        <p class="tip">Toca una caja para saber qué hace.</p>
+        <div class="net"><h3>Peticiones HTTP</h3>
+          <div class="net-row net-head"><span>Método</span><span>Ruta</span><span>Estado</span><span>Tamaño</span></div>
+          <ul class="log" id="log" aria-label="Peticiones HTTP"></ul></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Cambiar el ancho del panel" tabindex="0"></div>
+
+  <aside class="side" id="side" aria-label="Misiones y límites">
+    <div class="side-head"><h2>Misiones</h2><button class="hide" id="hideside" aria-label="Ocultar panel" title="Ocultar panel">×</button></div>
+    <ol class="mlist" id="missions"></ol>
+    <p class="hintline" id="hint" aria-live="polite"></p>
+    <section class="limits" id="limits" aria-label="Visitas y límites"></section>
+  </aside>
+</div>
+
+<dialog id="modal" aria-labelledby="mtitle">
+  <div class="mhead"><h2 id="mtitle"></h2><button class="x" id="mclose" aria-label="Cerrar">×</button></div>
+  <div class="mbody" id="mbody"></div>
+  <div class="mfoot" id="mfoot"></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const nf = new Intl.NumberFormat('es-PE');
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const short = n => n >= 1e6 ? nf.format(+(n/1e6).toFixed(1)) + ' M' : n >= 1e4 ? nf.format(Math.round(n/1e3)) + ' mil' : nf.format(Math.round(n));
+const SITE = 'rgapdemo-selector-aleatorio-peliculas.vercel.app';
+
+/* ---------- caso de estudio ---------- */
+const CASE = {
+  title:'Caso 1: selector aleatorio de películas',
+  problem:'Una persona tiene varias películas posibles para ver y quiere escoger una al azar. Se necesita una aplicación donde se pueda escribir una lista de títulos y obtener uno elegido al azar.',
+  scope:['La aplicación es de uso personal, para una sola persona a la vez. No hace falta iniciar sesión.','Los títulos solo existen mientras se está usando la aplicación en ese momento; no quedan guardados para después.','Todas las acciones las realiza la persona usuaria.'],
+  out:'Cuentas de usuario, historial de elecciones anteriores, listas guardadas de películas, filtros, puntuaciones, recomendaciones e integración con otras aplicaciones o servicios.',
+  roles:'<b>Usuario:</b> escribe las películas candidatas y pide que se elija una al azar.',
+};
+
+/* ---------- qué es cada caja ---------- */
+const INFO = {
+  nav:['Navegador','<p>Es Chrome, Safari o cualquier navegador de la persona usuaria. Descarga los archivos de la app y los ejecuta.</p><p>La app es solo frontend, hecha con <b>React 19</b>. Al pulsar <b>Elegir película</b>, React elige al azar dentro del navegador, sin pedirle nada a ningún servidor. Por eso elegir no gasta nada del plan.</p>'],
+  gh:['GitHub','<p>Guarda el código de la app: <code>index.html</code> (la página), <code>style.css</code> (los estilos) y <code>client-api.js</code> (el JavaScript que elige la película).</p><p>Vercel está conectado al repositorio: cada vez que haces <code>git push</code>, publica la versión nueva.</p>'],
+  host:['Vercel Hobby',`<p>Entrega los archivos de la app a quien entra a la URL. No ejecuta código tuyo: solo sirve archivos.</p>
+    <p>Por dentro, Vercel copia tus archivos en servidores de muchos países. A esa red de copias se le llama <b>CDN</b> (red de entrega de contenido): cada visitante descarga del servidor más cercano.</p>
+    <div><h3>Lo que incluye gratis cada 30 días</h3><ul>
+      <li><b>1,000,000 de peticiones</b>: cada archivo que pide un navegador cuenta una.</li>
+      <li><b>100 GB de transferencia</b>: lo que pesan esos archivos al viajar.</li>
+      <li><b>100 despliegues por día.</b></li>
+    </ul></div>
+    <div><h3>¿Cómo se cuenta el "mes"?</h3><p>No es el mes del calendario. Vercel suma lo usado en los <b>últimos 30 días</b>, una ventana que avanza día a día: hoy cuenta desde hace 30 días hasta hoy; mañana, un día más adelante.</p></div>
+    <div><h3>Si te pasas</h3><p>No te cobra: el proyecto se pausa. Vuelve cuando lo usado en los últimos 30 días baja otra vez del límite, a medida que los días con más tráfico quedan fuera de la ventana. Vercel dice que, en la mayoría de los casos, eso significa esperar 30 días.</p></div>
+    <p>Además, Hobby es solo para uso personal y no comercial.</p>
+    <p class="out">Fuentes: <a href="https://vercel.com/docs/plans/hobby" target="_blank" rel="noopener">vercel.com/docs/plans/hobby</a> y <a href="https://community.vercel.com/t/what-to-do-when-your-team-is-paused-or-blocked/45069" target="_blank" rel="noopener">guía de Vercel sobre equipos pausados</a>, revisadas el 22-09-2026.</p>`],
+};
+
+/* ---------- lo que pesa una visita (bytes transferidos, con cabeceras) ---------- */
+// [archivo, primera visita (200), al recargar (304: el navegador ya lo tiene)]
+const FILES = [['/', 1200, 100], ['/style.css', 800, 100], ['/client-api.js', 1300, 100]];
+const FIRST_KB = FILES.reduce((a, f) => a + f[1], 0) / 1000, AGAIN_KB = FILES.reduce((a, f) => a + f[2], 0) / 1000;
+// Para el límite se cuenta cada visita como primera visita: es el peor caso.
+const PER_VISIT = {req:FILES.length, gb:FIRST_KB / 1e6};
+const HOBBY = {gb:100, req:1e6};    // límites mensuales de referencia (sep. 2026)
+const MAX_VISITS = 400000;
+
+/* ---------- estado ---------- */
+const S = {cached:false, deployed:false, busy:false, visits:0, text:'', result:null, error:null, f:{picked:false, deployed:false, limit:false}};
+function limits(){
+  const v = S.visits;
+  return [
+    {k:'req', name:'Peticiones', used:v*PER_VISIT.req, max:HOBBY.req, fmt:short, breakAt:HOBBY.req / PER_VISIT.req},
+    {k:'gb', name:'Transferencia', used:v*PER_VISIT.gb, max:HOBBY.gb, fmt:g => g < .001 ? nf.format(+(g*1e6).toFixed(1)) + ' KB' : g < 1 ? nf.format(Math.round(g*1000)) + ' MB' : nf.format(+g.toFixed(1)) + ' GB', breakAt:HOBBY.gb / PER_VISIT.gb},
+  ];
+}
+const first = () => limits().reduce((a, b) => a.breakAt < b.breakAt ? a : b);
+const paused = () => S.deployed && limits().some(l => l.used > l.max);
+
+/* ---------- misiones ---------- */
+const MISSIONS = [
+  ['Prueba la app', () => S.f.picked, 'Pulsa <span>Datos demo</span> (o escribe tus películas) y luego <span>Elegir película</span>.'],
+  ['Despliégala', () => S.f.deployed, 'Solo existe en tu laptop. Pulsa <span>Desplegar en Vercel Hobby</span>.'],
+  ['Encuentra el límite', () => S.f.limit, 'Todavía nadie entra. Pulsa <span>+ 1 visita</span> o mueve la barra: ¿en qué momento deja de ser gratis?'],
+];
+let prevDone = null;
+function renderMissions(){
+  const done = MISSIONS.map(m => m[1]());
+  const now = done.indexOf(false);
+  $('#missions').innerHTML = MISSIONS.map((m, i) => `<li class="${done[i] ? 'done' : i === now ? 'now' : ''}"><b>${done[i] ? '✓' : i + 1}</b>${m[0]}</li>`).join('');
+  $('#hint').innerHTML = now < 0 ? `Encontraste el límite: cada visita hace ${PER_VISIT.req} peticiones, así que Vercel Hobby aguanta unas ${short(first().breakAt)} visitas gratis cada 30 días.` : MISSIONS[now][2];
+  const fresh = prevDone ? done.findIndex((d, i) => d && !prevDone[i]) : -1;
+  if (fresh >= 0) toast('Misión cumplida: ' + MISSIONS[fresh][0]);
+  prevDone = done;
+}
+
+/* ---------- modal ---------- */
+const modal = $('#modal');
+function openCase(){
+  $('#mtitle').textContent = CASE.title;
+  $('#mbody').innerHTML = `<div><h3>Problema</h3><p>${CASE.problem}</p></div>
+    <div><h3>Alcance y supuestos</h3><ul>${CASE.scope.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    <p class="out">Fuera de alcance: ${CASE.out}</p>
+    <div><h3>Roles</h3><p>${CASE.roles}</p></div>`;
+  $('#mfoot').innerHTML = `<button class="btn" data-close>${S.f.picked ? 'Entendido' : 'Empezar'}</button>`;
+  if (!modal.open) modal.showModal();
+}
+function openInfo(k){
+  const [t, html] = INFO[k];
+  $('#mtitle').textContent = t; $('#mbody').innerHTML = html;
+  $('#mfoot').innerHTML = `<button class="btn" data-close>Entendido</button>`;
+  if (!modal.open) modal.showModal();
+}
+
+/* ---------- la app (réplica del sitio publicado) ---------- */
+function renderUrl(){ $('#url').innerHTML = S.deployed ? `https://<b>${SITE}</b>` : 'http://<b>localhost:3000</b>'; }
+function renderApp(){
+  const app = $('#app');
+  const p = paused();
+  app.innerHTML = `<main ${p ? 'inert aria-hidden="true"' : ''}>
+    <h1>Selector aleatorio de películas</h1>
+    <p class="intro">Escribe una película por línea y deja la elección al azar.</p>
+    <form id="selector-form" class="card">
+      <label for="peliculas">Películas candidatas</label>
+      <textarea id="peliculas" rows="4" placeholder="El viaje de Chihiro&#10;Interestelar&#10;Parásitos">${esc(S.text)}</textarea>
+      <div class="actions"><button type="submit">Elegir película</button><button id="usar-demo" class="secondary" type="button">Datos demo</button></div>
+    </form>
+    ${S.result ? `<section class="result" aria-live="polite"><span>La película elegida es</span><strong>${esc(S.result)}</strong></section>` : ''}
+    ${S.error ? `<p class="error" role="alert">${esc(S.error)}</p>` : ''}
+  </main>${p ? `<div class="paused" role="alert"><b>Sitio pausado</b><p>Este proyecto pasó el límite de ${first().name.toLowerCase()} del plan gratis. Nadie puede entrar hasta que lo usado en los últimos 30 días baje del límite.</p></div>` : ''}`;
+}
+// Misma lógica que la app: se queda con los títulos no vacíos y elige uno al azar
+function seleccionar(peliculas){
+  const movies = peliculas.filter(t => typeof t === 'string' && t.trim()).map(t => t.trim());
+  if (!movies.length) return {status:400, data:{error:'Escribe al menos una película para poder elegir.'}};
+  return {status:200, data:{pelicula:movies[Math.floor(Math.random() * movies.length)]}};
+}
+
+/* ---------- diagrama ---------- */
+const POS = {nav:[80,40], host:[290,40], gh:[290,158]};
+const NW = 150, NH = 58;
+function node(k, t, s, cls, clickable = true){
+  const [x, y] = POS[k];
+  return `<g class="n ${cls}" data-n="${k}" ${clickable ? `tabindex="0" role="button" aria-label="Qué es ${t}"` : ''}><rect x="${x - NW/2}" y="${y - NH/2}" width="${NW}" height="${NH}" rx="10"/><text class="t" x="${x}" y="${y - 3}">${t}</text><text class="s" x="${x}" y="${y + 15}">${s}</text>${clickable ? `<text class="i" x="${x + NW/2 - 12}" y="${y - NH/2 + 16}">?</text>` : ''}</g>`;
+}
+function seg(a, b){
+  const [ax, ay] = POS[a], [bx, by] = POS[b];
+  if (ay === by){ const d = Math.sign(bx - ax); return [ax + d*NW/2, ay, bx - d*NW/2, by]; }
+  const d = Math.sign(by - ay); return [ax, ay + d*NH/2, bx, by - d*NH/2];
+}
+function line(a, b, cls = ''){ const [x1, y1, x2, y2] = seg(a, b); return `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`; }
+function renderDiagram(){
+  const dep = S.deployed;
+  let g = line('nav', 'host', dep ? '' : 'dash') + line('gh', 'host', dep ? '' : 'dash');
+  g += node('nav', 'Navegador', 'de quien visita', '');
+  g += dep ? node('host', 'Vercel Hobby', paused() ? 'pausado' : 'entrega la app', paused() ? 'paused' : 'host')
+           : node('host', 'Tu laptop', 'sin desplegar', 'local', false);
+  g += node('gh', 'GitHub', 'tu código', '');
+  $('#base').innerHTML = g;
+  $('#archaction').innerHTML = dep ? `<span class="done">${paused() ? '' : '✓ En línea'}</span>` : `<button class="btn" id="dodeploy" ${S.busy ? 'disabled' : ''}>Desplegar en Vercel Hobby</button>`;
+}
+function move(a, b, cls = '', label = '', dur = 520){
+  if (reduced) return Promise.resolve();
+  const [x1, y1, x2, y2] = seg(a, b), NS = 'http://www.w3.org/2000/svg';
+  const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 7); c.setAttribute('class', 'd ' + cls);
+  const t = label ? document.createElementNS(NS, 'text') : null;
+  if (t){ t.setAttribute('class', 'dl'); t.textContent = label; }
+  $('#dots').append(c); if (t) $('#dots').append(t);
+  return new Promise(res => {
+    const t0 = performance.now();
+    (function step(now){
+      const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+      const x = x1 + (x2 - x1)*e, y = y1 + (y2 - y1)*e;
+      c.setAttribute('cx', x); c.setAttribute('cy', y);
+      if (t){ t.setAttribute('x', x + 10); t.setAttribute('y', y - 11); }
+      if (k < 1) requestAnimationFrame(step); else { c.remove(); t && t.remove(); res(); }
+    })(t0);
+  });
+}
+function flash(k){ const n = document.querySelector(`[data-n="${k}"]`); if (!n) return; n.classList.add('flash'); setTimeout(() => n.classList.remove('flash'), 500); }
+// Registro de red: solo peticiones HTTP, la más nueva arriba
+function visitRows(isPaused, cached = false){
+  if (isPaused) return [['GET', '/', 402, null]];   // DEPLOYMENT_DISABLED
+  return FILES.map(f => ['GET', f[0], cached ? 304 : 200, cached ? f[2] : f[1]]);
+}
+function http(rows){
+  const ul = $('#log');
+  rows.slice().reverse().forEach(([m, path, st, bytes]) => {
+    const li = document.createElement('li'); li.className = 'net-row fresh';
+    li.innerHTML = `<span>${m}</span><span>${path}</span><span class="st-${st}">${st}</span><span>${bytes == null ? '—' : nf.format(+(bytes/1000).toFixed(1)) + ' KB'}</span>`;
+    ul.prepend(li);
+  });
+  while (ul.children.length > 30) ul.lastChild.remove();
+}
+
+/* ---------- acciones ---------- */
+function submit(){
+  S.text = $('#peliculas').value;
+  const {status, data} = seleccionar(S.text.split('\n'));
+  if (status === 200){
+    S.result = data.pelicula; S.error = null;
+    if (S.text.split('\n').filter(t => t.trim()).length >= 2) S.f.picked = true;
+  } else { S.result = null; S.error = data.error; }
+  renderApp(); renderMissions();
+}
+async function reload(){
+  if (S.busy) return;
+  S.result = null; S.error = null; S.text = '';
+  if (S.deployed){
+    const kb = n => nf.format(+n.toFixed(1)) + ' KB';
+    if (paused()) http(visitRows(true));
+    else { http(visitRows(false, S.cached)); S.cached = true; }
+    await move('nav', 'host', paused() ? 'bad' : '', `${PER_VISIT.req} peticiones`); flash('host');
+    if (!paused()) await move('host', 'nav', 'ok');
+  } else http(visitRows(false, false));
+  renderApp();
+}
+async function deploy(){
+  if (S.busy) return; S.busy = true; renderDiagram();
+  await move('gh', 'host', '', 'git push', 700);
+  await wait(reduced ? 0 : 500);
+  S.deployed = true; S.busy = false; S.f.deployed = true;
+  renderDiagram(); renderUrl(); renderApp(); renderLimits(); renderMissions(); flash('host');
+}
+
+/* ---------- límites ---------- */
+function renderLimits(){
+  if (!S.deployed){
+    $('#limits').innerHTML = `<div class="col"><h2>Límites del plan Hobby</h2><p class="locked">Mientras la app viva en tu laptop, nadie más puede entrar. Despliégala para ver cuántas visitas aguanta gratis.</p></div>`;
+    return;
+  }
+  $('#limits').innerHTML = `<div class="col">
+      <h2>Visitas</h2>
+      <div class="slider"><label for="x"><span>Visitas en los últimos 30 días</span><output id="xo"></output></label>
+        <input type="range" id="x" min="0" max="${MAX_VISITS}" step="1" value="${S.visits}">
+        <div class="legend"><span class="z"><i></i>Gratis</span><span class="z r"><i></i>Se pausa</span></div></div>
+      <div class="row-btns"><button class="btn plus" id="plus" aria-label="Sumar una visita">+ 1 visita</button></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+    <div class="col"><h2>Límites del plan Hobby</h2><div class="col" id="lrows" style="gap:12px"></div>
+      <div class="visit">Cada visita pide estos ${PER_VISIT.req} archivos:
+        <table><thead><tr><td></td><td>Primera vez</td><td>Al recargar</td></tr></thead><tbody>${FILES.map(f => `<tr><td>${f[0]}</td><td>${nf.format(+(f[1]/1000).toFixed(1))} KB</td><td>${nf.format(+(f[2]/1000).toFixed(1))} KB</td></tr>`).join('')}
+        <tr class="tot"><td>${PER_VISIT.req} peticiones</td><td>${nf.format(+FIRST_KB.toFixed(1))} KB</td><td>${nf.format(+AGAIN_KB.toFixed(1))} KB</td></tr></tbody></table></div>
+      </div>`;
+  updateLimits();
+}
+function updateLimits(){
+  if (!$('#x')) return;
+  const L = limits(), fb = first(), bx = Math.min(100, fb.breakAt / MAX_VISITS * 100);
+  $('#x').value = S.visits;
+  $('#xo').textContent = nf.format(S.visits);
+  $('#x').style.setProperty('--track', `linear-gradient(90deg,var(--mint) 0 ${bx}%,var(--rose) ${bx}% 100%)`);
+  const over = L.filter(l => l.used > l.max);
+  $('#verdict').className = 'verdict' + (over.length ? ' bad' : '');
+  $('#verdict').innerHTML = over.length
+    ? `<b>Sitio pausado</b><span class="muted">Pasaste el límite de ${over[0].name.toLowerCase()}: ${over[0].fmt(over[0].max)} cada 30 días.</span>`
+    : `<b>US$ 0</b><span class="muted">Gratis hasta ~${short(fb.breakAt)} visitas. Lo primero que se acaba: ${fb.name.toLowerCase()}.</span>`;
+  $('#lrows').innerHTML = L.map(l => {
+    const pct = Math.min(100, l.used / l.max * 100);
+    return `<div class="lrow ${l.k === fb.k ? 'first' : ''}"><span>${l.name}</span><span class="v">${l.fmt(l.used)} / ${l.fmt(l.max)}</span>
+      <div class="meter ${pct >= 100 ? 'bad' : pct >= 75 ? 'warn' : ''}"><span style="width:${pct > 0 ? Math.max(pct, .6) : 0}%"></span></div>
+      <span class="sub">${l.k === fb.k ? 'Se acaba primero: ' : 'Se acaba en '}~${short(l.breakAt)} visitas</span></div>`;
+  }).join('');
+}
+function setVisits(v){
+  const was = paused();
+  S.visits = v;
+  if (paused()) S.f.limit = true;
+  updateLimits();
+  if (was !== paused()){
+    renderDiagram(); renderApp();
+  }
+  renderMissions();
+}
+
+/* tráfico ambiental: más puntos cuantas más visitas */
+let acc = 0;
+setInterval(() => {
+  if (reduced || !S.deployed || document.hidden || !S.visits) return;
+  acc += (.4 + S.visits / MAX_VISITS * 7) * .15;
+  if ($('#dots').childElementCount > 40) return;
+  while (acc >= 1){ acc--; move('nav', 'host', paused() ? 'bad' : '', '', 650 + Math.random()*250); }
+}, 150);
+
+let tt;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }
+
+/* ---------- eventos ---------- */
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'selector-form') return;
+  e.preventDefault(); submit();
+});
+document.addEventListener('click', e => {
+  const n = e.target.closest('#dia .n[tabindex]');
+  if (n){ openInfo(n.dataset.n); return; }
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'usar-demo'){
+    S.text = 'El viaje de Chihiro\nInterestelar\nParásitos\nVolver al futuro'; S.result = null; S.error = null;
+    renderApp(); $('#peliculas').focus();
+  }
+  else if (b.id === 'reload') reload();
+  else if (b.id === 'dodeploy') deploy();
+  else if (b.id === 'plus'){
+    http(visitRows(paused())); setVisits(S.visits + 1);
+    move('nav', 'host', paused() ? 'bad' : '', `${PER_VISIT.req} peticiones`, 600);
+  }
+  else if (b.id === 'casebtn') openCase();
+  else if (b.id === 'mclose' || 'close' in b.dataset) modal.close();
+});
+document.addEventListener('keydown', e => {
+  const n = e.target.closest && e.target.closest('#dia .n[tabindex]');
+  if (n && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openInfo(n.dataset.n); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'peliculas') S.text = e.target.value;
+  if (e.target.id === 'x'){ setVisits(+e.target.value); }
+});
+modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+
+
+/* ---------- panel derecho: ocultar y cambiar ancho ---------- */
+const shell = $('#shell');
+const pref = (() => { try { return JSON.parse(localStorage.getItem('arma-panel') || '{}'); } catch(e){ return {}; } })();
+const savePref = () => { try { localStorage.setItem('arma-panel', JSON.stringify(pref)); } catch(e){} };
+function setSide(w){ pref.w = Math.round(Math.min(Math.max(w, 300), Math.min(720, innerWidth * .6))); shell.style.setProperty('--side', pref.w + 'px'); }
+function setHidden(h){ pref.hidden = h; shell.classList.toggle('nosde', h); $('#showside').hidden = !h; }
+if (pref.w) setSide(pref.w);
+setHidden(!!pref.hidden);
+$('#hideside').addEventListener('click', () => { setHidden(true); savePref(); $('#showside').focus(); });
+$('#showside').addEventListener('click', () => { setHidden(false); savePref(); $('#hideside').focus(); });
+const rz = $('#resizer');
+rz.addEventListener('pointerdown', e => {
+  rz.setPointerCapture(e.pointerId); rz.classList.add('drag');
+  const right = shell.getBoundingClientRect().right;
+  const mv = ev => setSide(right - ev.clientX - 7);
+  const up = () => { rz.classList.remove('drag'); rz.removeEventListener('pointermove', mv); rz.removeEventListener('pointerup', up); savePref(); };
+  rz.addEventListener('pointermove', mv); rz.addEventListener('pointerup', up);
+});
+rz.addEventListener('keydown', e => {
+  const cur = pref.w || $('#side').offsetWidth;
+  if (e.key === 'ArrowLeft'){ setSide(cur + 20); savePref(); e.preventDefault(); }
+  if (e.key === 'ArrowRight'){ setSide(cur - 20); savePref(); e.preventDefault(); }
+});
+
+/* ---------- inicio ---------- */
+renderUrl(); renderApp(); renderDiagram(); renderLimits(); renderMissions();
+openCase();
+})();
+</script>

@@ -1,0 +1,324 @@
+% Motor: XeLaTeX. Sesion 13 - material docente UTP.
+% Misma estructura docente que la Sesion 12.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Dónde se despliega hoy, qué cobran y cómo empezar con Google Skills}
+\date{Semana 07 - Sesión 13}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}[c]{Revisión de la sesión anterior}
+\begin{block}{La sesión anterior}
+\small Vimos \textbf{on-premise}, \textbf{IaaS}, \textbf{PaaS} y \textbf{SaaS} con la historia del clipero, y las cuatro piezas de un despliegue: frontend, backend, base de datos y almacenamiento.
+\end{block}
+\begin{alertblock}{Pregunta rápida}
+\small Subes tu código a una plataforma y te devuelve una dirección web. ¿Qué modelo es?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás nombrar los servicios de despliegue más usados, leer los \textbf{límites del plan gratuito} de cualquiera de ellos y comenzar la ruta \textbf{Introducción a Google Cloud} en Google Skills.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item ¿Qué servicio usarías hoy para publicar una página web gratis?
+  \item Si un servicio dice ``gratis'', ¿qué crees que te limita?
+  \item ¿Alguna vez hiciste un curso con práctica en una cuenta real, no solo videos?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.86\textwidth}
+{\large Saber qué cobra cada servicio evita sorpresas en la tarjeta. Y Google Skills te deja practicar en Google Cloud real, con una cuenta temporal que no pagas tú.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries ¿Dónde se despliega en 2026?}\par
+\vspace{2mm}
+{\small Los servicios más usados y lo que cobran}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Las nubes grandes, de más a menos usada}
+\begin{block}{Idea clave}
+\small Son los proveedores que tienen \textbf{de todo}: máquinas, bases de datos, almacenamiento, IA. Las empresas grandes suelen elegir una de estas.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{0.5cm}p{4.8cm}p{7.6cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Proveedor} & \textbf{En una frase}\\
+\midrule
+1 & Amazon Web Services (AWS) & El más antiguo y el más usado. Tiene la mayor cantidad de servicios.\\
+2 & Microsoft Azure & Muy usado en empresas que ya trabajan con Windows y Office.\\
+3 & Google Cloud (GCP) & Fuerte en datos, contenedores e IA. Es el que usamos en el curso.\\
+4 & Otros: Oracle Cloud, DigitalOcean & Más pequeños. DigitalOcean es popular por ser simple y barato.\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\footnotesize El orden sigue las encuestas de desarrolladores (Stack Overflow) y la cuota de mercado. Puede variar según el país y el año.
+\end{frame}
+
+\begin{frame}{Las plataformas para desarrolladores, de más a menos usada}
+\begin{block}{Idea clave}
+\small Son más sencillas: conectas tu repositorio de \texttt{git} y en minutos tienes una dirección web. Casi todas son \textbf{PaaS} y tienen plan gratuito.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Para el frontend}
+\small
+\textbf{1. Vercel:} la más usada para páginas hechas con React o Next.js.\par\smallskip
+\textbf{2. Cloudflare Pages:} muy rápida y generosa en tráfico.\par\smallskip
+\textbf{3. Netlify:} simple, arrastras una carpeta y queda publicada.\par\smallskip
+\textbf{4. GitHub Pages:} gratis para páginas sin backend.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Para backend y datos}
+\small
+\textbf{1. Firebase} (Google): base de datos, usuarios y hosting.\par\smallskip
+\textbf{2. Supabase:} base de datos PostgreSQL lista para usar.\par\smallskip
+\textbf{3. Render} y \textbf{Railway:} ejecutan tu backend.\par\smallskip
+\textbf{4. Cloud Run} (Google): ejecuta tu backend en un contenedor.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Qué cobran (1/4): tiempo de cómputo}
+\begin{block}{Qué es}
+\small El \textbf{tiempo que tu programa está trabajando}. Es como un taxi: se paga mientras el taxímetro corre.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cómo lo verás escrito}
+\small
+\textbf{Horas de instancia:} cuántas horas está encendido tu servidor. Render regala 750 al mes.\par\smallskip
+\textbf{Solicitudes:} cuántas veces alguien llama a tu programa. Cloud Run regala 2 millones al mes.\par\smallskip
+\textbf{vCPU-segundo:} un procesador trabajando un segundo.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Por qué importa}
+\small Un mes tiene unas 730 horas. Con 750 horas gratis alcanza para \textbf{un} servidor encendido todo el mes, no para dos.
+\end{block}
+\begin{alertblock}{La trampa}
+\small Un programa con un error que se repite sin parar puede gastar el mes entero en un día.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Qué cobran (2/4): transferencia de datos}
+\begin{block}{Qué es}
+\small Los datos que \textbf{salen} de tu servicio hacia tus usuarios: cada página, imagen o video que descargan. En inglés: \emph{bandwidth} o \emph{egress}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Un ejemplo para calcular}
+\small Tu página pesa 2 MB. Si la visitan 50\,000 veces en el mes:\par\smallskip
+$2 \text{ MB} \times 50\,000 = 100\,000 \text{ MB} = \mathbf{100 \text{ GB}}$\par\smallskip
+Ese es justo el límite gratuito típico de Vercel.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Lo que casi siempre pasa}
+\small Lo que \textbf{entra} (subir datos) suele ser gratis. Lo que \textbf{sale} es lo que se cobra.
+\end{block}
+\begin{alertblock}{La trampa}
+\small Los videos y las imágenes grandes gastan la transferencia muy rápido. Optimiza las imágenes antes de publicar.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Qué cobran (3/4): compilaciones y despliegues}
+\begin{block}{Qué es}
+\small Cada vez que subes un cambio, la plataforma \textbf{prepara tu proyecto}: instala dependencias y genera los archivos finales. A eso se le llama \textbf{build} o compilación.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cómo lo verás escrito}
+\small
+\textbf{Minutos de build al mes:} cuánto tiempo total puede pasar preparando tu proyecto.\par\smallskip
+\textbf{Builds al mes:} cuántas veces puedes desplegar. Cloudflare Pages permite 500.\par\smallskip
+\textbf{Builds a la vez:} en el plan gratuito, normalmente uno.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Por qué importa}
+\small Si haces \texttt{git push} cada cinco minutos, cada push es un build nuevo.
+\end{block}
+\begin{alertblock}{La trampa}
+\small Un proyecto con muchas dependencias tarda más en compilar y gasta más minutos.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Qué cobran (4/4): almacenamiento y datos}
+\begin{block}{Qué es}
+\small Lo que \textbf{guardas}: archivos y filas de la base de datos. Se mide en GB guardados al mes y, a veces, en lecturas y escrituras.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cómo lo verás escrito}
+\small
+\textbf{GB al mes:} Supabase regala 500 MB de base de datos.\par\smallskip
+\textbf{Lecturas y escrituras:} Firestore regala 50\,000 lecturas al día.\par\smallskip
+\textbf{Crédito inicial:} Google Cloud da 300 dólares para usar en 90 días.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Lo que no te cobran, pero te limita}
+\small
+\textbf{Se duerme:} en Render, si nadie entra en 15 minutos, tu backend se apaga y la siguiente visita tarda.\par\smallskip
+\textbf{Se pausa:} en Supabase, un proyecto sin uso por una semana se pausa.
+\end{alertblock}
+\begin{block}{Regla de oro}
+\small Los límites cambian seguido. Revisa siempre la página de \textbf{precios} (\emph{Pricing}) antes de elegir.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Google Skills}\par
+\vspace{2mm}
+{\small Aprender Google Cloud practicando en Google Cloud}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{¿Qué es Google Skills?}
+\begin{block}{Definición}
+\small La plataforma de cursos de Google, en \texttt{skills.google}. Reúne cerca de \textbf{3000 cursos y laboratorios} de Google Cloud, Google DeepMind, Grow with Google y Google for Education.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Lo que encuentras}
+\small
+\textbf{Cursos:} videos cortos con preguntas.\par\smallskip
+\textbf{Laboratorios (labs):} práctica guiada en Google Cloud real.\par\smallskip
+\textbf{Insignias (skill badges):} premio digital al completar un reto.\par\smallskip
+\textbf{Rutas de aprendizaje:} cursos y labs en un orden sugerido.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Cómo funciona un laboratorio}
+\small Presionas \textbf{Start Lab} y recibes un usuario y una contraseña \textbf{temporales} de Google Cloud. Tienes un reloj en cuenta regresiva. Al terminar, la cuenta se borra.
+\end{block}
+\begin{alertblock}{Lo mejor para empezar}
+\small No usas tu tarjeta ni tu cuenta: nada de lo que hagas en un lab te genera cobros.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{De Qwiklabs a Google Skills: la historia}
+\begin{block}{Un mismo sitio con tres nombres}
+\small Si ves \texttt{qwiklabs.com}, \texttt{cloudskillsboost.google} o \texttt{skills.google}, es la misma plataforma.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{2.3cm}p{10.6cm}@{}}
+\toprule
+\textbf{Año} & \textbf{Qué pasó}\\
+\midrule
+2012 & Nace \textbf{Qwiklabs}, una empresa pequeña de laboratorios prácticos, al inicio para aprender \textbf{AWS}.\\
+Nov. 2016 & \textbf{Google compra Qwiklabs} y la dedica a enseñar Google Cloud.\\
+Dic. 2021 & Cambia de nombre a \textbf{Google Cloud Skills Boost}, con unos 700 labs, cursos e insignias.\\
+Oct. 2025 & Pasa a llamarse \textbf{Google Skills} (\texttt{skills.google}) y suma cursos de IA, DeepMind y más.\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\footnotesize Por eso la ayuda oficial todavía está en \texttt{support.google.com/qwiklabs}.
+\end{frame}
+
+\begin{frame}{Ruta de aprendizaje: Introducción a Google Cloud}
+\begin{block}{Qué es}
+\small Una ruta para principiantes de \textbf{6 actividades} en \texttt{skills.google/paths/8}. No necesitas saber nada de nube.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Lo principal que incluye}
+\small
+\textbf{Lab de bienvenida:} un recorrido por la consola, proyectos y permisos.\par\smallskip
+\textbf{Curso de fundamentos:} \emph{Google Cloud Fundamentals: Core Infrastructure}.\par\smallskip
+\textbf{Insignia:} crear máquinas virtuales y repartir el tráfico entre ellas.\par\smallskip
+\textbf{Insignia:} preparar un entorno de desarrollo con Cloud Storage.\par\smallskip
+\textbf{Curso:} introducción a la IA en Google Cloud.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{Qué conecta con el curso}
+\small Proyectos, máquinas virtuales (IaaS), almacenamiento y permisos: lo que usaremos en las siguientes sesiones.
+\end{block}
+\begin{alertblock}{Consejo}
+\small Empieza por el lab de bienvenida. Es corto y te enseña a usar todos los demás.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Práctica: tu primer laboratorio \textnormal{\small(20 min)}}
+\begin{block}{Pasos}
+\small
+1. Entra a \texttt{skills.google} con tu cuenta de Google.\par\smallskip
+2. Busca la ruta \textbf{Introducción a Google Cloud} y ábrela.\par\smallskip
+3. Abre el primer laboratorio y presiona \textbf{Start Lab}.\par\smallskip
+4. Abre la consola en una \textbf{ventana de incógnito} con el usuario temporal.\par\smallskip
+5. Sigue las instrucciones y presiona \textbf{Check my progress} en cada paso.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Por qué incógnito}
+\small Así no se mezcla con tu cuenta personal de Gmail.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Entregable}
+\small Una captura con el lab completado y tu nombre visible.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cierre: tres preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. Nombra una nube grande y una plataforma para desarrolladores. ¿Qué diferencia hay entre ellas?\par\medskip
+2. Tu página pesa 5 MB y el límite es 100 GB al mes. ¿Cuántas visitas aguanta, más o menos?\par\medskip
+3. ¿Por qué un laboratorio de Google Skills no te genera cobros?
+\end{block}
+\begin{alertblock}{Lo que viene}
+\small Seguimos la ruta en Google Skills y creamos nuestros primeros recursos en Google Cloud.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Stack Overflow Developer Survey, sección \emph{Cloud platforms}, \texttt{survey.stackoverflow.co}.
+  \item Páginas de precios de Vercel, Netlify, Cloudflare Pages, Render, Supabase y Firebase (consultadas en septiembre de 2026).
+  \item Google Cloud: \emph{Free Program} y precios de Cloud Run, \texttt{cloud.google.com/free}.
+  \item Google Skills: ruta \emph{Introducción a Google Cloud}, \texttt{skills.google/paths/8}.
+  \item Google Cloud Blog (2016): \emph{Welcome Qwiklabs to Google Cloud}. TechCrunch (21/11/2016): \emph{Google acquires Qwiklabs}.
+  \item Google Cloud Blog (2021): lanzamiento de \emph{Google Cloud Skills Boost}.
+  \item Y. Serhiichuk (2025): \emph{Google Skills --- an evolution of online learning}, Google Cloud Community.
+  \item Las respuestas de todas las preguntas de esta sesión están en \texttt{respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
