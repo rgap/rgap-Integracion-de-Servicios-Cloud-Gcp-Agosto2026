@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#5a44d6" />
+    <title>Estampa | Sitio en construcción</title>
+    <meta
+      name="description"
+      content="Estamos preparando nuestra tienda de polos temáticos. Mientras tanto, cotiza por WhatsApp."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Ruta relativa (sin "/" al inicio): funciona al abrir el archivo con doble clic,
+         en GitHub Pages (usuario.github.io/repositorio/) y en Vercel -->
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A7%3C/text%3E%3C/svg%3E"
+    />
+  </head>
+  <body class="public-page">
+    <header class="site-header">
+      <a class="public-brand" href="./" aria-label="Ir al inicio">
+        <span class="public-brand-mark" aria-hidden="true">E</span>
+        <span><strong>Estampa</strong><small>Polos temáticos</small></span>
+      </a>
+      <!-- script.js completa el href de todos los enlaces con class="js-whatsapp" -->
+      <a class="management-link js-whatsapp" href="#" target="_blank" rel="noopener"
+        >Cotizar por WhatsApp</a
+      >
+    </header>
+
+    <main>
+      <section class="hero hero-solo">
+        <div class="hero-content">
+          <span class="construccion-tag" aria-hidden="true">🚧 Sitio en preparación</span>
+          <p class="eyebrow">Volvemos muy pronto</p>
+          <h1>Estamos <em>en construcción</em></h1>
+          <p class="hero-copy">
+            Nuestra tienda en línea todavía está en preparación. Mientras tanto,
+            escríbenos por WhatsApp y con gusto te pasamos una cotización de los
+            polos que buscas.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link js-whatsapp" href="#" target="_blank" rel="noopener"
+              >Cotizar por WhatsApp <span aria-hidden="true">→</span></a
+            >
+          </div>
+        </div>
+      </section>
+      <div class="rule" role="presentation"></div>
+
+      <section class="catalog-cta">
+        <p class="eyebrow">Atención directa</p>
+        <h2>¿Ya sabes lo que quieres?</h2>
+        <div class="cotiza-cta">
+          <a
+            class="whatsapp-link js-whatsapp"
+            id="whatsapp-number"
+            href="#"
+            target="_blank"
+            rel="noopener"
+            >Escríbenos por WhatsApp</a
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="public-brand footer-brand" href="./">
+        <span class="public-brand-mark" aria-hidden="true">E</span>
+        <span><strong>Estampa</strong><small>Polos temáticos</small></span>
+      </a>
+      <p>Polos estampados por tema. Sin marcas, solo temas. — <span id="year"></span></p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

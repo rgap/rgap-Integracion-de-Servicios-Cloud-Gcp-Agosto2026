@@ -1,0 +1,598 @@
+% Motor: XeLaTeX. Sesion 14 - material docente UTP.
+% Misma estructura docente que la Sesion 13.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{WSL, sitios estáticos, IAM y servicios de Google Cloud}
+\date{Semana 07 - Sesión 14}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}[c]{Revisión de la sesión anterior}
+\begin{block}{La sesión anterior}
+\small Vimos los servicios de despliegue más usados, \textbf{qué cobran} en su plan gratuito (cómputo, transferencia, builds y almacenamiento) y empezamos la ruta \textbf{Introducción a Google Cloud} en Google Skills.
+\end{block}
+\begin{alertblock}{Pregunta rápida}
+\small Tu página pesa 2 MB y la visitan 50\,000 veces en un mes. ¿Cuántos GB de transferencia gastas?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar para qué sirve \textbf{WSL}, publicar una landing en \textbf{GitHub Pages} y en \textbf{Vercel}, dar permisos con \textbf{IAM}, \textbf{habilitar un servicio} de Google Cloud y crear tu primera \textbf{máquina virtual}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item Si usas Windows, ¿cómo practicarías comandos de Linux sin borrar tu sistema?
+  \item ¿Se puede crear una máquina virtual \textbf{dentro} de otra máquina virtual?
+  \item Si compartes tu proyecto de Google Cloud con un compañero, ¿le darías permiso para borrarlo todo?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.86\textwidth}
+{\large Hoy juntas las piezas del día a día: trabajar con Linux desde Windows, publicar una página en minutos y entrar a Google Cloud sabiendo quién puede hacer qué y qué servicios están encendidos.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% ------------------------------------------------------------------ WSL
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries WSL}\par
+\vspace{2mm}
+{\small Linux dentro de Windows}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}[fragile]{¿Qué es WSL?}
+\begin{block}{Definición}
+\small \textbf{WSL} (\emph{Windows Subsystem for Linux}) es una función de Windows que te deja usar \textbf{Linux real} (por ejemplo, Ubuntu) sin instalar otro sistema ni reiniciar la computadora.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small Es como tener un \textbf{departamento dentro de tu casa}: comparte la luz y el agua (tu procesador y tu memoria), pero adentro las reglas son de Linux.
+\end{exampleblock}
+\begin{block}{WSL 1 y WSL 2}
+\small \textbf{WSL 2} es la versión actual: usa un núcleo (\emph{kernel}) de Linux verdadero dentro de una máquina virtual muy ligera que Windows administra solo.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Instalarlo: una sola línea}
+\small En PowerShell como administrador:
+\begin{lstlisting}
+wsl --install
+\end{lstlisting}
+\small Reinicias, eliges un usuario y contraseña de Linux, y listo: tienes Ubuntu.
+\end{exampleblock}
+\begin{alertblock}{Dónde están tus archivos}
+\small Tu disco \texttt{C:} aparece en Linux como \texttt{/mnt/c}. Tu carpeta de Linux aparece en el Explorador de Windows como \emph{Linux}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Para qué sirve? ¿Solo para practicar Linux?}
+\begin{block}{Respuesta corta}
+\small Sirve para practicar, sí, pero sobre todo para \textbf{trabajar}: la mayoría de servidores en la nube usan Linux, y WSL te da ese mismo entorno en tu laptop con Windows.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Usos realistas}
+\small
+\textbf{Programar} en Python, Node.js o Go con las mismas herramientas que el servidor.\par\smallskip
+\textbf{Docker Desktop} en Windows usa WSL 2 por debajo.\par\smallskip
+\textbf{Herramientas de nube:} \texttt{gcloud}, \texttt{ssh}, \texttt{git} y scripts \texttt{bash}.\par\smallskip
+\textbf{VS Code} abre tus carpetas de Linux como si fueran locales.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Lo que no es}
+\small No es un servidor de producción: se apaga cuando cierras la laptop. Para publicar algo en Internet se usa la nube.
+\end{block}
+\begin{alertblock}{Consejo práctico}
+\small Guarda tus proyectos dentro de Linux (\texttt{\textasciitilde/proyectos}), no en \texttt{/mnt/c}: es mucho más rápido.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------ Virtualizacion anidada
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Virtualización anidada}\par
+\vspace{2mm}
+{\small Una máquina virtual dentro de otra}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{¿Qué es la virtualización anidada?}
+\begin{block}{Definición}
+\small Ejecutar una \textbf{máquina virtual dentro de otra máquina virtual}. Como las muñecas rusas (matrioskas): una dentro de otra.
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.50\textwidth}
+\centering
+\begin{tikzpicture}[font=\small,every node/.style={align=center}]
+  \draw[fill=utpGrisClaro,rounded corners=4pt] (0,0) rectangle (6.2,3.9);
+  \node[anchor=north west] at (0.15,3.85) {\textbf{Computadora física}};
+  \draw[fill=white,rounded corners=4pt] (0.4,0.3) rectangle (5.8,3.2);
+  \node[anchor=north west] at (0.55,3.15) {\textbf{VM 1:} Windows en la nube};
+  \draw[fill=utpRojo!15,draw=utpRojo,rounded corners=4pt] (0.8,0.6) rectangle (5.4,2.4);
+  \node at (3.1,1.5) {\textbf{VM 2:} WSL 2 o Docker\\dentro de la VM 1};
+\end{tikzpicture}
+\column{.46\textwidth}
+\begin{exampleblock}{Por qué no funciona siempre}
+\small Una VM necesita funciones especiales del procesador (\emph{VT-x} en Intel, \emph{AMD-V} en AMD). La VM 1 debe \textbf{recibir} esas funciones de la computadora física para poder crear la VM 2.
+\end{exampleblock}
+\begin{alertblock}{El costo}
+\small Cada capa agrega trabajo: la VM de adentro va \textbf{más lenta}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Cuándo se usa?}
+\begin{block}{Idea clave}
+\small No es algo de todos los días, pero aparece en situaciones muy concretas.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Casos reales}
+\small
+\textbf{WSL o Docker en una VM:} tu Windows es una VM (en la nube o en VirtualBox) y quieres usar WSL 2. WSL 2 ya es una VM, así que es anidada.\par\smallskip
+\textbf{Laboratorios y cursos:} cada alumno recibe una VM y dentro crea sus propias VMs.\par\smallskip
+\textbf{Probar software de virtualización} (como KVM) sin comprar servidores.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{En Google Cloud}
+\small Compute Engine permite activarla al crear una VM Linux, con procesadores Intel y el hipervisor KVM.
+\end{block}
+\begin{alertblock}{Error típico}
+\small ``WSL 2 requiere que la virtualización esté habilitada''. Si ves esto dentro de una VM, la anidada está apagada.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------ Sitios estaticos
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Despliegue de sitios estáticos}\par
+\vspace{2mm}
+{\small Primero GitHub Pages, luego Vercel}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{¿Qué es un sitio estático?}
+\begin{block}{Definición}
+\small Un sitio hecho solo de \textbf{archivos}: HTML, CSS, JavaScript e imágenes. El servidor no calcula nada; solo \textbf{entrega los archivos} tal como están.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small \textbf{Estático:} una carta impresa. Todos ven lo mismo.\par\smallskip
+\textbf{Dinámico:} un mozo que te pregunta y trae algo distinto a cada uno. Necesita backend y base de datos.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Quién hace el trabajo}
+\small En un sitio estático, el JavaScript corre en el \textbf{navegador del visitante}, no en un servidor tuyo.
+\end{block}
+\begin{alertblock}{Por eso es barato}
+\small No hay nada encendido esperando: GitHub Pages y Vercel lo publican gratis.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Nuestra landing: Estampa, ahora sin Python}
+\begin{block}{Idea clave}
+\small Es la landing ``en construcción'' de la \textbf{Práctica Calificada 1} (Sesión 10). Allí la servía \texttt{server.py}; hoy la dejamos en \textbf{solo tres archivos}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{exampleblock}{Antes (Sesión 10)}
+\begin{lstlisting}
+ecommerce_webapp/
+  server.py
+  static/index.html
+  static/style.css
+\end{lstlisting}
+\small \texttt{server.py} armaba el enlace de WhatsApp.
+\end{exampleblock}
+\column{.50\textwidth}
+\begin{exampleblock}{Ahora (Sesion14/apps/landing)}
+\begin{lstlisting}
+landing/
+  index.html  <- contenido
+  styles.css  <- diseño
+  script.js   <- enlace WhatsApp
+\end{lstlisting}
+\small El enlace lo arma \texttt{script.js} en el navegador.
+\end{exampleblock}
+\end{columns}
+\par\vspace{1mm}
+\begin{alertblock}{Lo que cambió en el HTML}
+\small Las rutas pasan de \texttt{/style.css} a \texttt{styles.css} (sin \texttt{/} al inicio). Así funciona en GitHub Pages, que publica en una subcarpeta.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{GitHub Pages: publicar desde tu repositorio}
+\begin{block}{Qué es}
+\small Un servicio \textbf{gratis} de GitHub que publica los archivos de un repositorio como página web.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Pasos}
+\small
+1. Crea un repositorio \textbf{público} y sube los tres archivos.\par\smallskip
+2. Entra a \textbf{Settings} $\rightarrow$ \textbf{Pages}.\par\smallskip
+3. En \emph{Source} elige \textbf{Deploy from a branch}.\par\smallskip
+4. Elige la rama \texttt{main} y la carpeta \texttt{/ (root)}. Guarda.\par\smallskip
+5. Espera uno o dos minutos y abre:\par
+\hspace{3mm}\texttt{https://usuario.github.io/repositorio/}
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{Límites del plan gratuito}
+\small Sitio de hasta \textbf{1 GB} y unos \textbf{100 GB} de transferencia al mes. Solo archivos estáticos.
+\end{block}
+\begin{alertblock}{Por qué \texttt{index.html}}
+\small Es el archivo que se abre cuando nadie pide uno en particular. Si se llama \texttt{inicio.html}, verás un error 404.\par\smallskip
+Y como el sitio vive en \texttt{/repositorio/}, una ruta \texttt{/styles.css} lo buscaría fuera: página sin estilos.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Vercel: el mismo sitio, otra plataforma}
+\begin{block}{Qué es}
+\small Una plataforma PaaS muy usada para frontend. Se conecta a tu repositorio de GitHub y \textbf{publica sola} cada vez que haces \texttt{git push}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{exampleblock}{Pasos}
+\small
+1. Entra a \texttt{vercel.com} con tu cuenta de GitHub.\par\smallskip
+2. \textbf{Add New} $\rightarrow$ \textbf{Project} e importa el repositorio.\par\smallskip
+3. En \emph{Framework Preset} deja \textbf{Other}: no hay nada que compilar.\par\smallskip
+4. Presiona \textbf{Deploy}.\par\smallskip
+5. Abre \texttt{https://tu-proyecto.vercel.app}.
+\end{exampleblock}
+\column{.44\textwidth}
+\begin{block}{Lo que ganas}
+\small Cada rama o \emph{pull request} recibe su propia dirección de \textbf{vista previa} (\emph{preview}) para revisar antes de publicar.
+\end{block}
+\begin{alertblock}{Plan Hobby}
+\small Gratis, pero solo para proyectos \textbf{personales, no comerciales}. Unos 100 GB de transferencia al mes.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{GitHub Pages o Vercel}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{3.6cm}p{4.6cm}p{4.6cm}@{}}
+\toprule
+& \textbf{GitHub Pages} & \textbf{Vercel}\\
+\midrule
+Qué publica & Solo archivos estáticos & Estáticos y también React, Next.js y funciones\\
+Cómo se actualiza & Al hacer push a la rama elegida & Al hacer push a cualquier rama\\
+Vista previa por rama & No & Sí\\
+Dirección & \texttt{usuario.github.io/repo} & \texttt{proyecto.vercel.app}\\
+Mejor para & Portafolios y documentación & Proyectos que van a crecer\\
+\bottomrule
+\end{tabular}
+\par\vspace{4mm}
+\begin{block}{Idea clave}
+\small Para tres archivos, las dos sirven igual. La diferencia aparece cuando el proyecto crece.
+\end{block}
+\end{frame}
+
+\begin{frame}{Práctica: publica la landing dos veces \textnormal{\small(20 min)}}
+\begin{block}{Pasos}
+\small
+1. Copia la carpeta \texttt{Sesion14/apps/landing} y ábrela: haz doble clic en \texttt{index.html}.\par\smallskip
+2. En \texttt{script.js} pon tu número de WhatsApp; en \texttt{styles.css} cambia el color \texttt{-{}-accent}.\par\smallskip
+3. Súbela a un repositorio público nuevo de GitHub.\par\smallskip
+4. Publícala en \textbf{GitHub Pages}.\par\smallskip
+5. Impórtala en \textbf{Vercel}. Haz un cambio, un \texttt{git push} y mira cómo se actualizan las dos.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Si no se ven los estilos}
+\small Revisa que los nombres coincidan exactamente (\texttt{styles.css} no es \texttt{Styles.css}) y que la ruta no empiece con \texttt{/}.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Entregable}
+\small Las dos direcciones: \texttt{github.io} y \texttt{vercel.app}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Probando Figma Education: una app con Supabase}
+\begin{block}{Idea clave}
+\small Una landing estática no guarda datos. Para probar un \textbf{backend} sin escribir un servidor, usamos \textbf{Figma Make} (con el plan educativo) conectado a \textbf{Supabase}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Las dos piezas}
+\small
+\textbf{Figma Education:} el plan de pago de Figma, \textbf{gratis} para estudiantes y docentes verificados (\texttt{figma.com/education}).\par\smallskip
+\textbf{Figma Make:} describes una app con palabras y la genera funcionando.\par\smallskip
+\textbf{Supabase:} base de datos PostgreSQL y usuarios (login), lista para usar.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Pruébalo}
+\small
+1. Solicita el plan educativo con tu correo de la universidad.\par\smallskip
+2. En Figma Make pide: \emph{``formulario de cotización de polos que guarde los pedidos''}.\par\smallskip
+3. Conecta Supabase cuando Figma lo pida y revisa la tabla creada.
+\end{block}
+\begin{alertblock}{Recuerda la Sesión 13}
+\small Supabase gratis: 500 MB de base de datos y el proyecto \textbf{se pausa} tras una semana sin uso.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------ IAM
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Google Cloud IAM}\par
+\vspace{2mm}
+{\small Quién puede hacer qué, y dónde}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{¿Qué es IAM?}
+\begin{block}{Definición}
+\small \textbf{IAM} (\emph{Identity and Access Management}) es el sistema de Google Cloud que decide \textbf{quién} puede hacer \textbf{qué} sobre \textbf{qué recurso}.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,fill=utpRojo!10,rounded corners=4pt,minimum width=3.5cm,minimum height=1.35cm,align=center}]
+  \node[caja] (q) at (0,0) {\textbf{Quién}\\\footnotesize principal};
+  \node[caja] (r) at (4.6,0) {\textbf{Qué puede hacer}\\\footnotesize rol};
+  \node[caja] (d) at (9.2,0) {\textbf{Dónde}\\\footnotesize recurso};
+  \draw[-latex,thick] (q) -- (r);
+  \draw[-latex,thick] (r) -- (d);
+  \node[anchor=north,font=\footnotesize] at ([yshift=-1mm]q.south) {ana@gmail.com};
+  \node[anchor=north,font=\footnotesize] at ([yshift=-1mm]r.south) {Visualizador (Viewer)};
+  \node[anchor=north,font=\footnotesize] at ([yshift=-1mm]d.south) {proyecto \texttt{mi-tienda}};
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small Un hotel: tu \textbf{tarjeta} (quién) abre tu habitación y el gimnasio (qué), pero no la cocina ni otras habitaciones.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Quién puede ser}
+\small Una cuenta de Google, un grupo o una \textbf{cuenta de servicio}: una ``cuenta para programas'', por ejemplo una VM que lee archivos.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Roles: paquetes de permisos}
+\begin{block}{Qué es un rol}
+\small Un \textbf{rol} es un grupo de permisos con nombre. No das permisos sueltos: das roles.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Tres tipos}
+\small
+\textbf{Básicos:} \emph{Propietario} (Owner), \emph{Editor} y \emph{Visualizador} (Viewer). Afectan a todo el proyecto.\par\smallskip
+\textbf{Predefinidos:} para un solo servicio. Ejemplo: \emph{Visualizador de objetos de Storage} solo puede ver archivos.\par\smallskip
+\textbf{Personalizados:} los armas tú, permiso por permiso.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Mínimo privilegio}
+\small Da \textbf{solo lo necesario} para la tarea. Si alguien solo mira reportes, no necesita ser Editor.
+\end{block}
+\begin{alertblock}{Cuidado con Owner}
+\small El propietario puede borrar el proyecto y dar permisos a otros. Úsalo solo para quien administra.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cómo dar acceso en la consola}
+\begin{block}{Pasos}
+\small
+1. Entra a \texttt{console.cloud.google.com} y elige tu \textbf{proyecto} arriba.\par\smallskip
+2. Menú $\rightarrow$ \textbf{IAM y administración} $\rightarrow$ \textbf{IAM}.\par\smallskip
+3. Presiona \textbf{Otorgar acceso} (\emph{Grant access}).\par\smallskip
+4. En \emph{Principales nuevas} escribe el correo de tu compañero.\par\smallskip
+5. Elige un rol, por ejemplo \textbf{Visualizador}, y presiona \textbf{Guardar}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Quitar el acceso}
+\small En la misma lista, el ícono del lápiz $\rightarrow$ eliminar el rol.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Si ``no funciona''}
+\small Los cambios pueden tardar unos minutos en aplicarse. Espera antes de volver a intentar.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------ Servicios
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Habilitar servicios}\par
+\vspace{2mm}
+{\small Encender solo lo que vas a usar}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{¿Por qué hay que habilitar servicios?}
+\begin{block}{Idea clave}
+\small En un proyecto nuevo, la mayoría de servicios están \textbf{apagados}. Antes de crear una VM o usar Cloud Run, debes \textbf{habilitar su API}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small Un departamento nuevo: la luz, el agua e Internet se \textbf{contratan} uno por uno. No pagas por el cable si no lo pediste.
+\end{exampleblock}
+\begin{block}{Qué es una API aquí}
+\small La ``puerta'' por la que la consola, \texttt{gcloud} o tu programa le piden cosas a un servicio. Ejemplo: \texttt{compute.googleapis.com} es Compute Engine.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El error que vas a ver}
+\small \emph{``API has not been used in project \ldots{} before or it is disabled''}. Traducción: enciéndela primero.
+\end{alertblock}
+\begin{block}{Antes de habilitar}
+\small Muchos servicios piden una \textbf{cuenta de facturación} vinculada, aunque uses el crédito gratis. Y necesitas un rol que lo permita, como Editor o Propietario.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Cómo habilitar un servicio}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Desde la consola}
+\small
+1. Menú $\rightarrow$ \textbf{APIs y servicios} $\rightarrow$ \textbf{Biblioteca}.\par\smallskip
+2. Busca \textbf{Compute Engine API}.\par\smallskip
+3. Presiona \textbf{Habilitar} y espera unos segundos.\par\smallskip
+4. Revísala en \textbf{APIs y servicios habilitados}.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Desde la terminal (Cloud Shell)}
+\begin{lstlisting}
+# Encender Compute Engine
+gcloud services enable compute.googleapis.com
+
+# Ver lo que ya esta encendido
+gcloud services list --enabled
+\end{lstlisting}
+\end{exampleblock}
+\end{columns}
+\par\vspace{2mm}
+\begin{block}{Relación con IAM}
+\small IAM decide \textbf{quién} puede usar un servicio. Habilitar decide \textbf{si el servicio existe} en tu proyecto. Necesitas las dos cosas.
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------ Google Skills
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Google Skills: crea una máquina virtual}\par
+\vspace{2mm}
+{\small Todo lo anterior, en un laboratorio real}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}[fragile]{Laboratorio: Crea una máquina virtual}
+\begin{block}{Qué es}
+\small Un laboratorio corto para principiantes en \texttt{skills.google/focuses/3563}. Creas una VM de Compute Engine (IaaS) y la conviertes en un servidor web.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{exampleblock}{Las tres tareas}
+\small
+\textbf{1.} Crear la VM \texttt{gcelab} desde la consola, marcando \textbf{Permitir tráfico HTTP}.\par\smallskip
+\textbf{2.} Entrar por SSH e instalar \textbf{NGINX}; abrir la IP externa en el navegador.\par\smallskip
+\textbf{3.} Crear una segunda VM, \texttt{gcelab2}, con \texttt{gcloud}.
+\end{exampleblock}
+\begin{alertblock}{Lo de hoy, en el lab}
+\small Compute Engine ya está \textbf{habilitado} y tu usuario temporal tiene un \textbf{rol de IAM} para crear VMs.
+\end{alertblock}
+\column{.46\textwidth}
+\begin{block}{Los comandos clave}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+sudo apt-get update
+sudo apt-get install -y nginx
+
+gcloud compute instances \
+  create gcelab2 \
+  --machine-type=e2-medium \
+  --zone=ZONA
+\end{lstlisting}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Práctica: tu máquina virtual con NGINX \textnormal{\small(25 min)}}
+\begin{block}{Pasos}
+\small
+1. Entra a \texttt{skills.google/focuses/3563} y presiona \textbf{Start Lab}.\par\smallskip
+2. Abre la consola en una \textbf{ventana de incógnito} con el usuario temporal.\par\smallskip
+3. Revisa \textbf{IAM y administración} $\rightarrow$ \textbf{IAM}: ¿qué rol tiene tu usuario temporal?\par\smallskip
+4. Revisa \textbf{APIs y servicios}: ¿está habilitada Compute Engine API?\par\smallskip
+5. Sigue las tres tareas y presiona \textbf{Check my progress} en cada una.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Si la IP no abre}
+\small Usa \texttt{http://}, no \texttt{https://}, y revisa que marcaste \emph{Permitir tráfico HTTP}.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Entregable}
+\small Captura de la página \emph{Welcome to nginx!} y del lab completado.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. Da un uso de WSL que no sea solo ``practicar Linux''.\par\medskip
+2. ¿Por qué WSL 2 dentro de una VM de Windows necesita virtualización anidada?\par\medskip
+3. La landing de Estampa ya no necesita \texttt{server.py}. ¿Por qué? ¿Y por qué la tienda completa, con usuarios y pagos, sí necesitaría backend?\par\medskip
+4. Un compañero solo necesita ver tu proyecto de Google Cloud. ¿Qué rol le das y por qué?\par\medskip
+5. Aparece el error \emph{``API \ldots{} is disabled''}. ¿Qué haces?
+\end{block}
+\begin{alertblock}{Lo que viene}
+\small Seguimos con la ruta de Google Skills y desplegamos en Google Cloud.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Microsoft Learn: \emph{What is Windows Subsystem for Linux?} y \emph{Install WSL}, \texttt{learn.microsoft.com/windows/wsl}.
+  \item Microsoft Learn: \emph{Comparing WSL 1 and WSL 2} y \emph{Working across file systems}.
+  \item Google Cloud: \emph{About nested virtualization}, documentación de Compute Engine, \texttt{cloud.google.com/compute/docs}.
+  \item GitHub Docs: \emph{About GitHub Pages} y \emph{GitHub Pages limits}, \texttt{docs.github.com/pages}.
+  \item Vercel Docs: \emph{Deploying a project from Git} y \emph{Hobby plan}, \texttt{vercel.com/docs}.
+  \item Figma: \emph{Figma for Education}, \texttt{figma.com/education}; Figma Help Center: \emph{Connect a Figma Make file to Supabase}.
+  \item Supabase: \emph{Pricing} y documentación, \texttt{supabase.com/docs}.
+  \item Google Cloud: \emph{IAM overview} y \emph{Roles and permissions}, \texttt{cloud.google.com/iam/docs}.
+  \item Google Cloud: \emph{Enabling and disabling services}, \texttt{cloud.google.com/service-usage/docs}.
+  \item Google Skills: laboratorio \emph{Crea una máquina virtual}, \texttt{skills.google/focuses/3563}.
+  \item Las respuestas de todas las preguntas de esta sesión están en \texttt{respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
