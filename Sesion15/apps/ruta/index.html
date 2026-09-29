@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Repaso y ruta Cloud Engineer</title>
+    <style>
+      :root {
+        --utp-red: #c42b35;
+        --utp-red-soft: #fbe9ea;
+        --black: #111111;
+        --gray: #626262;
+        --line: #dedede;
+        --surface: #f5f5f5;
+        --white: #ffffff;
+        --ok: #1f7a4d;
+        --ok-soft: #e5f4ec;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--black);
+        background: var(--white);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+      }
+
+      .topbar {
+        height: 8px;
+        background: var(--utp-red);
+      }
+
+      header,
+      main,
+      footer {
+        width: min(960px, calc(100% - 32px));
+        margin-inline: auto;
+      }
+
+      header {
+        padding: 40px 0 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--utp-red);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        max-width: 640px;
+        margin: 12px 0 0;
+        color: var(--gray);
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      nav a {
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--black);
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        border-color: var(--utp-red);
+        color: var(--utp-red);
+      }
+
+      section {
+        padding: 32px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0 0 4px;
+        font-size: 1.4rem;
+      }
+
+      .hint {
+        margin: 0 0 20px;
+        color: var(--gray);
+      }
+
+      .card {
+        margin-bottom: 12px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .card p {
+        margin: 0;
+      }
+
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button {
+        padding: 8px 14px;
+        border: 1px solid var(--black);
+        border-radius: 6px;
+        background: var(--white);
+        color: var(--black);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled) {
+        border-color: var(--utp-red);
+        color: var(--utp-red);
+      }
+
+      button:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      button.picked {
+        opacity: 1;
+        background: var(--black);
+        color: var(--white);
+      }
+
+      .feedback {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-left: 4px solid;
+        border-radius: 4px;
+      }
+
+      .feedback.good {
+        border-color: var(--ok);
+        background: var(--ok-soft);
+      }
+
+      .feedback.bad {
+        border-color: var(--utp-red);
+        background: var(--utp-red-soft);
+      }
+
+      .score {
+        margin: 16px 0 0;
+        font-weight: 700;
+      }
+
+      .reset {
+        margin-top: 12px;
+        border-color: var(--line);
+        color: var(--gray);
+      }
+
+      code {
+        padding: 1px 4px;
+        border-radius: 3px;
+        background: var(--white);
+        font-size: 0.9em;
+      }
+
+      .progress {
+        height: 10px;
+        margin: 0 0 20px;
+        border-radius: 999px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--utp-red);
+        transition: width 0.25s;
+      }
+
+      .blocks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .block h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .block h3 small {
+        display: block;
+        color: var(--gray);
+        font-weight: 400;
+      }
+
+      label {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        margin-top: 4px;
+        accent-color: var(--utp-red);
+      }
+
+      footer {
+        padding: 24px 0 40px;
+        color: var(--gray);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar"></div>
+
+    <header>
+      <p class="eyebrow">Sesión 15</p>
+      <h1>Repaso y ruta Cloud Engineer</h1>
+      <p>
+        Primero repasa la Sesión 14. Luego elige el servicio correcto para
+        cada caso y marca lo que ya sabes de cada bloque del examen Associate
+        Cloud Engineer.
+      </p>
+      <nav>
+        <a href="#repaso">1. Repaso</a>
+        <a href="#servicios">2. ¿Qué servicio uso?</a>
+        <a href="#ruta">3. Mi avance en la ruta</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="repaso">
+        <h2>1. Repaso de la Sesión 14</h2>
+        <p class="hint">¿Verdadero o falso? Responde y lee la explicación.</p>
+        <div id="quiz-tf"></div>
+        <p class="score" id="score-tf"></p>
+      </section>
+
+      <section id="servicios">
+        <h2>2. ¿Qué servicio uso?</h2>
+        <p class="hint">
+          Así son las preguntas del examen: una situación y varias opciones.
+        </p>
+        <div id="quiz-svc"></div>
+        <p class="score" id="score-svc"></p>
+      </section>
+
+      <section id="ruta">
+        <h2>3. Mi avance en la ruta</h2>
+        <p class="hint" id="ruta-count">
+          Marca lo que ya sabes hacer. Se guarda en este navegador.
+        </p>
+        <div class="progress"><span id="ruta-bar"></span></div>
+        <div class="blocks" id="blocks"></div>
+        <button class="reset" id="ruta-reset" type="button">
+          Desmarcar todo
+        </button>
+      </section>
+    </main>
+
+    <footer>
+      Universidad Tecnológica del Perú · Integración de Servicios Cloud GCP
+    </footer>
+
+    <script>
+      const trueFalse = [
+        {
+          q: "WSL 2 necesita que instales VirtualBox primero.",
+          answer: false,
+          why: "Basta con <code>wsl --install</code>. WSL 2 usa una VM ligera que Windows administra solo.",
+        },
+        {
+          q: "GitHub Pages puede ejecutar el <code>server.py</code> de la Sesión 10.",
+          answer: false,
+          why: "GitHub Pages solo entrega archivos estáticos. Por eso el enlace de WhatsApp ahora lo arma <code>script.js</code>.",
+        },
+        {
+          q: "En GitHub Pages, <code>styles.css</code> y <code>Styles.css</code> son el mismo archivo.",
+          answer: false,
+          why: "En el servidor las mayúsculas importan. En Windows funciona, pero publicado la página sale sin estilos.",
+        },
+        {
+          q: "Si le das el rol Editor a alguien en el proyecto, puede crear y borrar VMs.",
+          answer: true,
+          why: "Editor puede crear, cambiar y borrar casi todos los recursos. Por eso no es el rol para quien solo mira.",
+        },
+        {
+          q: "Si tienes rol de Propietario, puedes usar Compute Engine aunque su API esté apagada.",
+          answer: false,
+          why: "IAM decide quién lo usa; habilitar decide si el servicio existe en el proyecto. Primero hay que habilitar la API.",
+        },
+        {
+          q: "La IP de la VM con NGINX se abre con <code>http://</code>, no con <code>https://</code>.",
+          answer: true,
+          why: "NGINX quedó escuchando en el puerto 80 (HTTP) y no se configuró un certificado para HTTPS.",
+        },
+      ];
+
+      const services = [
+        {
+          q: "Necesitas una máquina con Linux donde tú instales y configures todo.",
+          options: ["Compute Engine", "Cloud Run", "Cloud Storage"],
+          answer: 0,
+          why: "Compute Engine es IaaS: te dan la máquina y tú cuidas todo lo de adentro.",
+        },
+        {
+          q: "Tienes un contenedor con visitas irregulares y quieres pagar poco cuando nadie lo usa.",
+          options: ["GKE", "Cloud Run", "Compute Engine"],
+          answer: 1,
+          why: "Cloud Run es sin servidor: cobra por uso y puede bajar a cero cuando no hay visitas.",
+        },
+        {
+          q: "Debes guardar las fotos de los productos de la tienda.",
+          options: ["Cloud SQL", "Firestore", "Cloud Storage"],
+          answer: 2,
+          why: "Cloud Storage guarda archivos (objetos) en buckets.",
+        },
+        {
+          q: "Necesitas una base de datos con tablas para pedidos y clientes, sin administrar el servidor.",
+          options: ["Cloud SQL", "Cloud Storage", "Cloud Logging"],
+          answer: 0,
+          why: "Cloud SQL es una base de datos relacional (MySQL, PostgreSQL) administrada por Google.",
+        },
+        {
+          q: "Tu app se cayó anoche y quieres ver qué errores mostró.",
+          options: ["Cloud Monitoring", "Cloud Logging", "IAM"],
+          answer: 1,
+          why: "Los mensajes y errores quedan en Cloud Logging. Monitoring muestra métricas y alertas.",
+        },
+        {
+          q: "Un compañero solo debe ver los archivos de un bucket, nada más.",
+          options: ["Editor del proyecto", "Visualizador de objetos de Storage", "Propietario"],
+          answer: 1,
+          why: "Un rol predefinido de un solo servicio cumple el mínimo privilegio.",
+        },
+      ];
+
+      const route = [
+        {
+          title: "1. Preparar el entorno",
+          sub: "Proyectos, facturación, APIs",
+          items: [
+            "Crear un proyecto y elegirlo en la consola",
+            "Explicar la jerarquía: organización, carpetas, proyectos",
+            "Habilitar una API desde la consola o con gcloud",
+            "Crear un presupuesto con alertas",
+          ],
+        },
+        {
+          title: "2. Planificar e implementar",
+          sub: "Cómputo, almacenamiento, redes",
+          items: [
+            "Crear una VM y elegir región y zona",
+            "Distinguir Compute Engine, Cloud Run y GKE",
+            "Crear un bucket y subir un archivo",
+            "Distinguir Cloud SQL y Firestore",
+          ],
+        },
+        {
+          title: "3. Operar la solución",
+          sub: "Mantener todo funcionando",
+          items: [
+            "Ver mis VMs con gcloud compute instances list",
+            "Buscar un error en Cloud Logging",
+            "Detener o borrar recursos que no uso",
+          ],
+        },
+        {
+          title: "4. Acceso y seguridad",
+          sub: "IAM",
+          items: [
+            "Explicar quién, qué rol y qué recurso",
+            "Diferenciar roles básicos, predefinidos y personalizados",
+            "Dar un rol a un compañero en IAM",
+            "Explicar qué es una cuenta de servicio",
+          ],
+        },
+      ];
+
+      function renderQuiz(containerId, scoreId, questions, getOptions, isRight) {
+        const container = document.getElementById(containerId);
+        const score = document.getElementById(scoreId);
+        let answered = 0;
+        let right = 0;
+
+        questions.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<p><strong>${index + 1}.</strong> ${item.q}</p>`;
+          const choices = document.createElement("div");
+          choices.className = "choices";
+
+          getOptions(item).forEach((label, optionIndex) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = label;
+            button.addEventListener("click", () => {
+              const ok = isRight(item, optionIndex);
+              choices.querySelectorAll("button").forEach((b) => (b.disabled = true));
+              button.classList.add("picked");
+              const feedback = document.createElement("div");
+              feedback.className = `feedback ${ok ? "good" : "bad"}`;
+              feedback.innerHTML = `<strong>${ok ? "Correcto." : "No."}</strong> ${item.why}`;
+              card.appendChild(feedback);
+              answered += 1;
+              if (ok) right += 1;
+              if (answered === questions.length) {
+                score.textContent = `Resultado: ${right} de ${questions.length}.`;
+              }
+            });
+            choices.appendChild(button);
+          });
+
+          card.appendChild(choices);
+          container.appendChild(card);
+        });
+      }
+
+      renderQuiz(
+        "quiz-tf",
+        "score-tf",
+        trueFalse,
+        () => ["Verdadero", "Falso"],
+        (item, option) => (option === 0) === item.answer,
+      );
+
+      renderQuiz(
+        "quiz-svc",
+        "score-svc",
+        services,
+        (item) => item.options,
+        (item, option) => option === item.answer,
+      );
+
+      const storageKey = "sesion15-ruta";
+      let checked = {};
+      try {
+        checked = JSON.parse(localStorage.getItem(storageKey)) || {};
+      } catch (error) {
+        checked = {};
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(checked));
+        } catch (error) {
+          // Sin almacenamiento el avance solo dura mientras la página esté abierta.
+        }
+      }
+
+      const blocks = document.getElementById("blocks");
+      const total = route.reduce((sum, block) => sum + block.items.length, 0);
+
+      function updateProgress() {
+        const done = Object.values(checked).filter(Boolean).length;
+        document.getElementById("ruta-bar").style.width = `${(done / total) * 100}%`;
+        document.getElementById("ruta-count").textContent =
+          `Marca lo que ya sabes hacer (${done} de ${total}). Se guarda en este navegador.`;
+      }
+
+      route.forEach((block, blockIndex) => {
+        const card = document.createElement("div");
+        card.className = "card block";
+        card.innerHTML = `<h3>${block.title}<small>${block.sub}</small></h3>`;
+        block.items.forEach((text, itemIndex) => {
+          const id = `${blockIndex}-${itemIndex}`;
+          const label = document.createElement("label");
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = Boolean(checked[id]);
+          input.addEventListener("change", () => {
+            checked[id] = input.checked;
+            save();
+            updateProgress();
+          });
+          label.append(input, document.createTextNode(text));
+          card.appendChild(label);
+        });
+        blocks.appendChild(card);
+      });
+
+      document.getElementById("ruta-reset").addEventListener("click", () => {
+        checked = {};
+        save();
+        blocks.querySelectorAll("input").forEach((input) => (input.checked = false));
+        updateProgress();
+      });
+
+      updateProgress();
+    </script>
+  </body>
+</html>
