@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redes y máquinas virtuales</title>
+    <style>
+      :root {
+        --utp-red: #c42b35;
+        --utp-red-soft: #fbe9ea;
+        --black: #111111;
+        --gray: #626262;
+        --line: #dedede;
+        --surface: #f5f5f5;
+        --white: #ffffff;
+        --ok: #1f7a4d;
+        --ok-soft: #e5f4ec;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--black);
+        background: var(--white);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+      }
+
+      .topbar {
+        height: 8px;
+        background: var(--utp-red);
+      }
+
+      header,
+      main,
+      footer {
+        width: min(960px, calc(100% - 32px));
+        margin-inline: auto;
+      }
+
+      header {
+        padding: 40px 0 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--utp-red);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        max-width: 640px;
+        margin: 12px 0 0;
+        color: var(--gray);
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      nav a {
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--black);
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+
+      nav a:hover {
+        border-color: var(--utp-red);
+        color: var(--utp-red);
+      }
+
+      section {
+        padding: 32px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0 0 4px;
+        font-size: 1.4rem;
+      }
+
+      .hint {
+        margin: 0 0 20px;
+        color: var(--gray);
+      }
+
+      .card {
+        margin-bottom: 12px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .card p {
+        margin: 0;
+      }
+
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button {
+        padding: 8px 14px;
+        border: 1px solid var(--black);
+        border-radius: 6px;
+        background: var(--white);
+        color: var(--black);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled) {
+        border-color: var(--utp-red);
+        color: var(--utp-red);
+      }
+
+      button:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+
+      button.picked {
+        opacity: 1;
+        background: var(--black);
+        color: var(--white);
+      }
+
+      .feedback {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-left: 4px solid;
+        border-radius: 4px;
+      }
+
+      .feedback.good {
+        border-color: var(--ok);
+        background: var(--ok-soft);
+      }
+
+      .feedback.bad {
+        border-color: var(--utp-red);
+        background: var(--utp-red-soft);
+      }
+
+      .score {
+        margin: 16px 0 0;
+        font-weight: 700;
+      }
+
+      .reset {
+        margin-top: 12px;
+        border-color: var(--line);
+        color: var(--gray);
+      }
+
+      code {
+        padding: 1px 4px;
+        border-radius: 3px;
+        background: var(--white);
+        font-size: 0.9em;
+      }
+
+      .progress {
+        height: 10px;
+        margin: 0 0 20px;
+        border-radius: 999px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--utp-red);
+        transition: width 0.25s;
+      }
+
+      .blocks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .block h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .block h3 small {
+        display: block;
+        color: var(--gray);
+        font-weight: 400;
+      }
+
+      label {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        margin-top: 4px;
+        accent-color: var(--utp-red);
+      }
+
+      footer {
+        padding: 24px 0 40px;
+        color: var(--gray);
+        font-size: 0.85rem;
+      }
+
+      .tool {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .field {
+        display: block;
+        margin-bottom: 12px;
+        cursor: default;
+      }
+
+      .field span {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 700;
+      }
+
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--white);
+        font: inherit;
+      }
+
+      .big {
+        margin: 0;
+        color: var(--utp-red);
+        font-size: 2.4rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .muted {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+
+      .bar {
+        display: flex;
+        height: 18px;
+        margin: 12px 0 4px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--ok-soft);
+      }
+
+      .bar span {
+        background: var(--utp-red);
+      }
+
+      .rules label {
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--white);
+      }
+
+      .tests {
+        display: grid;
+        gap: 8px;
+      }
+
+      .test {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 10px;
+        border-left: 4px solid;
+        border-radius: 4px;
+      }
+
+      .test.pass {
+        border-color: var(--ok);
+        background: var(--ok-soft);
+      }
+
+      .test.block {
+        border-color: var(--utp-red);
+        background: var(--utp-red-soft);
+      }
+
+      .goal {
+        margin-top: 12px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar"></div>
+
+    <header>
+      <p class="eyebrow">Sesión 16</p>
+      <h1>Redes y máquinas virtuales</h1>
+      <p>
+        Repasa la Sesión 15 y juega con las ideas del curso
+        <em>Infraestructura esencial de Google Cloud: conceptos básicos</em>:
+        cuántas direcciones tiene una subred, qué deja pasar el firewall y qué
+        te cobran por una VM.
+      </p>
+      <nav>
+        <a href="#repaso">1. Repaso</a>
+        <a href="#subred">2. Calculadora de subredes</a>
+        <a href="#firewall">3. Simulador de firewall</a>
+        <a href="#vm">4. ¿Qué VM uso?</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="repaso">
+        <h2>1. Repaso de la Sesión 15</h2>
+        <p class="hint">¿Verdadero o falso? Responde y lee la explicación.</p>
+        <div id="quiz-tf"></div>
+        <p class="score" id="score-tf"></p>
+      </section>
+
+      <section id="subred">
+        <h2>2. Calculadora de subredes</h2>
+        <p class="hint">
+          Elige el tamaño de la subred. Mientras más chico el número después de
+          la barra, más direcciones.
+        </p>
+        <div class="tool">
+          <div class="card">
+            <label class="field">
+              <span>Rango de la subred</span>
+              <select id="prefix"></select>
+            </label>
+            <p class="muted" id="cidr-text"></p>
+          </div>
+          <div class="card">
+            <p class="muted">Direcciones para tus VMs</p>
+            <p class="big" id="usable"></p>
+            <div class="bar"><span id="reserved-bar"></span></div>
+            <p class="muted" id="cidr-detail"></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="firewall">
+        <h2>3. Simulador de firewall</h2>
+        <p class="hint">
+          Lo que entra está bloqueado, salvo lo que permitas. Activa reglas y
+          etiquetas y mira qué visitas llegan a tu VM.
+        </p>
+        <div class="tool">
+          <div class="card rules">
+            <h3>Reglas de la red</h3>
+            <div id="rules"></div>
+            <h3>Etiquetas de tu VM</h3>
+            <div id="tags"></div>
+          </div>
+          <div class="card">
+            <h3>Visitas desde Internet</h3>
+            <div class="tests" id="tests"></div>
+            <p class="goal" id="goal"></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="vm">
+        <h2>4. ¿Qué VM uso?</h2>
+        <p class="hint">Elige la opción que conviene en cada caso.</p>
+        <div id="quiz-vm"></div>
+        <p class="score" id="score-vm"></p>
+      </section>
+    </main>
+
+    <footer>
+      Universidad Tecnológica del Perú · Integración de Servicios Cloud GCP
+    </footer>
+
+    <script>
+      const trueFalse = [
+        {
+          q: "Una VM creada en <code>us-central1-a</code> vive en una zona.",
+          answer: true,
+          why: "<code>us-central1</code> es la región y la <code>-a</code> es la zona. Una VM es un recurso zonal.",
+        },
+        {
+          q: "Todo recurso de Google Cloud vive dentro de un proyecto.",
+          answer: true,
+          why: "El proyecto agrupa la facturación, las APIs habilitadas y los permisos de IAM.",
+        },
+        {
+          q: "Un presupuesto de 10 dólares apaga tus VMs al llegar a ese monto.",
+          answer: false,
+          why: "El presupuesto solo envía alertas. Hay que detener o borrar los recursos uno mismo.",
+        },
+        {
+          q: "Cloud Shell necesita que instales <code>gcloud</code> primero.",
+          answer: false,
+          why: "Cloud Shell es una terminal en el navegador que ya trae <code>gcloud</code> instalado.",
+        },
+        {
+          q: "Un curso de Google Skills y la certificación ACE son lo mismo.",
+          answer: false,
+          why: "El curso enseña y practica; la certificación es un examen oficial que comprueba lo aprendido.",
+        },
+      ];
+
+      const vmCases = [
+        {
+          q: "Quieres una VM para aprender y gastar lo menos posible.",
+          options: ["E2", "M3 (mucha memoria)", "A3 (con GPU)"],
+          answer: 0,
+          why: "E2 es de uso general y la más barata. Es la que se usa en los labs.",
+        },
+        {
+          q: "Debes procesar miles de fotos por la noche. Si se corta, se puede volver a empezar.",
+          options: ["A pedido", "VM Spot", "Uso comprometido 3 años"],
+          answer: 1,
+          why: "La VM Spot es muy barata; que Google la apague no importa si el trabajo se puede repetir.",
+        },
+        {
+          q: "La web de tu tienda debe estar encendida todo el año, sin cortes.",
+          options: ["VM Spot", "Uso comprometido", "Ninguna, mejor borrarla"],
+          answer: 1,
+          why: "Si la usarás todo el año, prometer 1 o 3 años da descuento. Spot podría apagarse en plena venta.",
+        },
+        {
+          q: "Terminaste el lab y apagaste (detuviste) la VM. ¿Qué te siguen cobrando?",
+          options: ["Nada", "El disco", "Procesador y memoria"],
+          answer: 1,
+          why: "Detenida no cobra procesador ni memoria, pero el disco sigue existiendo. Para no pagar nada, bórrala.",
+        },
+        {
+          q: "Tu VM no tiene IP externa, pero necesita descargar actualizaciones de Internet.",
+          options: ["Cloud NAT", "Abrir el puerto 22", "Marketplace"],
+          answer: 0,
+          why: "Cloud NAT le da salida a Internet sin permitir que nadie entre.",
+        },
+      ];
+
+      function renderQuiz(containerId, scoreId, questions, getOptions, isRight) {
+        const container = document.getElementById(containerId);
+        const score = document.getElementById(scoreId);
+        let answered = 0;
+        let right = 0;
+
+        questions.forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<p><strong>${index + 1}.</strong> ${item.q}</p>`;
+          const choices = document.createElement("div");
+          choices.className = "choices";
+
+          getOptions(item).forEach((label, optionIndex) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = label;
+            button.addEventListener("click", () => {
+              const ok = isRight(item, optionIndex);
+              choices.querySelectorAll("button").forEach((b) => (b.disabled = true));
+              button.classList.add("picked");
+              const feedback = document.createElement("div");
+              feedback.className = `feedback ${ok ? "good" : "bad"}`;
+              feedback.innerHTML = `<strong>${ok ? "Correcto." : "No."}</strong> ${item.why}`;
+              card.appendChild(feedback);
+              answered += 1;
+              if (ok) right += 1;
+              if (answered === questions.length) {
+                score.textContent = `Resultado: ${right} de ${questions.length}.`;
+              }
+            });
+            choices.appendChild(button);
+          });
+
+          card.appendChild(choices);
+          container.appendChild(card);
+        });
+      }
+
+      renderQuiz(
+        "quiz-tf",
+        "score-tf",
+        trueFalse,
+        () => ["Verdadero", "Falso"],
+        (item, option) => (option === 0) === item.answer,
+      );
+
+      renderQuiz(
+        "quiz-vm",
+        "score-vm",
+        vmCases,
+        (item) => item.options,
+        (item, option) => option === item.answer,
+      );
+
+      // Calculadora de subredes
+      const prefix = document.getElementById("prefix");
+      [29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 16].forEach((p) => {
+        const option = document.createElement("option");
+        option.value = p;
+        option.textContent = `10.0.0.0/${p}`;
+        if (p === 24) option.selected = true;
+        prefix.appendChild(option);
+      });
+
+      function updateSubnet() {
+        const p = Number(prefix.value);
+        const total = 2 ** (32 - p);
+        const usable = total - 4;
+        const fmt = (n) => n.toLocaleString("es-PE");
+        document.getElementById("usable").textContent = fmt(usable);
+        document.getElementById("reserved-bar").style.width = `${Math.max((4 / total) * 100, 1)}%`;
+        document.getElementById("cidr-text").textContent =
+          `Los primeros ${p} bits son fijos y quedan ${32 - p} libres: 2^${32 - p} = ${fmt(total)} direcciones.`;
+        document.getElementById("cidr-detail").textContent =
+          `${fmt(total)} direcciones en total, menos 4 que Google se reserva (en rojo).`;
+      }
+
+      prefix.addEventListener("change", updateSubnet);
+      updateSubnet();
+
+      // Simulador de firewall
+      const rules = [
+        { id: "web", text: "Permitir tcp:80 desde cualquier IP a VMs con etiqueta http-server", port: 80, tag: "http-server", on: false },
+        { id: "https", text: "Permitir tcp:443 desde cualquier IP a VMs con etiqueta https-server", port: 443, tag: "https-server", on: false },
+        { id: "ssh", text: "Permitir tcp:22 desde cualquier IP a todas las VMs", port: 22, tag: null, on: true },
+      ];
+      const tags = { "http-server": false, "https-server": false };
+      const visits = [
+        { port: 80, text: "Abrir la web con http:// (puerto 80)" },
+        { port: 443, text: "Abrir la web con https:// (puerto 443)" },
+        { port: 22, text: "Entrar por SSH (puerto 22)" },
+      ];
+
+      function passes(port) {
+        return rules.some((r) => r.on && r.port === port && (r.tag === null || tags[r.tag]));
+      }
+
+      function renderToggles(containerId, items, getLabel, getValue, setValue) {
+        const container = document.getElementById(containerId);
+        items.forEach((item) => {
+          const label = document.createElement("label");
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = getValue(item);
+          input.addEventListener("change", () => {
+            setValue(item, input.checked);
+            updateFirewall();
+          });
+          label.append(input, document.createTextNode(getLabel(item)));
+          container.appendChild(label);
+        });
+      }
+
+      renderToggles("rules", rules, (r) => r.text, (r) => r.on, (r, v) => (r.on = v));
+      renderToggles("tags", Object.keys(tags), (t) => t, (t) => tags[t], (t, v) => (tags[t] = v));
+
+      function updateFirewall() {
+        const tests = document.getElementById("tests");
+        tests.innerHTML = "";
+        visits.forEach((visit) => {
+          const ok = passes(visit.port);
+          const row = document.createElement("div");
+          row.className = `test ${ok ? "pass" : "block"}`;
+          row.innerHTML = `<span>${visit.text}</span><strong>${ok ? "Pasa" : "Bloqueada"}</strong>`;
+          tests.appendChild(row);
+        });
+        const goalMet = passes(80) && passes(443) && !passes(22);
+        document.getElementById("goal").textContent = goalMet
+          ? "¡Lo lograste! La web abre y nadie entra por SSH desde Internet."
+          : "Reto: que la web abra con http y https, pero que SSH quede bloqueado.";
+      }
+
+      updateFirewall();
+    </script>
+  </body>
+</html>

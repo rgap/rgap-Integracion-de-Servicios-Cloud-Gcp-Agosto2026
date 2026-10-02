@@ -1,0 +1,636 @@
+% Motor: XeLaTeX. Sesion 16 - material docente UTP.
+% Misma estructura docente que la Sesion 15.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Ruta Associate Cloud Engineer: Infraestructura esencial de Google Cloud}
+\date{Semana 08 - Sesión 16}
+\author{Rel Guzman}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+\begin{frame}[c]{Revisión de la sesión anterior}
+\begin{block}{La sesión anterior}
+\small Conocimos la certificación \textbf{Associate Cloud Engineer} y sus \textbf{4 bloques}, la jerarquía de recursos (\textbf{organización, carpetas, proyectos}), \textbf{regiones y zonas}, la consola, Cloud Shell y \texttt{gcloud}, e hicimos dos labs en Google Skills.
+\end{block}
+\begin{alertblock}{Pregunta rápida}
+\small Creaste una VM en \texttt{us-central1-a}. ¿Esa VM vive en una \textbf{región} o en una \textbf{zona}? ¿Y qué pasa si esa zona se queda sin luz?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, sabrás en qué punto de la \textbf{ruta Associate Cloud Engineer} estamos y podrás explicar con tus palabras las \textbf{formas de usar} Google Cloud, cómo funciona su \textbf{red} (subredes, IPs y firewall) y qué decides al crear una \textbf{máquina virtual}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item En tu casa, el router le da a tu celular una IP como \texttt{192.168.1.25}. ¿Esa IP la puede ver alguien desde Internet?
+  \item En la Sesión 14 marcaste \textbf{Permitir tráfico HTTP} al crear la VM. ¿Qué crees que hizo esa casilla por detrás?
+  \item Si apagas una VM, ¿crees que Google te sigue cobrando algo?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.86\textwidth}
+{\large Hasta ahora creamos VMs con los valores por defecto. Hoy entiendes \textbf{qué hay detrás}: la red donde vive la VM, quién puede entrar y cuánto cuesta. Es el primer curso técnico de la ruta y la base del bloque 2 del examen.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% ------------------------------------------------------------- La ruta
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries La ruta ACE}\par
+\vspace{2mm}
+{\small Associate Cloud Engineer: dónde estamos y en qué orden avanzamos}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{La ruta en Google Skills}
+\begin{block}{Qué es}
+\small La ruta \textbf{Certificación de Associate Cloud Engineer} (\texttt{skills.google/paths/11}) ordena unas \textbf{17 actividades}: cursos, labs e insignias. La seguimos \textbf{en orden}.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{0.6cm}p{6.6cm}p{2.2cm}p{3.2cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Actividad} & \textbf{Tipo} & \textbf{Hoy}\\
+\midrule
+1 & Recorrido por los labs prácticos de Google Cloud & Lab & Rápido\\
+2 & Crea una guía de estudio para el examen ACE & Curso & \textbf{Lo saltamos}\\
+3 & Infraestructura esencial de Google Cloud: conceptos básicos & Curso + labs & \textbf{Lo principal}\\
+4+ & Servicios principales, escalamiento, Kubernetes, observabilidad e insignias & Cursos e insignias & Próximas sesiones\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{alertblock}{Ojo}
+\small Google actualiza la ruta seguido: el número y el orden de las actividades pueden cambiar.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Plan de hoy (80 minutos)}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  paso/.style={draw=utpRojo,rounded corners=4pt,minimum height=1.25cm,align=center}]
+  \node[paso,fill=utpRojo!10,minimum width=2.2cm] (a) at (0,0) {\textbf{Recorrido}\\\footnotesize 7 min};
+  \node[paso,fill=white,minimum width=2.2cm,dashed] (b) at (2.7,0) {\textbf{Guía ACE}\\\footnotesize 3 min};
+  \node[paso,fill=utpRojo!30,minimum width=5.0cm] (c) at (7.0,0) {\textbf{Infraestructura esencial}\\\footnotesize teoría 35 min + práctica 15 min};
+  \draw[-latex,thick] (a) -- (b);
+  \draw[-latex,thick] (b) -- (c);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Bloques del curso principal}
+\small
+\textbf{1.} Interactuar con Google Cloud.\par\smallskip
+\textbf{2.} Redes virtuales (VPC).\par\smallskip
+\textbf{3.} Máquinas virtuales.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{El resto del tiempo}
+\small Inicio y presentación de la ruta (12 min); preguntas de cierre (8 min).
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------- Actividad 1: recorrido
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Recorrido por los labs}\par
+\vspace{2mm}
+{\small Actividad 1: \emph{A Tour of Google Cloud Hands-on Labs} (GSP282), en versión rápida}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Qué enseña el recorrido}
+\begin{block}{Idea}
+\small Es el \textbf{primer lab} de la ruta: enseña a usar la plataforma de labs y a moverse por la consola. Ya usamos esa plataforma en las Sesiones 14 y 15.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{La plataforma de labs}
+\small
+\textbf{Start Lab} crea un \textbf{proyecto temporal}.\par\smallskip
+Te da un \textbf{usuario y contraseña} de prueba y un \textbf{temporizador}.\par\smallskip
+\textbf{Check my progress} califica cada tarea.\par\smallskip
+\textbf{End Lab} borra todo al terminar.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Lo que muestra de Google Cloud}
+\small
+\textbf{Proyectos:} nombre, ID y número.\par\smallskip
+\textbf{IAM:} usuarios, roles y permisos.\par\smallskip
+\textbf{APIs:} buscar y habilitar una API en la biblioteca.
+\end{block}
+\end{columns}
+\par\vspace{1mm}
+\begin{alertblock}{La regla de oro}
+\small Abre la consola en \textbf{incógnito} con el usuario temporal, nunca con tu cuenta personal.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{¿Por qué lo vemos rápido?}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{alertblock}{Lo desactualizado}
+\small
+Las \textbf{capturas} son de una consola anterior: los menús ya no se ven igual.\par\smallskip
+Habla de \textbf{Qwiklabs} y \textbf{Cloud Skills Boost}: hoy la plataforma se llama \textbf{Google Skills}.\par\smallskip
+Algunas rutas de menú cambiaron de nombre o de lugar.
+\end{alertblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Lo que sigue valiendo}
+\small
+Proyecto, IAM y APIs: \textbf{los conceptos no cambian}.\par\smallskip
+Si un menú no aparece, usa la \textbf{barra de búsqueda} de la consola: escribe \emph{IAM} o \emph{API Library}.
+\end{exampleblock}
+\begin{block}{Qué hacemos}
+\small Lo recorro en pantalla en pocos minutos. Si quieres que figure como completado en la ruta, hazlo de tarea.
+\end{block}
+\end{columns}
+\end{frame}
+
+% --------------------------------------------- Actividad 2: guia ACE
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Guía de estudio ACE}\par
+\vspace{2mm}
+{\small Actividad 2: \emph{Preparing for Your Associate Cloud Engineer Journey}}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{La guía de estudio: la saltamos, y por qué}
+\begin{block}{Qué es}
+\small Un curso para \textbf{planificar} tu preparación: recorre los 4 bloques del examen con \textbf{preguntas de diagnóstico} y al final armas tu propio plan de estudio.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{alertblock}{Por qué no ahora}
+\small
+\textbf{1.} Las preguntas de diagnóstico suponen que \textbf{ya estudiaste}: hoy fallarías casi todas sin aprender nada nuevo.\par\smallskip
+\textbf{2.} No tiene \textbf{labs}: no practicas en la consola.\par\smallskip
+\textbf{3.} Lo esencial (bloques del examen y plan de estudio) ya lo vimos en la \textbf{Sesión 15}.
+\end{alertblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Cuándo volver}
+\small Al \textbf{terminar la ruta}, antes de inscribirte al examen. Ahí sí sirve para encontrar tus puntos débiles.
+\end{exampleblock}
+\begin{block}{Una comparación}
+\small Es como un \textbf{simulacro} de admisión: se da cuando ya estudiaste, no el primer día de academia.
+\end{block}
+\end{columns}
+\end{frame}
+
+% --------------------------------- Actividad 3: infraestructura esencial
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Infraestructura esencial}\par
+\vspace{2mm}
+{\small Actividad 3: \emph{Essential Google Cloud Infrastructure: Foundation} (conceptos básicos)}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Mapa del curso}
+\begin{block}{Qué es}
+\small El \textbf{primer curso técnico} de la ruta (unas 7 horas). Se centra en \textbf{Compute Engine}: la red donde viven las VMs y las VMs mismas.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{4.8cm}p{7.8cm}@{}}
+\toprule
+\textbf{Módulo} & \textbf{Labs, en orden}\\
+\midrule
+1. Interactuar con Google Cloud & Consola y Cloud Shell; una web lista con Marketplace\\
+2. Redes virtuales & Crear redes VPC; VMs sin IP externa con Cloud NAT\\
+3. Máquinas virtuales & Crear VMs; configurar VMs\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Cómo lo trabajamos}
+\small En clase vemos la \textbf{teoría} de los tres módulos. Los labs van en orden: hoy empiezas el primero.
+\end{alertblock}
+\end{frame}
+
+% ---- Modulo 1
+\begin{frame}[fragile]{Módulo 1: cuatro formas de hablar con Google Cloud}
+\begin{block}{Idea}
+\small Google Cloud es como un banco: puedes ir a la \textbf{ventanilla}, usar el \textbf{cajero}, la \textbf{app} o que tu sistema se conecte \textbf{directo}. El dinero es el mismo; cambia la forma.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.235\textwidth}
+\begin{exampleblock}{Consola}
+\footnotesize Página web con clics. Ideal para \textbf{ver} y empezar.
+\end{exampleblock}
+\column{.235\textwidth}
+\begin{exampleblock}{Cloud Shell}
+\footnotesize Una terminal en el navegador, ya lista. No instalas nada.
+\end{exampleblock}
+\column{.235\textwidth}
+\begin{exampleblock}{\texttt{gcloud}}
+\footnotesize Comandos que puedes instalar en tu laptop o en WSL.
+\end{exampleblock}
+\column{.235\textwidth}
+\begin{exampleblock}{API}
+\footnotesize Tus programas (Python, Node.js) le piden cosas a Google Cloud.
+\end{exampleblock}
+\end{columns}
+\par\vspace{2mm}
+\begin{block}{Lo mismo, de dos formas}
+\small Con clics: \textbf{Compute Engine} $\rightarrow$ \textbf{Instancias de VM}. Con un comando:
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+gcloud compute instances list
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}{Módulo 1: el proyecto y el Marketplace}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Un proyecto tiene tres datos}
+\small
+\textbf{Nombre:} como tu apodo; lo cambias cuando quieras.\par\smallskip
+\textbf{ID:} como tu \textbf{DNI}; único y \textbf{no cambia nunca}. Es el que piden los comandos.\par\smallskip
+\textbf{Número:} lo pone Google.
+\end{block}
+\begin{alertblock}{Error típico}
+\small Escribir el \textbf{nombre} cuando el comando pide el \textbf{ID}.
+\end{alertblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Marketplace: soluciones listas}
+\small Una \textbf{tienda} de programas ya armados: WordPress, una tienda online, un servidor web con base de datos. Eliges uno y Google crea la VM y todo lo necesario.
+\end{exampleblock}
+\begin{block}{Una comparación}
+\small Es comprar un \textbf{mueble armado} en vez de las piezas: rápido, pero igual debes saber qué compraste y cuánto cuesta.
+\end{block}
+\end{columns}
+\end{frame}
+
+% ---- Modulo 2
+\begin{frame}{Módulo 2: ¿qué es una red VPC?}
+\begin{block}{Definición}
+\small La \textbf{red privada de tu proyecto} (\emph{Virtual Private Cloud}). Es donde se conectan tus VMs, como el wifi de tu casa conecta tus equipos.
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.52\textwidth}
+\centering
+\begin{tikzpicture}[font=\footnotesize]
+  \draw[utpRojo,thick,rounded corners=6pt,fill=utpRojo!5] (0,0) rectangle (6.4,3.3);
+  \node[anchor=north west,font=\small\bfseries] at (0.1,3.25) {Red VPC: el condominio};
+  \draw[rounded corners=4pt,fill=white] (0.3,0.3) rectangle (3.0,2.6);
+  \node[anchor=north west] at (0.35,2.55) {\textbf{Subred en EE.\,UU.}};
+  \node[anchor=north west] at (0.35,2.15) {un bloque};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (1.0,0.9) {VM a};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (2.3,0.9) {VM b};
+  \draw[rounded corners=4pt,fill=white] (3.4,0.3) rectangle (6.1,2.6);
+  \node[anchor=north west] at (3.45,2.55) {\textbf{Subred en Chile}};
+  \node[anchor=north west] at (3.45,2.15) {otro bloque};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (4.75,0.9) {VM c};
+\end{tikzpicture}
+\column{.44\textwidth}
+\begin{exampleblock}{Una comparación}
+\small La VPC es un \textbf{condominio}; las \textbf{subredes} son los bloques de edificios; las \textbf{VMs}, los departamentos.
+\end{exampleblock}
+\begin{block}{Lo sorprendente}
+\small Cada subred está en \textbf{una región}, pero la red las une a todas: la VM de Chile y la de EE.\,UU. se hablan como vecinas, sin salir a Internet.
+\end{block}
+\end{columns}
+\par\vspace{1mm}
+\begin{alertblock}{Ya la usaste}
+\small Cada proyecto trae una red llamada \texttt{default}. Tus VMs de la Sesión 14 vivían ahí.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Módulo 2: subredes y sus direcciones}
+\begin{block}{Cada subred tiene un rango de direcciones}
+\small Se escribe así: \texttt{10.0.1.0/24}. El número después de la barra dice el \textbf{tamaño}: mientras \textbf{más chico}, \textbf{más direcciones}.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{2.4cm}p{3.4cm}p{3.0cm}p{3.8cm}@{}}
+\toprule
+\textbf{Rango} & \textbf{Direcciones} & \textbf{Para VMs} & \textbf{Alcanza para\ldots}\\
+\midrule
+\texttt{/29} & 8 & 4 & una prueba pequeña\\
+\texttt{/24} & 256 & 252 & un proyecto normal\\
+\texttt{/20} & 4\,096 & 4\,092 & una empresa grande\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{¿Por qué 4 menos?}
+\small Google se \textbf{reserva 4 direcciones} en cada subred para que la red funcione (la primera, la puerta de salida y las dos últimas).
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Si te quedas corto}
+\small Puedes \textbf{agrandar} la subred sin apagar nada. Lo que no se puede es achicarla.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Módulo 2: IP interna e IP externa}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{IP interna}
+\small La tiene \textbf{toda} VM. Sirve para hablar \textbf{dentro} de la red, con las otras VMs.
+\end{block}
+\begin{block}{IP externa}
+\small \textbf{Opcional}. Es la que abriste desde el navegador en el lab de NGINX.\par\smallskip
+\textbf{Efímera:} puede cambiar si apagas la VM.\par
+\textbf{Estática:} la reservas y se queda fija.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small La IP interna es el \textbf{anexo} de una oficina: solo funciona dentro. La externa es el \textbf{número público} de la central: cualquiera puede llamar.
+\end{exampleblock}
+\begin{alertblock}{Saberes previos, resuelto}
+\small El \texttt{192.168.1.25} de tu celular es como una IP \textbf{interna}: desde Internet no se ve. Tu casa sale con la IP pública del router.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Módulo 2: el firewall, el portero de la red}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.4cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=white] (i) at (0,0) {\textbf{Internet}};
+  \node[caja,fill=utpRojo!30] (f) at (5.2,0) {\textbf{Firewall}\\\footnotesize revisa su lista};
+  \node[caja,fill=utpRojo!10] (v) at (10.4,0) {\textbf{Tu VM}};
+  \draw[-latex,thick] (i) -- node[above,font=\footnotesize] {visita al puerto 80} (f);
+  \draw[-latex,thick] (f) -- node[above,font=\footnotesize] {¿está en la lista?} (v);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{La regla básica}
+\small Lo que \textbf{entra}: todo \textbf{bloqueado}, salvo lo que tú permitas.\par\smallskip
+Lo que \textbf{sale}: todo permitido.
+\end{block}
+\begin{exampleblock}{Una regla dice}
+\small \textbf{Qué} (puerto 80, web), \textbf{desde dónde} (cualquier IP) y \textbf{a quién} (las VMs con cierta etiqueta).
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Los puertos más comunes}
+\small
+\textbf{22:} SSH, entrar a la terminal.\par
+\textbf{80:} web (\texttt{http://}).\par
+\textbf{443:} web segura (\texttt{https://}).
+\end{block}
+\begin{alertblock}{Una comparación}
+\small El portero del condominio con su \textbf{lista de invitados}: si no estás, no entras.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Módulo 2: la casilla ``Permitir tráfico HTTP''}
+\begin{block}{Qué hizo en la Sesión 14}
+\small Le puso a la VM una \textbf{etiqueta}: \texttt{http-server}. La red ya tenía una regla: ``a las VMs con esa etiqueta, deja pasar la web (puerto 80)''.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.6cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=utpRojo!10] (c) at (0,0) {Marcas la casilla};
+  \node[caja,fill=utpRojo!20] (e) at (4.6,0) {VM con etiqueta\\\texttt{http-server}};
+  \node[caja,fill=utpRojo!35] (r) at (9.2,0) {La regla la deja\\pasar: la web abre};
+  \draw[-latex,thick] (c) -- (e);
+  \draw[-latex,thick] (e) -- (r);
+\end{tikzpicture}
+\end{center}
+\begin{exampleblock}{La misma regla, escrita como comando}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+gcloud compute firewall-rules create permitir-web \
+  --allow=tcp:80 --target-tags=http-server
+\end{lstlisting}
+\end{exampleblock}
+\begin{alertblock}{Error típico}
+\small Crear la regla pero olvidar ponerle la \textbf{etiqueta} a la VM: la página no abre.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Módulo 2: VMs sin IP externa y lo que cuesta la red}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{VMs escondidas, pero útiles}
+\small Una VM \textbf{sin IP externa} es más segura: nadie la alcanza desde Internet. Pero, ¿cómo descarga actualizaciones?\par\smallskip
+\textbf{Cloud NAT} le da \textbf{salida} a Internet, sin dejar que nadie entre.
+\end{block}
+\begin{exampleblock}{Una comparación}
+\small Como una casa con \textbf{puerta solo de salida}: tú sales a comprar, pero nadie toca el timbre.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Qué se cobra}
+\small
+Datos que \textbf{entran}: gratis.\par\smallskip
+Datos entre VMs \textbf{cercanas} (misma zona): gratis.\par\smallskip
+Datos que \textbf{salen a Internet}: se cobran.
+\end{alertblock}
+\begin{block}{Idea clave}
+\small Lo que \textbf{sale} cuesta. Mantener las cosas cerca ahorra dinero.
+\end{block}
+\end{columns}
+\end{frame}
+
+% ---- Modulo 3
+\begin{frame}{Módulo 3: una VM por dentro}
+\begin{block}{Qué eliges al crear una VM}
+\small Lo mismo que al comprar una laptop: \textbf{procesador} (vCPU), \textbf{memoria}, \textbf{disco} y \textbf{sistema operativo}. Más \textbf{dónde vive} (zona) y \textbf{a qué red} se conecta.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{3.6cm}p{2.8cm}p{6.2cm}@{}}
+\toprule
+\textbf{Familia} & \textbf{Ejemplo} & \textbf{Como una\ldots}\\
+\midrule
+Uso general & E2, N2 & \textbf{laptop de oficina}: sirve para casi todo\\
+Mucho cálculo & C2 & \textbf{PC gamer}: procesador potente\\
+Mucha memoria & M3 & \textbf{servidor gigante} para bases de datos enormes\\
+Con GPU & A3, G2 & \textbf{equipo de IA}: tarjetas gráficas\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cómo se lee \texttt{e2-medium}}
+\small Familia \textbf{E2}, tamaño \textbf{medium}. Es la que usamos en los labs.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Para empezar}
+\small Casi siempre: \textbf{E2}. Es la más barata.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Módulo 3: encendida, detenida, borrada}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  est/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.4cm,minimum height=1.3cm,align=center}]
+  \node[est,fill=utpRojo!40] (r) at (0,0) {\textbf{Encendida}\\\footnotesize\texttt{RUNNING}};
+  \node[est,fill=utpRojo!12] (t) at (4.8,0) {\textbf{Detenida}\\\footnotesize\texttt{TERMINATED}};
+  \node[est,fill=white] (b) at (9.6,0) {\textbf{Borrada}\\\footnotesize ya no existe};
+  \draw[-latex,thick] ([yshift=2mm]r.east) -- node[above,font=\footnotesize] {detener} ([yshift=2mm]t.west);
+  \draw[-latex,thick] ([yshift=-2mm]t.west) -- node[below,font=\footnotesize] {iniciar} ([yshift=-2mm]r.east);
+  \draw[-latex,thick] (t) -- node[above,font=\footnotesize] {borrar} (b);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{3.6cm}p{2.6cm}p{2.6cm}p{2.6cm}@{}}
+\toprule
+\textbf{¿Se cobra?} & \textbf{Encendida} & \textbf{Detenida} & \textbf{Borrada}\\
+\midrule
+Procesador y memoria & Sí & No & No\\
+Disco & Sí & \textbf{Sí} & No\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Ojo con el nombre}
+\small \emph{Terminated} suena a ``borrada'', pero solo está \textbf{apagada}. El disco se sigue cobrando: al terminar un proyecto, \textbf{bórrala}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Módulo 3: cómo pagar menos por una VM}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{3.4cm}p{5.2cm}p{4.0cm}@{}}
+\toprule
+\textbf{Opción} & \textbf{Cómo funciona} & \textbf{Como un\ldots}\\
+\midrule
+A pedido & Pagas por segundo mientras está encendida & \textbf{taxi} con taxímetro\\
+Uso comprometido & Prometes usarla 1 o 3 años y te hacen descuento & \textbf{plan anual} del gimnasio\\
+\textbf{VM Spot} & Muy barata, pero Google puede apagarla cuando necesite espacio & asiento en \textbf{lista de espera}\\
+\bottomrule
+\end{tabular}
+\par\vspace{4mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cuándo usar Spot}
+\small Trabajos que se pueden \textbf{repetir} si se cortan: procesar fotos por la noche, cálculos largos.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Cuándo no}
+\small La web de tu tienda: si Google la apaga, tus clientes no compran.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Módulo 3: discos, imágenes y copias}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{block}{Imagen}
+\small El \textbf{sistema operativo} con el que nace la VM: Debian, Ubuntu, Windows\ldots{}\par\smallskip
+También puedes crear tu \textbf{propia imagen} de una VM ya configurada.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Disco}
+\small Donde se guardan los archivos y el sistema operativo.\par\smallskip
+Se puede \textbf{agrandar}, no achicar.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Instantánea}
+\small Una \textbf{foto} del disco en un momento. Sirve como copia de seguridad o para clonar la VM.
+\end{block}
+\end{columns}
+\par\vspace{3mm}
+\begin{exampleblock}{Una comparación}
+\small La \textbf{imagen} es el molde de la torta; el \textbf{disco}, la torta que te comes; la \textbf{instantánea}, la foto que le tomas antes de cortarla.
+\end{exampleblock}
+\begin{alertblock}{Script de inicio}
+\small Un pequeño programa que la VM corre \textbf{cada vez que arranca}. Así se puede instalar NGINX sin entrar por SSH.
+\end{alertblock}
+\end{frame}
+
+% ------------------------------------------------------------ Practica
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries Práctica}\par
+\vspace{2mm}
+{\small El aplicativo y los labs del curso}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}
+
+\begin{frame}{Práctica: redes y VMs \textnormal{\small(15 min en clase + tarea)}}
+\begin{block}{En clase}
+\small
+1. Abre \texttt{Sesion16/apps/vpc/index.html}: responde el repaso de la Sesión 15.\par\smallskip
+2. En la \textbf{calculadora de subredes}, prueba \texttt{/24}, \texttt{/20} y \texttt{/29}. Anota cuántas IPs quedan para VMs.\par\smallskip
+3. En el \textbf{simulador de firewall}, haz que pase el tráfico web pero no el SSH desde Internet.\par\smallskip
+4. Inicia el primer lab del curso: \emph{Explore the Google Cloud Console and Cloud Shell}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{De tarea, en orden}
+\small Terminar el de consola y Cloud Shell, luego \emph{Create and Configure VPC Networks} y \emph{Create Virtual Machines}. Los otros tres del curso, opcionales.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Entregable}
+\small Captura de cada lab con todos los \textbf{Check my progress} en verde y tus resultados de la calculadora.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Por qué saltamos la guía de estudio del examen ACE y cuándo conviene hacerla?\par\medskip
+2. Una red VPC, ¿es global, regional o zonal? ¿Y una subred?\par\medskip
+3. ¿Cuántas IPs quedan para VMs en una subred \texttt{/24}? ¿Por qué no son 256?\par\medskip
+4. Creaste una regla que abre el puerto 80 para la etiqueta \texttt{web}, pero la página no abre. ¿Qué revisas?\par\medskip
+5. Apagaste tu VM. ¿Qué te siguen cobrando?\par\medskip
+6. Debes procesar miles de fotos por la noche al menor costo. ¿Qué tipo de VM usas?
+\end{block}
+\begin{alertblock}{Lo que viene}
+\small Seguimos la ruta: \textbf{Infraestructura esencial: servicios principales} (IAM a fondo, almacenamiento y bases de datos).
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Google Skills: ruta \emph{Certificación de Associate Cloud Engineer}, \texttt{skills.google/paths/11}.
+  \item Google Skills: \emph{A Tour of Google Cloud Hands-on Labs} (GSP282) y \emph{Preparing for Your Associate Cloud Engineer Journey}.
+  \item Google Skills: \emph{Essential Google Cloud Infrastructure: Foundation}, \texttt{skills.google/paths/11/course\_templates/50}.
+  \item Google Cloud: \emph{VPC network overview}, \emph{Subnets} y \emph{VPC firewall rules}, \texttt{cloud.google.com/vpc/docs}.
+  \item Google Cloud: \emph{Cloud NAT overview} y \emph{Private Google Access}, \texttt{cloud.google.com/nat/docs} y \texttt{cloud.google.com/vpc/docs}.
+  \item Google Cloud: \emph{Machine families resource and comparison guide}, \emph{VM instance lifecycle} y \emph{Spot VMs}, \texttt{cloud.google.com/compute/docs}.
+  \item Google Cloud: \emph{Disks and images}, \texttt{cloud.google.com/compute/docs/disks}.
+  \item Google Cloud: \emph{Network pricing}, \texttt{cloud.google.com/vpc/network-pricing}.
+  \item Material de repaso: \texttt{Sesion15/slides/slides.tex}.
+  \item Las respuestas de todas las preguntas de esta sesión están en \texttt{respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
