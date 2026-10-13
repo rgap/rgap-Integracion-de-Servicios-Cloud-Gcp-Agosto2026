@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Marketplace y redes VPC</title>
+    <title>Redes VPC, Acceso privado a Google y Cloud NAT</title>
     <style>
       :root {
         --utp-red: #c42b35;
@@ -558,18 +558,19 @@
     <div class="topbar"></div>
 
     <header>
-      <p class="eyebrow">Sesión 18</p>
-      <h1>Marketplace y redes VPC</h1>
+      <p class="eyebrow">Sesión 19</p>
+      <h1>Redes VPC, Acceso privado a Google y Cloud NAT</h1>
       <p>
-        Repasa la sesión anterior y practica, sin gastar créditos, los dos labs
-        de hoy: implementar una pila LAMP con Marketplace y probar qué máquinas
-        se pueden hablar dentro de una red VPC.
+        Repasa la sesión anterior y practica, sin gastar créditos, las ideas de
+        los dos labs de hoy: qué máquinas se pueden hablar dentro de una red
+        VPC y cómo trabaja una máquina sin dirección pública.
       </p>
       <nav>
         <a href="#repaso">1. Repaso</a>
-        <a href="#marketplace">2. Simulador de Marketplace</a>
+        <a href="#donde">2. ¿Dónde vive?</a>
         <a href="#ping">3. Laboratorio de ping</a>
-        <a href="#parecidos">4. ¿A qué se parece?</a>
+        <a href="#privada">4. VM sin IP externa</a>
+        <a href="#parecidos">5. ¿A qué se parece?</a>
       </nav>
     </header>
 
@@ -581,36 +582,20 @@
         <p class="score" id="score-tf"></p>
       </section>
 
-      <section id="marketplace">
-        <h2>2. Simulador de Marketplace</h2>
+      <section id="donde">
+        <h2>2. ¿Dónde vive?</h2>
         <p class="hint">
-          Sigue los pasos del lab 1 para implementar una pila LAMP. A la
-          derecha ves lo que Marketplace va haciendo por ti.
+          La jerarquía dice de quién es cada cosa; la región y la zona dicen
+          dónde está. Ubica cada pieza.
         </p>
-        <div class="sim">
-          <div class="panel">
-            <p class="crumb" id="mp-crumb"></p>
-            <div id="mp-screen"></div>
-            <div id="mp-msg"></div>
-            <div class="term-actions">
-              <button type="button" class="reset" id="mp-reset">
-                Empezar de cero
-              </button>
-            </div>
-          </div>
-          <div class="card side">
-            <h3>Misiones</h3>
-            <ul class="missions" id="mp-missions"></ul>
-            <h3>Lo que Marketplace hace por ti</h3>
-            <ul class="steps" id="mp-steps"></ul>
-          </div>
-        </div>
+        <div id="quiz-donde"></div>
+        <p class="score" id="score-donde"></p>
       </section>
 
       <section id="ping">
         <h2>3. Laboratorio de ping</h2>
         <p class="hint">
-          Estas son las tres redes y las cuatro máquinas del lab 2. Elige desde
+          Estas son las tres redes y las cuatro máquinas del lab 1. Elige desde
           dónde y hacia dónde va el <code>ping</code>, adivina el resultado y
           compruébalo.
         </p>
@@ -652,8 +637,53 @@
         </div>
       </section>
 
+      <section id="privada">
+        <h2>4. VM sin IP externa</h2>
+        <p class="hint">
+          Esta es <code>vm-internal</code>, la máquina del lab 2: no tiene IP
+          externa. Enciende o apaga los dos servicios, elige una prueba,
+          adivina el resultado y compruébalo.
+        </p>
+        <div class="sim">
+          <div class="panel">
+            <div class="rules">
+              <label>
+                <input type="checkbox" id="sw-pga" />
+                <span><strong>Acceso privado a Google</strong> en la subred <code>privatenet-us</code></span>
+              </label>
+              <label>
+                <input type="checkbox" id="sw-nat" />
+                <span><strong>Cloud NAT</strong>: la puerta de enlace <code>nat-config</code></span>
+              </label>
+            </div>
+            <label class="field">
+              <span>Prueba</span>
+              <select id="pv-test">
+                <option value="bucket">Dentro de la VM: traer la imagen del bucket</option>
+                <option value="apt">Dentro de la VM: sudo apt-get update</option>
+                <option value="in">Desde Internet: alguien intenta entrar a la VM</option>
+              </select>
+            </label>
+            <p><strong>¿Qué crees que pasará?</strong></p>
+            <div class="choices">
+              <button type="button" id="pv-yes">Funciona</button>
+              <button type="button" id="pv-no">No llega</button>
+            </div>
+            <div id="pv-result"></div>
+          </div>
+          <div class="card side">
+            <h3>Misiones</h3>
+            <ul class="missions" id="pv-missions"></ul>
+            <p class="muted">
+              Pista: cada servicio abre un camino de salida distinto. Ninguno
+              abre un camino de entrada.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section id="parecidos">
-        <h2>4. ¿A qué se parece?</h2>
+        <h2>5. ¿A qué se parece?</h2>
         <p class="hint">Cada pieza de hoy tiene un parecido cotidiano.</p>
         <div id="quiz-par"></div>
         <p class="score" id="score-par"></p>
@@ -667,68 +697,111 @@
     <script>
       const trueFalse = [
         {
-          q: "Un bucket creado con un comando en Cloud Shell también aparece en la consola.",
+          q: "Marketplace es una tienda de programas ya preparados dentro de la consola.",
           answer: true,
-          why: "La consola y Cloud Shell son dos puertas al mismo lugar: trabajan sobre los mismos recursos.",
+          why: "Buscas el producto, lees su ficha y lo implementas con unos clics, como en la Play Store.",
         },
         {
-          q: "Las variables que creas en Cloud Shell siguen ahí cuando lo cierras y lo vuelves a abrir.",
+          q: "En una pila LAMP, MySQL es el programa que atiende a quien visita la web.",
           answer: false,
-          why: "Las variables viven en la sesión y se pierden. Lo que se conserva son los archivos de tu carpeta personal.",
+          why: "Ese es Apache, el mozo. MySQL guarda los datos: es la despensa.",
         },
         {
-          q: "En <code>gcloud storage buckets create</code>, la palabra <code>create</code> es la acción.",
-          answer: true,
-          why: "Programa, servicio, recurso y acción: gcloud, storage, buckets, create.",
-        },
-        {
-          q: "La consola conviene más que los comandos cuando hay que repetir lo mismo cien veces.",
+          q: "Un producto gratis de Marketplace no cuesta nada mientras esté funcionando.",
           answer: false,
-          why: "Para repetir y automatizar ganan los comandos. La consola es mejor para ver y explorar.",
+          why: "El programa puede ser gratis, pero la máquina virtual donde corre se cobra mientras esté encendida.",
         },
         {
-          q: "Para hacer un lab se entra con el usuario temporal, en una ventana de incógnito.",
+          q: "Para que la web se pudiera visitar, Marketplace abrió una regla de firewall.",
           answer: true,
-          why: "Así no usas tu cuenta personal, donde sí te podrían cobrar lo que crees.",
+          why: "Creó la máquina, le dio una dirección en Internet, abrió el firewall e instaló los programas.",
+        },
+        {
+          q: "Implementar un programa es dejarlo instalado y funcionando, listo para usarse.",
+          answer: true,
+          why: "También se dice desplegar. Con Marketplace toma minutos en vez de horas.",
+        },
+      ];
+
+      const whereCases = [
+        {
+          q: "Ordena de mayor a menor la <strong>jerarquía</strong> de Google Cloud.",
+          options: [
+            "Proyecto → carpeta → organización → recurso",
+            "Organización → carpeta → proyecto → recurso",
+            "Recurso → proyecto → organización → carpeta",
+          ],
+          answer: 1,
+          why: "La organización es toda la empresa; dentro van las carpetas, dentro los proyectos y, al final, los recursos.",
+        },
+        {
+          q: "Creas una máquina virtual. ¿A qué pertenece <strong>siempre</strong>?",
+          options: ["A un proyecto", "A ninguna parte", "A todas las carpetas a la vez"],
+          answer: 0,
+          why: "Todo recurso pertenece a un solo proyecto. Por eso cada lab te da un proyecto temporal.",
+        },
+        {
+          q: "Una <strong>red VPC</strong> es un recurso…",
+          options: ["Zonal", "Regional", "Global"],
+          answer: 2,
+          why: "La red abarca todo el mundo. Por eso dos VMs de la misma red se hablan aunque estén en continentes distintos.",
+        },
+        {
+          q: "Una <strong>subred</strong> es un recurso…",
+          options: ["Zonal", "Regional", "Global"],
+          answer: 1,
+          why: "Cada subred vive en una región y tiene su propio rango de direcciones.",
+        },
+        {
+          q: "Una <strong>máquina virtual</strong> es un recurso…",
+          options: ["Zonal", "Regional", "Global"],
+          answer: 0,
+          why: "Una VM vive en una zona: un centro de datos concreto dentro de una región.",
+        },
+        {
+          q: "<code>us-central1-a</code> es…",
+          options: ["Una región", "Una zona", "Un proyecto"],
+          answer: 1,
+          why: "La letra final la delata: us-central1 es la región y us-central1-a, una de sus zonas.",
         },
       ];
 
       const alikeCases = [
         {
-          q: "<strong>Marketplace</strong> se parece a…",
-          options: ["La Play Store o la App Store", "Una calculadora", "Un antivirus"],
+          q: "La <strong>jerarquía</strong> de Google Cloud se parece a…",
+          options: ["Las carpetas de tu computadora", "Un cable de red", "Una contraseña"],
           answer: 0,
-          why: "Una tienda: buscas un programa, lees su ficha y lo instalas con un clic.",
-        },
-        {
-          q: "<strong>Jenkins</strong> se parece a…",
-          options: ["Un cable de red", "Un mayordomo que revisa tu trabajo apenas lo entregas", "Una carpeta de Drive"],
-          answer: 1,
-          why: "Cada vez que alguien sube código, Jenkins arma el programa, lo prueba y avisa si algo falló.",
-        },
-        {
-          q: "En una pila LAMP, <strong>Apache</strong> se parece a…",
-          options: ["La despensa", "El cocinero", "El mozo que atiende a los clientes"],
-          answer: 2,
-          why: "Apache recibe a quien visita la web. PHP es el cocinero y MySQL, la despensa.",
+          why: "El disco, las carpetas, las subcarpetas y los archivos: cada cosa está dentro de otra.",
         },
         {
           q: "Una <strong>subred</strong> se parece a…",
-          options: ["La oficina de una empresa en una ciudad", "Una contraseña", "Un archivo PDF"],
-          answer: 0,
-          why: "La red es la empresa completa; cada subred es su oficina en una región, con sus propios anexos.",
+          options: ["Un archivo PDF", "Un piso del edificio", "Un antivirus"],
+          answer: 1,
+          why: "El edificio es la red; cada piso es una subred con su propio grupo de direcciones.",
         },
         {
-          q: "La <strong>IP externa</strong> se parece a…",
-          options: ["El anexo de una oficina", "El número público al que cualquiera puede llamar", "Un candado"],
-          answer: 1,
-          why: "La IP interna es el anexo: solo sirve adentro. La externa se ve desde Internet.",
+          q: "El <strong>gateway</strong> se parece a…",
+          options: ["La pared entre dos oficinas", "Una impresora", "La puerta del piso: por ahí sale todo lo que va a otro lado"],
+          answer: 2,
+          why: "Lo que va a otra subred o a Internet pasa por el gateway. Dentro de una VPC, Google lo pone por ti.",
         },
         {
           q: "El <strong>firewall</strong> se parece a…",
-          options: ["Un letrero de carretera", "Una impresora", "El portero con su lista de invitados"],
+          options: ["El portero con su lista de invitados", "Un letrero de carretera", "Una calculadora"],
+          answer: 0,
+          why: "Lo que entra está bloqueado hasta que agregas una regla que lo deje pasar.",
+        },
+        {
+          q: "El <strong>Acceso privado a Google</strong> se parece a…",
+          options: ["Un número de teléfono público", "Un pasillo interno hasta el almacén de la misma empresa", "Una puerta a la calle"],
+          answer: 1,
+          why: "La VM llega a los servicios de Google sin salir a Internet. No sirve para el resto de Internet.",
+        },
+        {
+          q: "<strong>Cloud NAT</strong> se parece a…",
+          options: ["Un candado", "Un piso vacío", "La central telefónica: llamas afuera, pero nadie marca directo a tu anexo"],
           answer: 2,
-          why: "Deja entrar solo a quien está en la lista. El letrero de carretera sería una ruta.",
+          why: "La VM sale a Internet con una IP prestada. Desde afuera nadie puede empezar una conexión hacia ella.",
         },
       ];
 
@@ -778,6 +851,7 @@
         () => ["Verdadero", "Falso"],
         (item, option) => (option === 0) === item.answer,
       );
+      renderQuiz("quiz-donde", "score-donde", whereCases, (i) => i.options, (i, o) => o === i.answer);
       renderQuiz("quiz-par", "score-par", alikeCases, (i) => i.options, (i, o) => o === i.answer);
 
       function renderMissions(id, list, done) {
@@ -791,174 +865,7 @@
         });
       }
 
-      // Simulador de Marketplace: los pasos del lab 1, en orden.
-      const LAB_ZONE = "us-central1-a";
-      const mpMissionList = [
-        "Busca LAMP y elige la pila correcta",
-        "Configura la máquina como pide el lab",
-        "Espera a que termine la implementación",
-        "Abre la URL del sitio y mira la página de felicitaciones",
-      ];
-      const mpWork = [
-        "Crear la máquina virtual lamp-1-vm",
-        "Darle una dirección en Internet",
-        "Abrir el firewall para la web",
-        "Instalar Linux, Apache, MySQL y PHP",
-      ];
-      const listings = [
-        { name: "LAMP empaquetado por Bitnami", by: "Bitnami", right: false },
-        { name: "Pila de LAMP", by: "Google Click to Deploy", right: true },
-        { name: "LAMP Stack con panel de control", by: "Otro proveedor", right: false },
-      ];
-      let mp;
-      const mpScreen = document.getElementById("mp-screen");
-      const mpMsg = document.getElementById("mp-msg");
-
-      function mpSay(text, good) {
-        mpMsg.innerHTML = text ? `<div class="feedback ${good ? "good" : "bad"}">${text}</div>` : "";
-      }
-
-      function mpRenderSide() {
-        renderMissions("mp-missions", mpMissionList, mp.done);
-        const ul = document.getElementById("mp-steps");
-        ul.innerHTML = "";
-        mpWork.forEach((text, i) => {
-          const li = document.createElement("li");
-          li.textContent = `${i < mp.built ? "✔ " : ""}${text}`;
-          if (i < mp.built) li.className = "done";
-          ul.appendChild(li);
-        });
-      }
-
-      function mpRender() {
-        const crumbs = ["Marketplace", "Resultados de LAMP", "Acuerdos", "Configuración", "Implementación lamp-1", "Tu sitio"];
-        document.getElementById("mp-crumb").textContent = "Consola de Google Cloud → " + crumbs[mp.step];
-        mpScreen.innerHTML = "";
-
-        if (mp.step === 0) {
-          mpScreen.innerHTML = `
-            <h3>Marketplace</h3>
-            <label class="field"><span>Buscar en Marketplace</span>
-              <input type="text" id="mp-q" placeholder="Escribe aquí lo que pide el lab" autocomplete="off" /></label>
-            <button type="button" id="mp-search">Buscar</button>`;
-          const go = () => {
-            const q = document.getElementById("mp-q").value.trim().toLowerCase();
-            if (q !== "lamp") return mpSay("El lab pide buscar <strong>LAMP</strong>. Escríbelo y busca otra vez.", false);
-            mp.step = 1;
-            mpSay("", true);
-            mpRender();
-          };
-          document.getElementById("mp-search").addEventListener("click", go);
-          document.getElementById("mp-q").addEventListener("keydown", (e) => e.key === "Enter" && go());
-        } else if (mp.step === 1) {
-          mpScreen.innerHTML = "<h3>3 resultados para “LAMP”</h3>";
-          listings.forEach((item) => {
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "listing";
-            b.innerHTML = `<strong>${item.name}</strong><small>${item.by}</small>`;
-            b.addEventListener("click", () => {
-              if (!item.right) {
-                return mpSay("Esa es <strong>otra</strong> pila LAMP: los pasos del lab no coincidirían. Elige la de <strong>Google Click to Deploy</strong>.", false);
-              }
-              mp.done[0] = true;
-              mp.step = 2;
-              mpSay("Correcta. Fíjate siempre en quién preparó el producto.", true);
-              mpRender();
-            });
-            mpScreen.appendChild(b);
-          });
-        } else if (mp.step === 2) {
-          mpScreen.innerHTML = `
-            <h3>Pila de LAMP · Acuerdos</h3>
-            <label><input type="checkbox" id="mp-terms" /> Acepto los términos y acuerdos</label>
-            <button type="button" id="mp-agree">Aceptar e implementar</button>`;
-          document.getElementById("mp-agree").addEventListener("click", () => {
-            if (!document.getElementById("mp-terms").checked) return mpSay("Primero marca la casilla de términos.", false);
-            mp.step = 3;
-            mpSay("Si el lab lo pide, aquí también se <strong>habilitan las APIs</strong>: es encender el interruptor del servicio.", true);
-            mpRender();
-          });
-        } else if (mp.step === 3) {
-          mpScreen.innerHTML = `
-            <h3>Configura la máquina</h3>
-            <p class="muted">El lab pide: zona <strong>${LAB_ZONE}</strong> (en tu lab real puede ser otra), serie <strong>E2</strong> y tipo <strong>e2-medium</strong>.</p>
-            <label class="field"><span>Zona</span>
-              <select id="mp-zone"><option>europe-west1-b</option><option>southamerica-west1-a</option><option>${LAB_ZONE}</option></select></label>
-            <label class="field"><span>Serie</span>
-              <select id="mp-series"><option>N2</option><option>E2</option><option>C3</option></select></label>
-            <label class="field"><span>Tipo de máquina</span>
-              <select id="mp-type"><option>e2-micro (1 GB de memoria)</option><option>e2-standard-4 (16 GB de memoria)</option><option>e2-medium (4 GB de memoria)</option></select></label>
-            <button type="button" id="mp-deploy">Implementar</button>`;
-          document.getElementById("mp-deploy").addEventListener("click", () => {
-            const zone = document.getElementById("mp-zone").value;
-            const series = document.getElementById("mp-series").value;
-            const type = document.getElementById("mp-type").value;
-            const wrong = [];
-            if (zone !== LAB_ZONE) wrong.push("la zona");
-            if (series !== "E2") wrong.push("la serie");
-            if (!type.startsWith("e2-medium")) wrong.push("el tipo de máquina");
-            if (wrong.length) {
-              const list = wrong.length > 1 ? wrong.slice(0, -1).join(", ") + " y " + wrong.at(-1) : wrong[0];
-              return mpSay(`Revisa ${list}. Si no usas los valores del lab, la tarea no se pone en verde.`, false);
-            }
-            mp.done[1] = true;
-            mp.step = 4;
-            mpSay("", true);
-            mpRender();
-            mpBuild();
-          });
-        } else if (mp.step === 4) {
-          const ready = mp.built === mpWork.length;
-          mpScreen.innerHTML = `
-            <h3>${ready ? "Se implementó lamp-1" : "Se está implementando lamp-1…"}</h3>
-            <p class="muted">${ready ? "Haz clic en lamp-1-vm → Detalles y luego en la URL del sitio." : "Mira la lista de la derecha: son los pasos que harías a mano."}</p>
-            <button type="button" id="mp-url" ${ready ? "" : "disabled"}>URL del sitio</button>`;
-          document.getElementById("mp-url").addEventListener("click", () => {
-            mp.clicks += 1;
-            if (mp.clicks === 1) {
-              return mpSay("El sitio todavía no responde: los programas están arrancando. <strong>Espera unos segundos y vuelve a intentar</strong>, como dice el lab.", false);
-            }
-            mp.done[3] = true;
-            mp.step = 5;
-            mpSay("", true);
-            mpRender();
-          });
-        } else {
-          mpScreen.innerHTML = `
-            <div class="site">
-              <p class="big">¡Felicitaciones!</p>
-              <p>El servidor web <strong>Apache</strong> está funcionando en <code>http://34.10.0.20</code></p>
-            </div>
-            <p class="muted">Publicaste una web completa sin instalar nada. Esa dirección es la IP externa de tu máquina.</p>`;
-        }
-        mpRenderSide();
-      }
-
-      function mpBuild() {
-        const run = mp.run;
-        const tick = () => {
-          // Si se reinicio el simulador mientras se implementaba, esta tanda se abandona.
-          if (run !== mp.run || mp.step !== 4) return;
-          mp.built += 1;
-          if (mp.built === mpWork.length) mp.done[2] = true;
-          mpRender();
-          if (mp.built < mpWork.length) setTimeout(tick, 900);
-        };
-        setTimeout(tick, 900);
-      }
-
-      let mpRuns = 0;
-      function mpStart() {
-        mpRuns += 1;
-        mp = { step: 0, built: 0, clicks: 0, run: mpRuns, done: mpMissionList.map(() => false) };
-        mpSay("", true);
-        mpRender();
-      }
-      document.getElementById("mp-reset").addEventListener("click", mpStart);
-      mpStart();
-
-      // Laboratorio de ping: las redes y maquinas del lab 2.
+      // Laboratorio de ping: las redes y maquinas del lab 1.
       const networks = ["mynetwork", "managementnet", "privatenet"];
       const vms = [
         { name: "mynet-us-vm", net: "mynetwork", place: "EE. UU., zona A", int: "10.128.0.2", ext: "34.10.0.11" },
@@ -1058,6 +965,75 @@
       document.getElementById("guess-no").addEventListener("click", () => doPing(false));
       renderNets();
       renderMissions("ping-missions", pingMissionList, pingDone);
+
+      // VM sin IP externa: los tres momentos del lab 2.
+      const pvMissionList = [
+        "Trae la imagen del bucket con solo el Acceso privado encendido",
+        "Comprueba que, solo con el Acceso privado, apt-get update no llega",
+        "Logra que apt-get update funcione",
+        "Con los dos servicios encendidos, comprueba que desde Internet nadie entra",
+      ];
+      const pvDone = pvMissionList.map(() => false);
+      const swPga = document.getElementById("sw-pga");
+      const swNat = document.getElementById("sw-nat");
+      const pvTest = document.getElementById("pv-test");
+      const pvResult = document.getElementById("pv-result");
+      const pvCommands = {
+        bucket: "vm-internal:~$ gcloud storage cp gs://$MY_BUCKET/*.svg .",
+        apt: "vm-internal:~$ sudo apt-get update",
+        in: "internet:~$ ssh IP_DE_VM_INTERNAL",
+      };
+
+      function doPrivate(guessYes) {
+        const pga = swPga.checked;
+        const nat = swNat.checked;
+        const test = pvTest.value;
+        let ok;
+        let out;
+        let why;
+
+        if (test === "bucket") {
+          ok = pga || nat;
+          out = ok ? "Copying gs://.../access.svg to file://./access.svg\nCompleted files 1/1" : "(se queda esperando… corta con Ctrl + C)";
+          if (pga) {
+            why = "El <strong>Acceso privado a Google</strong> está encendido en la subred: la VM llega a Cloud Storage por dentro de la red de Google.";
+            if (!nat) pvDone[0] = true;
+          } else if (nat) {
+            why = "Sale por <strong>Cloud NAT</strong>, dando la vuelta por Internet. Funciona, pero el camino directo a Google es el Acceso privado.";
+          } else {
+            why = "La VM no tiene IP externa y la subred no tiene el Acceso privado a Google: no hay camino hacia Cloud Storage.";
+          }
+        } else if (test === "apt") {
+          ok = nat;
+          out = ok ? "Reading package lists... Done" : "(avanza un poco y se queda esperando… corta con Ctrl + C)";
+          if (nat) {
+            why = "<strong>Cloud NAT</strong> le presta una IP pública para salir. La respuesta vuelve, pero nadie de afuera puede empezar la conversación.";
+            pvDone[2] = true;
+          } else if (pga) {
+            why = "El Acceso privado solo lleva a <strong>Google</strong>. Las actualizaciones que están en el resto de Internet no llegan: falta Cloud NAT.";
+            pvDone[1] = true;
+          } else {
+            why = "Sin IP externa y sin Cloud NAT, la VM no tiene cómo salir a Internet.";
+          }
+        } else {
+          ok = false;
+          out = "ssh: connect to host ... Connection timed out";
+          why = "La VM <strong>no tiene IP externa</strong>: desde Internet no hay a dónde llamar. Ni el Acceso privado ni Cloud NAT abren un camino de entrada. Tú entras con IAP.";
+          if (pga && nat) pvDone[3] = true;
+        }
+
+        const hit = guessYes === ok;
+        pvResult.innerHTML = `
+          <div class="term out">${pvCommands[test]}
+${out}</div>
+          <div class="feedback ${hit ? "good" : "bad"}"><strong>${ok ? "Funciona." : "No llega."}</strong> ${hit ? "Acertaste." : "No era lo que esperabas."} ${why}</div>`;
+        renderMissions("pv-missions", pvMissionList, pvDone);
+      }
+
+      [swPga, swNat, pvTest].forEach((el) => el.addEventListener("change", () => (pvResult.innerHTML = "")));
+      document.getElementById("pv-yes").addEventListener("click", () => doPrivate(true));
+      document.getElementById("pv-no").addEventListener("click", () => doPrivate(false));
+      renderMissions("pv-missions", pvMissionList, pvDone);
     </script>
   </body>
 </html>
