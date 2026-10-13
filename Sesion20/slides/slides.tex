@@ -1,0 +1,460 @@
+% Motor: XeLaTeX. Sesion 20 - material docente UTP.
+% Misma estructura docente que la Sesion 19: teoria en dos partes y un lab.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{header.tex}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Ruta Associate Cloud Engineer: rutas en VPC, Acceso privado a Google y Cloud NAT}
+\date{Semana 10 - Sesión 20}
+\author{Rel Guzman}
+
+% Separador de tema: titulo grande, subtitulo y linea roja.
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% ------------------------------------------- Revision de la sesion anterior
+\begin{frame}{Revisión de la sesión anterior (1/2): redes VPC}
+\begin{block}{Lo que hicimos}
+\small Vimos cómo se organiza Google Cloud y, en el lab \emph{Crea y configura redes de VPC}, creaste \textbf{tres redes} y probaste con \texttt{ping} qué máquinas se hablan.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Dos preguntas sobre cada recurso}
+\small \textbf{¿De quién es?} Lo dice la jerarquía: organización, carpeta, proyecto.\par\smallskip
+\textbf{¿Dónde está?} Lo dicen la región y la zona.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{El edificio}
+\small La \textbf{red} es el edificio; la \textbf{subred}, un piso; el \textbf{gateway}, la puerta del piso.\par\smallskip
+En Google Cloud eso se llama \textbf{red VPC}, y se arma sin cables.
+\end{exampleblock}
+\end{columns}
+\par\vspace{1mm}
+\begin{alertblock}{La idea que seguimos usando hoy}
+\small Toda máquina virtual vive \textbf{dentro de una red}. Hoy vemos \textbf{por dónde viaja} lo que sale de ella.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Revisión de la sesión anterior (2/2): pregunta rápida}
+\begin{block}{Lo que salió en el lab}
+\small Desde una máquina hiciste \texttt{ping} a las otras tres, por dentro (IP interna) y por fuera (IP externa).
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{5.2cm}p{3.4cm}p{3.4cm}@{}}
+\toprule
+\textbf{La otra máquina está en\ldots} & \textbf{Por su IP interna} & \textbf{Por su IP externa}\\
+\midrule
+la \textbf{misma red}, en otra región & \textbf{Responde} & Responde\\
+\textbf{otra red}, en la misma zona & \textbf{No llega} & Responde\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Lo que aprendimos}
+\small Por dentro, lo que importa es estar en la \textbf{misma red}. Cada red VPC está aislada de las demás.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Pregunta rápida}
+\small En el lab, todas las máquinas tenían IP externa. ¿Qué crees que pasa si a una \textbf{se la quitas}?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar con tus palabras \textbf{qué es una red VPC} y \textbf{qué es una ruta}, y decir para qué sirven el \textbf{Acceso privado a Google} y \textbf{Cloud NAT}, haciendo que una máquina \textbf{sin dirección pública} llegue a Google y a Internet.
+\end{block}
+\end{frame}
+
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{10pt}
+  \item Vas por la carretera a una ciudad que no conoces. ¿Cómo sabes por dónde ir en cada cruce?
+  \item Desde tu celular puedes abrir cualquier página de Internet. ¿Puede alguien de Internet ``entrar'' a tu celular? ¿Por qué crees que no?
+  \item En una oficina hay teléfonos que solo llaman a otros anexos. ¿Para qué serviría tener uno así?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.86\textwidth}
+{\large En el trabajo real, las máquinas más importantes \textbf{no se exponen a Internet}: una base de datos, un servidor interno. Pero igual necesitan \textbf{guardar archivos} y \textbf{actualizarse}. Hoy aprendes cómo se logra eso sin abrirles la puerta.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}{Plan de hoy: dos partes y un lab}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{1.4cm}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{5.1cm}@{}}
+\toprule
+\textbf{Parte} & \textbf{Qué vemos} & \textbf{Del curso}\\
+\midrule
+1. Teoría & Repaso corto: qué es una red VPC y qué es una ruta & Módulo \emph{Redes virtuales}\\
+2. Teoría & Máquinas sin dirección pública: cómo llegan a Google y a Internet & \emph{Acceso privado a Google y Cloud NAT}\\
+\textbf{Lab} & Una VM privada que igual descarga y se actualiza & \emph{Implementa el Acceso privado a Google y Cloud NAT}\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Cómo lo trabajamos}
+\small Vamos a lo \textbf{esencial}: una idea por diapositiva y una comparación de la vida diaria. Del lab vemos solo \textbf{lo más importante}; los pasos están en su guía.
+\end{alertblock}
+\end{frame}
+
+% ------------------------------------------------ Parte 1: repaso de VPC
+\separador{Parte 1: las redes VPC, en corto}{Qué es una red VPC y qué es una ruta}
+
+\begin{frame}{¿Qué es una red VPC?}
+\begin{block}{En una frase}
+\small La \textbf{red privada} de tu proyecto dentro de Google Cloud: ahí se conectan tus máquinas virtuales. Se arma con clics o comandos, \textbf{sin cables}.
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.54\textwidth}
+\centering
+\begin{tikzpicture}[font=\footnotesize]
+  \draw[black!55,rounded corners=6pt] (-0.25,-0.25) rectangle (6.85,4.2);
+  \node[anchor=north west,font=\small\bfseries] at (-0.15,4.15) {Proyecto};
+  \draw[utpRojo,thick,rounded corners=6pt,fill=utpRojo!5] (0,0) rectangle (6.6,3.5);
+  \node[anchor=north west,font=\small\bfseries] at (0.1,3.45) {Red (es mundial)};
+  \draw[rounded corners=4pt,fill=white] (0.3,0.3) rectangle (3.1,2.7);
+  \node[anchor=north west] at (0.35,2.65) {\textbf{Subred}};
+  \node[anchor=north west] at (0.35,2.25) {región de EE.\,UU.};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (1.05,0.9) {VM};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (2.3,0.9) {VM};
+  \draw[rounded corners=4pt,fill=white] (3.5,0.3) rectangle (6.3,2.7);
+  \node[anchor=north west] at (3.55,2.65) {\textbf{Subred}};
+  \node[anchor=north west] at (3.55,2.25) {región de Europa};
+  \node[draw,fill=utpRojo!20,rounded corners=2pt] at (4.9,0.9) {VM};
+\end{tikzpicture}
+\column{.43\textwidth}
+\begin{block}{De afuera hacia adentro}
+\small
+\textbf{Proyecto:} la caja donde vive todo.\par\smallskip
+\textbf{Red:} abarca \textbf{todo el mundo}.\par\smallskip
+\textbf{Subred:} un pedazo de la red en \textbf{una región}.\par\smallskip
+\textbf{VM:} vive dentro de una subred.
+\end{block}
+\begin{exampleblock}{Una comparación}
+\small Una \textbf{empresa} con una \textbf{sede} en cada ciudad y \textbf{empleados} en cada sede.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Las redes VPC en cinco ideas}
+\renewcommand{\arraystretch}{1.4}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.7cm}>{\raggedright\arraybackslash}p{5.3cm}>{\raggedright\arraybackslash}p{3.9cm}@{}}
+\toprule
+\textbf{La idea} & \textbf{Qué significa} & \textbf{Se parece a}\\
+\midrule
+\textbf{La red es mundial} & Una sola red llega a todas las regiones & Una empresa con sedes en varios países\\
+\textbf{La subred es de una región} & Cada una tiene su propio grupo de direcciones & La sede de una ciudad\\
+\textbf{Misma red, se hablan} & Por dentro, aunque estén lejos. Entre redes distintas, no & Los anexos de una misma empresa\\
+\textbf{Dos direcciones} & La IP interna la tienen todas. La externa es opcional & El anexo y el número público\\
+\textbf{El firewall decide} & Lo que entra está bloqueado hasta que una regla lo permita & El portero con su lista\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{alertblock}{La idea que abre la parte 2}
+\small La IP externa es \textbf{opcional}. ¿Qué pasa con una máquina que \textbf{no la tiene}?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{¿Qué es una ruta en una VPC?}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Qué es}
+\small Una indicación de la red: ``para llegar a \textbf{tal destino}, ve por \textbf{aquí}''.
+\end{block}
+\begin{block}{Las que ya vienen en toda red}
+\small
+\textbf{Una por cada subred:} para que las máquinas de la red se encuentren, aunque estén en subredes distintas.\par\smallskip
+\textbf{Una hacia Internet:} para todo lo demás. Se escribe \texttt{0.0.0.0/0}, que significa ``cualquier otra dirección''.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small Los \textbf{letreros de la carretera}: ``Arequipa, por la derecha''. No manejan por ti; solo indican el camino.
+\end{exampleblock}
+\begin{alertblock}{La ruta no basta}
+\small Que exista el camino no significa que puedas usarlo. Para \textbf{entrar}, el firewall tiene que permitirlo. Para \textbf{salir a Internet}, la máquina necesita una IP externa\ldots{} o lo que vemos en la parte 2.
+\end{alertblock}
+\end{columns}
+\par\vspace{1mm}
+\begin{block}{Para este curso}
+\small No creas rutas: Google las crea y las mantiene. Las puedes mirar en \textbf{Red de VPC} $\rightarrow$ \textbf{Rutas}.
+\end{block}
+\end{frame}
+
+% --------------------------------------- Parte 2: Acceso privado y Cloud NAT
+\separador{Parte 2: Acceso privado a Google y Cloud NAT}{Máquinas sin dirección pública que igual pueden trabajar}
+
+\begin{frame}{El punto de partida: una VM sin IP externa}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Por qué se hace}
+\small Una máquina \textbf{sin IP externa} no se ve desde Internet: nadie de afuera puede tocarla. Es lo más \textbf{seguro} para una base de datos o un servidor interno.
+\end{block}
+\begin{exampleblock}{Una comparación}
+\small Un empleado con \textbf{anexo pero sin número público}: nadie de la calle puede llamarlo directo.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{El problema}
+\small La puerta queda cerrada en \textbf{los dos sentidos}. Esa máquina tampoco puede:\par\smallskip
+\textbf{1.} Usar los \textbf{servicios de Google}, como Cloud Storage.\par
+\textbf{2.} \textbf{Salir a Internet} para descargar actualizaciones.
+\end{alertblock}
+\begin{block}{Lo que sí puede}
+\small Hablar con las máquinas de \textbf{su misma red}, por su IP interna.
+\end{block}
+\end{columns}
+\par\vspace{1mm}
+\begin{block}{Las dos soluciones de hoy}
+\small Para el problema 1: \textbf{Acceso privado a Google}. Para el problema 2: \textbf{Cloud NAT}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Acceso privado a Google}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.9cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
+  \node[caja,fill=utpRojo!30] (g) at (8.4,0) {\textbf{Servicios de Google}\\\footnotesize Cloud Storage y otros};
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {por dentro de la red de Google} (g);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Qué es}
+\small Un \textbf{interruptor} de la subred. Al encenderlo, sus máquinas sin IP externa pueden usar los \textbf{servicios de Google}.
+\end{block}
+\begin{block}{Dónde se enciende}
+\small En la \textbf{subred}, no en la máquina. Vale para todas las VMs de esa subred.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small Un \textbf{pasillo interno} entre tu oficina y el almacén de la misma empresa: llegas sin salir a la calle.
+\end{exampleblock}
+\begin{alertblock}{Lo que no hace}
+\small No te lleva al \textbf{resto de Internet}. Solo a Google.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cloud NAT}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.7cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
+  \node[caja,fill=utpRojo!30] (n) at (4.3,0) {\textbf{Cloud NAT}\\\footnotesize presta una IP pública};
+  \node[caja,fill=utpRojo!10] (i) at (10.6,0) {\textbf{Internet}};
+  \draw[-latex,thick] ([yshift=2.2mm]v.east) -- node[above,font=\footnotesize] {sale} ([yshift=2.2mm]n.west);
+  \draw[-latex,thick] ([yshift=2.2mm]n.east) -- node[above,font=\footnotesize] {sale con la IP prestada} ([yshift=2.2mm]i.west);
+  \draw[-latex,thick,dashed] ([yshift=-2.2mm]i.west) -- node[below,font=\footnotesize] {nadie entra por su cuenta} ([yshift=-2.2mm]n.east);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Qué es}
+\small Un servicio que deja a las máquinas sin IP externa \textbf{salir a Internet}. La respuesta vuelve, pero nadie de afuera puede \textbf{empezar} una conexión hacia ellas.
+\end{block}
+\begin{block}{Una palabra nueva}
+\small \textbf{NAT:} \emph{traducción de direcciones}. Cambia la IP interna por una pública al salir.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Una comparación}
+\small La \textbf{central telefónica} de la empresa: llamas afuera y se ve el número de la empresa. Desde afuera nadie marca directo a tu anexo.
+\end{exampleblock}
+\begin{alertblock}{Ya lo usas en casa}
+\small Tu \textbf{router wifi} hace NAT: por eso tu celular navega y nadie de Internet entra a él.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Cuál necesito?}
+\renewcommand{\arraystretch}{1.4}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.3cm}p{3.5cm}@{}}
+\toprule
+\textbf{Mi VM sin IP externa quiere\ldots} & \textbf{Se usa} & \textbf{Se configura en}\\
+\midrule
+Usar Cloud Storage u otro servicio de Google & \textbf{Acceso privado a Google} & la subred\\
+Descargar actualizaciones de Internet & \textbf{Cloud NAT} & la red y una región\\
+Que yo entre a su terminal & \textbf{IAP}: un túnel de Google & una regla de firewall\\
+Que el público la visite & Una \textbf{IP externa} & la propia VM\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Se pueden usar juntos}
+\small En el lab enciendes \textbf{los dos}: primero el Acceso privado y después Cloud NAT.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{¿Y cómo entro sin IP externa?}
+\small Con \textbf{IAP}: Google te abre un túnel seguro hasta la terminal de la VM. El lab de hoy entra así.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------ Lab
+\separador{El lab: lo más importante}{\emph{Implementa el Acceso privado a Google y Cloud NAT}}
+
+\begin{frame}{El lab en una mirada}
+\begin{block}{De qué trata}
+\small Creas una máquina \textbf{sin IP externa} y le vas abriendo caminos de salida, uno por uno.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.5cm,minimum height=1.15cm,align=center}]
+  \node[caja,fill=white] (a) at (0,0) {\textbf{1. VM sin IP externa}\\\footnotesize no llega a ningún lado};
+  \node[caja,fill=utpRojo!15] (b) at (4.7,0) {\textbf{2. + Acceso privado}\\\footnotesize ya llega a Google};
+  \node[caja,fill=utpRojo!30] (c) at (9.4,0) {\textbf{3. + Cloud NAT}\\\footnotesize ya llega a Internet};
+  \draw[-latex,thick] (a) -- (b);
+  \draw[-latex,thick] (b) -- (c);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Las dos pruebas del lab}
+\small \textbf{¿Llego a Google?} Traer una imagen de un bucket.\par\smallskip
+\textbf{¿Llego a Internet?} Pedir actualizaciones con \texttt{sudo apt-get update}.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{El ritmo del lab}
+\small \textbf{No funciona}, enciendes algo, \textbf{ahora funciona}. Así, dos veces.
+\end{exampleblock}
+\end{columns}
+\par\vspace{1mm}
+\begin{alertblock}{No te asustes}
+\small Que la prueba falle al inicio \textbf{es parte del lab}: no es un error tuyo. Si se queda esperando, corta con \texttt{Ctrl + C}.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Lo más importante del lab: antes y después}
+\begin{block}{La misma máquina, tres momentos}
+\small \texttt{vm-internal} nunca recibe una IP externa. Lo único que cambia es lo que vas \textbf{encendiendo} a su alrededor.
+\end{block}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{4.9cm}p{2.3cm}p{2.6cm}p{2.6cm}@{}}
+\toprule
+\textbf{Prueba dentro de la VM} & \textbf{Al inicio} & \textbf{+ Acceso privado} & \textbf{+ Cloud NAT}\\
+\midrule
+Traer la imagen del bucket & No llega & \textbf{Funciona} & Funciona\\
+\texttt{sudo apt-get update} & No llega & Solo lo de Google & \textbf{Funciona}\\
+Que alguien de Internet entre & No & No & \textbf{No}\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Qué significa}
+\small Cada servicio abre \textbf{un camino de salida} distinto: uno hacia Google, el otro hacia Internet.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{La conclusión del lab}
+\small La máquina \textbf{trabaja con normalidad} y sigue \textbf{invisible} desde Internet.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{El lab: tres ideas para no perderte}
+\renewcommand{\arraystretch}{1.45}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.0cm}@{}}
+\toprule
+\textbf{La idea} & \textbf{Dónde la ves en el lab} & \textbf{Si la olvidas}\\
+\midrule
+\textbf{La VM nace sin IP externa} & Al crearla, en IP externa eliges \textbf{Ninguna} & El lab pierde sentido: todo funciona desde el inicio\\
+\textbf{El Acceso privado es de la subred} & Editas la \textbf{subred}, no la máquina & Lo buscas en la VM y no aparece\\
+\textbf{Cloud NAT no es instantáneo} & Tarda hasta \textbf{3 minutos} en hacer efecto & Crees que falló: espera y repite\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{¿Y cómo entras a la VM?}
+\small No tiene IP externa, así que Google te abre un \textbf{túnel seguro} (IAP). El comando ya viene escrito en el lab.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Si algo falla}
+\small Fíjate \textbf{dónde estás}: Cloud Shell y la VM son dos lugares distintos. Lo que guardaste en uno no existe en el otro.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------ Practica
+\separador{Práctica}{El lab real}
+
+\begin{frame}{Práctica: una VM sin dirección pública \textnormal{\small(en clase + tarea)}}
+\begin{block}{En clase}
+\small
+1. Haz el lab real: \emph{Implementa el Acceso privado a Google y Cloud NAT}.\par\smallskip
+2. En tu cuaderno, anota cada prueba del lab: \textbf{¿falló o funcionó?} y \textbf{¿qué acababas de encender?}\par\smallskip
+3. Al terminar, compara tus notas con la tabla de \emph{antes y después}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{De tarea}
+\small Terminar el lab si no alcanzó el tiempo en clase.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{alertblock}{Entregable}
+\small Captura del lab con sus tareas en verde y tus notas de las pruebas.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Qué es una red VPC? ¿En qué se diferencia de una subred?\par\medskip
+2. ¿Qué dice una ruta? ¿Qué dos tipos de ruta trae toda red VPC?\par\medskip
+3. La ruta hacia Internet ya existe. ¿Basta para que una máquina sin IP externa salga a Internet?\par\medskip
+4. ¿Por qué querrías una máquina sin IP externa?\par\medskip
+5. Una VM sin IP externa necesita leer un bucket y descargar actualizaciones. ¿Qué enciendes para cada cosa?\par\medskip
+6. Con Cloud NAT encendido, ¿puede alguien de Internet entrar a la máquina? ¿Por qué?
+\end{block}
+\begin{alertblock}{Lo que viene}
+\small Las \textbf{máquinas virtuales} por dentro: tipos de máquina, discos e imágenes.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=center,inner sep=0pt] at (current page.center)
+    {\includegraphics[width=\paperwidth,height=\paperheight]{gracias-final.pdf}};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Google Skills: ruta \emph{Certificación de Associate Cloud Engineer}, \texttt{skills.google/paths/11}.
+  \item Google Skills: \emph{Infraestructura esencial de Google Cloud: conceptos básicos}, \texttt{skills.google/course\_templates/50}, módulo \emph{Redes virtuales}.
+  \item Google Skills: lab \emph{Implementa el Acceso privado a Google y Cloud NAT}, \texttt{skills.google/catalog\_lab/2526}.
+  \item Google Cloud: \emph{VPC networks}, \texttt{cloud.google.com/vpc/docs/vpc}.
+  \item Google Cloud: \emph{Routes}, \texttt{cloud.google.com/vpc/docs/routes}.
+  \item Google Cloud: \emph{Private Google Access}, \texttt{cloud.google.com/vpc/docs/private-google-access}.
+  \item Google Cloud: \emph{Cloud NAT overview}, \texttt{cloud.google.com/nat/docs/overview}.
+  \item Material de repaso: \texttt{Sesion19/slides/slides.tex}.
+  \item Las respuestas de todas las preguntas de esta sesión están en \texttt{respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}

@@ -6,7 +6,6 @@ El criterio fue **lo más introductorio posible, aunque no entren todos los tema
 
 - [Diapositivas PDF](slides/build/slides.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
-- [Aplicativo: Marketplace y pila LAMP](apps/marketplace/index.html)
 - [Respuestas de todas las preguntas](respuestas.md)
 
 ## Qué parte del curso cubre
@@ -29,20 +28,10 @@ El video de introducción es antiguo y muestra la instalación de **Jenkins** (c
 | Inicio | 1–7 | 8 | Revisión de la Sesión 17, logro, saberes previos, utilidad y plan |
 | Soluciones listas | 8–13 | 15 | La aclaración Jenkins/LAMP, qué es Jenkins, a mano o con Marketplace, la tienda |
 | El lab, paso a paso | 14–19 | 15 | Qué es LAMP, cómo viaja una visita, las tareas y qué hizo Marketplace |
-| Práctica | 20–21 | 35 | Aplicativo y el lab real completo |
+| Práctica | 20–21 | 35 | El lab real completo |
 | Cierre | 22–24 | 7 | Preguntas para comprobar y referencias |
 
 Con un solo lab, el lab real **sí cabe** en la clase; lo que no se termine queda de tarea.
-
-## El aplicativo
-
-`apps/marketplace/index.html` es una sola página, sin dependencias, que se abre con doble clic:
-
-1. **Repaso:** cinco preguntas de verdadero o falso sobre la Sesión 17.
-2. **Simulador de Marketplace:** los pasos del lab (buscar LAMP, elegir la pila de Google Click to Deploy entre tres, aceptar los términos, configurar zona, serie y tipo, implementar y abrir la URL del sitio). A la derecha se marca lo que Marketplace va haciendo por ti. Reproduce los dos tropiezos típicos: elegir otra pila y abrir el sitio antes de tiempo.
-3. **¿A qué se parece?:** cada pieza de hoy con su comparación.
-
-El laboratorio de ping que estaba aquí ahora está en el aplicativo de la Sesion19.
 
 ## Los dibujos
 

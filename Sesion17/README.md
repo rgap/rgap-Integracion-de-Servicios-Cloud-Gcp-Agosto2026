@@ -4,7 +4,6 @@ Presentación de **37 diapositivas** para una clase de **80 minutos**, nivel pri
 
 - [Diapositivas PDF](slides/build/slides.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
-- [Aplicativo: consola y Cloud Shell](apps/consola/index.html)
 - [Respuestas de todas las preguntas](respuestas.md)
 
 ## La ruta que seguimos
@@ -25,7 +24,7 @@ Ruta **Certificación de Associate Cloud Engineer** en Google Skills (`skills.go
 | Guía de estudio ACE | 8 | 2 | Qué hay dentro del curso |
 | Infraestructura esencial | 9–18 | 20 | Mapa del curso, qué es la nube, ecosistema, regiones y zonas, opciones de cómputo, las cuatro formas de interactuar, consola, `gcloud` y Cloud Shell |
 | El lab, tarea por tarea | 19–32 | 25 | Bucket, las 6 tareas del lab, vocabulario de terminal, variables, `.profile` y errores frecuentes |
-| Práctica | 33–34 | 15 | Simulador de Cloud Shell e inicio del lab real |
+| Práctica | 33–34 | 15 | Inicio del lab real |
 | Cierre | 35–37 | 8 | Preguntas para comprobar y referencias |
 
 ## Las imágenes
@@ -41,15 +40,6 @@ Las siete capturas del curso están en `slides/assets/` y aparecen en este orden
 | 16 | `gc-consola.png` | La lista de VMs en la consola |
 | 17 | `gc-cli.png` | La misma lista con `gcloud compute instances list` |
 | 18 | `gc-cloud-shell.png` | Cloud Shell abierto desde la consola |
-
-## El aplicativo
-
-`apps/consola/index.html` es una sola página, sin dependencias, que se abre con doble clic:
-
-1. **Repaso:** cinco preguntas de verdadero o falso sobre el recorrido por los labs y la sesión anterior.
-2. **Simulador de Cloud Shell:** una terminal de mentira que entiende los comandos del lab (`gcloud storage buckets create`, `gcloud storage cp`, variables, `mkdir`, `touch`, `echo >>`, `source`, `nano .profile`). Tiene un botón para **cerrar y volver a abrir** la sesión, que muestra qué se pierde y qué no, y seis misiones que se marcan solas.
-3. **¿Consola o Cloud Shell?:** casos para elegir la herramienta.
-4. **¿A qué se parece?:** cada pieza de Google Cloud con su parecido fuera de Google.
 
 ## Criterio de redacción
 

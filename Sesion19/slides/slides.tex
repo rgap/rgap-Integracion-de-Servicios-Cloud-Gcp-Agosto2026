@@ -1,10 +1,10 @@
 % Motor: XeLaTeX. Sesion 19 - material docente UTP.
-% Misma estructura docente que la Sesion 18, con dos partes y dos labs.
+% Misma estructura docente que la Sesion 18.
 \documentclass[aspectratio=169,10pt,c]{beamer}
 \input{header.tex}
 
 \title{Integración de Servicios Cloud GCP}
-\subtitle{Ruta Associate Cloud Engineer: redes VPC, Acceso privado a Google y Cloud NAT}
+\subtitle{Ruta Associate Cloud Engineer: configuración de redes VPC}
 \date{Semana 10 - Sesión 19}
 \author{Rel Guzman}
 
@@ -77,7 +77,7 @@
 
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
-Al finalizar, podrás explicar con tus palabras \textbf{cómo se organiza Google Cloud} (la jerarquía, las regiones y las zonas), \textbf{crear una red VPC} con sus subredes y su firewall, y decir para qué sirven el \textbf{Acceso privado a Google} y \textbf{Cloud NAT}.
+Al finalizar, podrás explicar con tus palabras \textbf{cómo se organiza Google Cloud} (la jerarquía, las regiones y las zonas), decir qué son una \textbf{red local}, una \textbf{subred} y un \textbf{gateway}, y \textbf{crear una red VPC} con sus subredes y su firewall.
 \end{block}
 \end{frame}
 
@@ -85,39 +85,37 @@ Al finalizar, podrás explicar con tus palabras \textbf{cómo se organiza Google
 \begin{itemize}\setlength\itemsep{10pt}
   \item En tu computadora guardas archivos dentro de carpetas, y carpetas dentro de otras. ¿Para qué sirve ese orden?
   \item En tu casa, el celular, la laptop y el televisor usan el mismo wifi. ¿Pueden ``verse'' entre ellos? ¿Y con el wifi del vecino?
-  \item Desde tu celular puedes abrir cualquier página de Internet. ¿Puede alguien de Internet ``entrar'' a tu celular? ¿Por qué crees que no?
+  \item ¿Quién decide quién entra a un edificio? ¿Cómo lo decide?
 \end{itemize}
 \end{frame}
 
 \begin{frame}[c]{Utilidad de esta sesión}
 \begin{center}
 \begin{minipage}{.86\textwidth}
-{\large Toda máquina en la nube vive \textbf{dentro de una red}. Quien entiende la red sabe responder tres preguntas de cualquier trabajo real: \textbf{¿quién se habla con quién?}, \textbf{¿quién puede entrar?} y \textbf{¿cómo sale a Internet una máquina que no queremos exponer?}}
+{\large Toda máquina en la nube vive \textbf{dentro de una red}. Quien entiende la red sabe responder dos preguntas de cualquier trabajo real: \textbf{¿quién se habla con quién?} y \textbf{¿quién puede entrar?}}
 \end{minipage}
 \end{center}
 \end{frame}
 
-\begin{frame}{Plan de hoy: dos partes, dos labs}
+\begin{frame}{Plan de hoy: teoría y un lab}
 \renewcommand{\arraystretch}{1.35}
 \centering\small
 \begin{tabular}{@{}p{1.4cm}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{5.1cm}@{}}
 \toprule
 \textbf{Parte} & \textbf{Qué vemos} & \textbf{Del curso}\\
 \midrule
-1. Teoría & Jerarquía, regiones y zonas; red local, subred, gateway y VPC & Módulo \emph{Redes virtuales}\\
-\textbf{Lab 1} & Crear redes y probar quién habla con quién & \emph{Crea y configura redes de VPC}\\
-2. Teoría & Máquinas sin dirección pública: cómo llegan a Google y a Internet & \emph{Acceso privado a Google y Cloud NAT}\\
-\textbf{Lab 2} & Una VM privada que igual descarga y se actualiza & \emph{Implementa el Acceso privado a Google y Cloud NAT}\\
+Teoría & Jerarquía, regiones y zonas; red local, subred, gateway y VPC & Módulo \emph{Redes virtuales}\\
+\textbf{Lab} & Crear redes y probar quién habla con quién & \emph{Crea y configura redes de VPC}\\
 \bottomrule
 \end{tabular}
 \par\vspace{3mm}
 \begin{alertblock}{Cómo lo trabajamos}
-\small Vamos a lo \textbf{esencial}: una idea por diapositiva y una comparación de la vida diaria. Al final de cada parte hay un lab.
+\small Vamos a lo \textbf{esencial}: una idea por diapositiva y una comparación de la vida diaria. Del lab vemos solo \textbf{lo más importante}; los pasos están en su guía.
 \end{alertblock}
 \end{frame}
 
-% ------------------------------------------------ Parte 1: redes VPC
-\separador{Parte 1: configuración de redes VPC}{De la jerarquía de Google Cloud a tu primera red}
+% ------------------------------------------------ Redes VPC
+\separador{Configuración de redes VPC}{De la jerarquía de Google Cloud a tu primera red}
 
 \begin{frame}{La jerarquía de Google Cloud}
 \begin{columns}[c,onlytextwidth]
@@ -381,7 +379,7 @@ Al finalizar, podrás explicar con tus palabras \textbf{cómo se organiza Google
 \end{exampleblock}
 \column{.48\textwidth}
 \begin{alertblock}{Sin red no hay VM}
-\small Toda máquina virtual necesita una red. Lo comprobarás en el lab 1.
+\small Toda máquina virtual necesita una red. Lo comprobarás en el lab.
 \end{alertblock}
 \end{columns}
 \end{frame}
@@ -505,32 +503,13 @@ Tú agregas reglas para \textbf{dejar entrar} lo que necesitas.
 \end{alertblock}
 \end{frame}
 
-% ------------------------------------------------------------------ Lab 1
-\separador{Lab 1, paso a paso}{\emph{Crea y configura redes de VPC}}
+% ------------------------------------------------------------------ Lab
+\separador{El lab: lo más importante}{\emph{Crea y configura redes de VPC}}
 
-\begin{frame}{Mapa del lab 1}
+\begin{frame}{El lab en una mirada}
 \begin{block}{De qué trata}
-\small Borras la red que viene por defecto, creas \textbf{tres redes} propias y pruebas con \texttt{ping} \textbf{qué máquinas se pueden hablar}.
+\small Creas \textbf{tres redes} propias y pruebas con \texttt{ping} \textbf{qué máquinas se pueden hablar}.
 \end{block}
-\renewcommand{\arraystretch}{1.3}
-\centering\small
-\begin{tabular}{@{}p{0.7cm}p{5.6cm}p{6.4cm}@{}}
-\toprule
-\textbf{\#} & \textbf{Tarea} & \textbf{Lo que aprendes}\\
-\midrule
-1 & Explora la red predeterminada & Qué trae una red, y que sin red no hay VM\\
-2 & Crea una red de modo automático & Red, firewall y dos VMs; probar con \texttt{ping}\\
-3 & Crea redes de modo personalizado & Lo mismo con clics y con comandos\\
-4 & Explora la conectividad entre redes & Misma red: se hablan. Otra red: no\\
-\bottomrule
-\end{tabular}
-\par\vspace{2mm}
-\begin{alertblock}{Es un lab largo}
-\small Tiene muchos pasos, pero se \textbf{repiten}: crear una red, una regla, una VM. La primera vez con clics; la segunda, con un comando.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Lo que tendrás al terminar}
 \begin{center}
 \begin{tikzpicture}[font=\footnotesize,
   vm/.style={draw,fill=utpRojo!20,rounded corners=2pt,minimum height=.55cm,inner xsep=3pt}]
@@ -552,128 +531,13 @@ Tú agregas reglas para \textbf{dejar entrar} lo que necesitas.
 \small Tres \textbf{redes} (los marcos) y cuatro \textbf{máquinas} (las cajas). Tres máquinas están en la \textbf{misma zona}, pero en redes distintas.
 \end{block}
 \column{.48\textwidth}
-\begin{exampleblock}{Cómo leer los nombres}
-\small \texttt{us}: está en la región de EE.\,UU. \texttt{notus}: \emph{not US}, está en \textbf{otra} región. El lab te dice cuáles son.
-\end{exampleblock}
-\end{columns}
-\par\vspace{1mm}
 \begin{alertblock}{La pregunta del lab}
 \small Desde \texttt{mynet-us-vm}, ¿a cuáles de las otras tres llega un \texttt{ping}?
 \end{alertblock}
-\end{frame}
-
-\begin{frame}{Lab 1, tarea 1: explora la red predeterminada}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Primero, mira}
-\small En \textbf{Red de VPC} verás lo que trae la red \texttt{default}:\par\smallskip
-\textbf{Subredes:} una en cada región.\par
-\textbf{Rutas:} una por subred y una hacia Internet.\par
-\textbf{Firewall:} cuatro reglas que dejan entrar \texttt{ping}, SSH, RDP y lo que viene de la misma red.
-\end{block}
-\column{.48\textwidth}
-\begin{block}{Después, borra}
-\small
-\textbf{1.} Borra las cuatro reglas de firewall.\par
-\textbf{2.} Borra la red \texttt{default}.\par
-\textbf{3.} Mira \textbf{Rutas} y \textbf{Firewall}: quedaron vacíos.
-\end{block}
-\begin{exampleblock}{El experimento}
-\small Intenta crear una VM. Sale el error \emph{No hay más redes disponibles}. Haz clic en \textbf{Cancelar}.
-\end{exampleblock}
-\end{columns}
-\par\vspace{1mm}
-\begin{alertblock}{La lección}
-\small \textbf{Sin red, no hay máquina virtual.} Es como querer un anexo en una oficina sin central telefónica.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Lab 1, tarea 2 (a): crea una red automática}
-\begin{columns}[T,onlytextwidth]
-\column{.50\textwidth}
-\begin{block}{Paso a paso}
-\small
-\textbf{1.} En Cloud Shell, ejecuta el comando que da el lab para \textbf{habilitar} dos APIs.\par\smallskip
-\textbf{2.} \textbf{Red de VPC} $\rightarrow$ \textbf{Crear red de VPC}. Nombre: \texttt{mynetwork}. Modo: \textbf{Automático}.\par\smallskip
-\textbf{3.} En \textbf{Reglas de firewall}, marca \textbf{todas}. Clic en \textbf{Crear}.\par\smallskip
-\textbf{4.} Crea una regla más: \texttt{allow-iap-ssh}, con los valores del lab.\par\smallskip
-\textbf{5.} Crea dos VMs: \texttt{mynet-us-vm} y \texttt{mynet-notus-vm}. En \textbf{Redes}, ponles la etiqueta \texttt{iap-gce}.
-\end{block}
-\column{.46\textwidth}
-\begin{exampleblock}{¿Para qué la regla \texttt{allow-iap-ssh}?}
-\small Deja que \textbf{Google} te abra la terminal de la VM de forma segura. Solo vale para las VMs con la etiqueta \texttt{iap-gce}.
-\end{exampleblock}
-\begin{block}{¿Qué es una etiqueta de red?}
-\small Un \textbf{sticker} que le pegas a la VM. La regla dice: ``dejo pasar solo a las que tienen este sticker''.
-\end{block}
-\begin{alertblock}{Error típico}
-\small Olvidar la etiqueta, o escribirla distinto. Después, la terminal no abre.
-\end{alertblock}
 \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Lab 1, tarea 2 (b): entra a una VM y haz \texttt{ping}}
-\begin{block}{Los comandos}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-gcloud compute ssh mynet-us-vm --zone=ZONA_DEL_LAB --tunnel-through-iap
-ping -c 3 IP_DE_LA_OTRA_VM
-exit
-\end{lstlisting}
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Línea por línea}
-\small
-\textbf{1.} Abre la terminal \textbf{dentro} de \texttt{mynet-us-vm}. Si pregunta, responde \texttt{Y} y luego Enter dos veces.\par\smallskip
-\textbf{2.} Saluda \textbf{3 veces} a la otra VM. Prueba con su IP interna y con la externa.\par\smallskip
-\textbf{3.} Sale de la VM y vuelve a Cloud Shell.
-\end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Cómo leer el resultado}
-\small \texttt{0\% packet loss}: respondió.\par
-\texttt{100\% packet loss}: no llegó.
-\end{exampleblock}
-\begin{alertblock}{Mira el \emph{prompt}}
-\small Si dice \texttt{mynet-us-vm}, estás \textbf{dentro} de la VM. Si dice \texttt{cloudshell}, estás afuera.
-\end{alertblock}
-\end{columns}
-\par\vspace{1mm}
-{\small \textbf{Para cerrar la tarea:} edita \texttt{mynetwork} y cambia el modo a \textbf{Personalizado}. Así Google ya no le agrega subredes por su cuenta.}
-\end{frame}
-
-\begin{frame}[fragile]{Lab 1, tarea 3: lo mismo, con clics y con comandos}
-\renewcommand{\arraystretch}{1.25}
-\centering\small
-\begin{tabular}{@{}p{3.2cm}p{4.6cm}p{4.8cm}@{}}
-\toprule
-\textbf{Qué creas} & \textbf{Con clics (consola)} & \textbf{Con un comando (Cloud Shell)}\\
-\midrule
-Una red y su subred & \texttt{managementnet} & \texttt{privatenet}\\
-Una regla de firewall & para \texttt{managementnet} & para \texttt{privatenet}\\
-Una VM & \texttt{managementnet-us-vm} & \texttt{privatenet-us-vm}\\
-\bottomrule
-\end{tabular}
-\par\vspace{1mm}
-\begin{block}{Así se ve crear una red y una subred con comandos}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-gcloud compute networks create privatenet --subnet-mode=custom
-gcloud compute networks subnets create privatesubnet-us \
-  --network=privatenet --region=REGION_DEL_LAB --range=172.16.0.0/24
-\end{lstlisting}
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Cómo leerlo}
-\small \texttt{--network}: a qué red pertenece. \texttt{--region}: dónde queda. \texttt{--range}: su grupo de direcciones.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{alertblock}{El truco de la consola}
-\small El botón \textbf{Línea de comandos equivalente} te muestra el comando de lo que acabas de llenar con clics.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Lab 1, tarea 4: ¿quién se puede hablar?}
+\begin{frame}{Lo más importante del lab: ¿quién se puede hablar?}
 \begin{block}{El experimento}
 \small Entras a \texttt{mynet-us-vm} y le haces \texttt{ping} a las otras tres máquinas: primero a su IP \textbf{externa}, luego a su IP \textbf{interna}.
 \end{block}
@@ -703,290 +567,49 @@ gcloud compute networks subnets create privatesubnet-us \
 {\raggedright\small \textbf{¿Por qué la IP externa sí responde?} Porque va por Internet, y tus reglas de firewall dejan entrar el \texttt{ping}.\par}
 \end{frame}
 
-% --------------------------------------- Parte 2: Acceso privado y Cloud NAT
-\separador{Parte 2: Acceso privado a Google y Cloud NAT}{Máquinas sin dirección pública que igual pueden trabajar}
-
-\begin{frame}{El punto de partida: una VM sin IP externa}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Por qué se hace}
-\small Una máquina \textbf{sin IP externa} no se ve desde Internet: nadie de afuera puede tocarla. Es lo más \textbf{seguro} para una base de datos o un servidor interno.
-\end{block}
-\begin{exampleblock}{Una comparación}
-\small Un empleado con \textbf{anexo pero sin número público}: nadie de la calle puede llamarlo directo.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{alertblock}{El problema}
-\small La puerta queda cerrada en \textbf{los dos sentidos}. Esa máquina tampoco puede:\par\smallskip
-\textbf{1.} Usar los \textbf{servicios de Google}, como Cloud Storage.\par
-\textbf{2.} \textbf{Salir a Internet} para descargar actualizaciones.
-\end{alertblock}
-\begin{block}{Lo que sí puede}
-\small Hablar con las máquinas de \textbf{su misma red}, por su IP interna.
-\end{block}
-\end{columns}
-\par\vspace{1mm}
-\begin{block}{Las dos soluciones de hoy}
-\small Para el problema 1: \textbf{Acceso privado a Google}. Para el problema 2: \textbf{Cloud NAT}.
-\end{block}
-\end{frame}
-
-\begin{frame}{Acceso privado a Google}
-\begin{center}
-\begin{tikzpicture}[font=\small,
-  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.9cm,minimum height=1.0cm,align=center}]
-  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
-  \node[caja,fill=utpRojo!30] (g) at (8.4,0) {\textbf{Servicios de Google}\\\footnotesize Cloud Storage y otros};
-  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {por dentro de la red de Google} (g);
-\end{tikzpicture}
-\end{center}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Qué es}
-\small Un \textbf{interruptor} de la subred. Al encenderlo, sus máquinas sin IP externa pueden usar los \textbf{servicios de Google}.
-\end{block}
-\begin{block}{Dónde se enciende}
-\small En la \textbf{subred}, no en la máquina. Vale para todas las VMs de esa subred.
-\end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Una comparación}
-\small Un \textbf{pasillo interno} entre tu oficina y el almacén de la misma empresa: llegas sin salir a la calle.
-\end{exampleblock}
-\begin{alertblock}{Lo que no hace}
-\small No te lleva al \textbf{resto de Internet}. Solo a Google.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Cloud NAT}
-\begin{center}
-\begin{tikzpicture}[font=\small,
-  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.7cm,minimum height=1.0cm,align=center}]
-  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
-  \node[caja,fill=utpRojo!30] (n) at (4.3,0) {\textbf{Cloud NAT}\\\footnotesize presta una IP pública};
-  \node[caja,fill=utpRojo!10] (i) at (10.6,0) {\textbf{Internet}};
-  \draw[-latex,thick] ([yshift=2.2mm]v.east) -- node[above,font=\footnotesize] {sale} ([yshift=2.2mm]n.west);
-  \draw[-latex,thick] ([yshift=2.2mm]n.east) -- node[above,font=\footnotesize] {sale con la IP prestada} ([yshift=2.2mm]i.west);
-  \draw[-latex,thick,dashed] ([yshift=-2.2mm]i.west) -- node[below,font=\footnotesize] {nadie entra por su cuenta} ([yshift=-2.2mm]n.east);
-\end{tikzpicture}
-\end{center}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{block}{Qué es}
-\small Un servicio que deja a las máquinas sin IP externa \textbf{salir a Internet}. La respuesta vuelve, pero nadie de afuera puede \textbf{empezar} una conexión hacia ellas.
-\end{block}
-\begin{block}{Una palabra nueva}
-\small \textbf{NAT:} \emph{traducción de direcciones}. Cambia la IP interna por una pública al salir.
-\end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Una comparación}
-\small La \textbf{central telefónica} de la empresa: llamas afuera y se ve el número de la empresa. Desde afuera nadie marca directo a tu anexo.
-\end{exampleblock}
-\begin{alertblock}{Ya lo usas en casa}
-\small Tu \textbf{router wifi} hace NAT: por eso tu celular navega y nadie de Internet entra a él.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{¿Cuál necesito?}
-\renewcommand{\arraystretch}{1.4}
+\begin{frame}{El lab: tres ideas para no perderte}
+\renewcommand{\arraystretch}{1.45}
 \centering\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.3cm}p{3.5cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.3cm}>{\raggedright\arraybackslash}p{4.0cm}@{}}
 \toprule
-\textbf{Mi VM sin IP externa quiere\ldots} & \textbf{Se usa} & \textbf{Se configura en}\\
+\textbf{La idea} & \textbf{Dónde la ves en el lab} & \textbf{Se parece a}\\
 \midrule
-Usar Cloud Storage u otro servicio de Google & \textbf{Acceso privado a Google} & la subred\\
-Descargar actualizaciones de Internet & \textbf{Cloud NAT} & la red y una región\\
-Que yo entre a su terminal & \textbf{IAP}, como en el lab 1 & una regla de firewall\\
-Que el público la visite & Una \textbf{IP externa} & la propia VM\\
+\textbf{Sin red no hay VM} & Borras la red y ya no te deja crear máquinas & Pedir un anexo donde no hay central telefónica\\
+\textbf{Para entrar hace falta permiso} & Una regla de firewall deja abrir la terminal solo a las VMs con la etiqueta \texttt{iap-gce} & Un sticker de ``visita autorizada''\\
+\textbf{El \texttt{ping} se lee fácil} & \texttt{0\% packet loss}: respondió. \texttt{100\% packet loss}: no llegó & Gritar ``¿me escuchas?''\\
 \bottomrule
 \end{tabular}
 \par\vspace{3mm}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
-\begin{exampleblock}{Se pueden usar juntos}
-\small En el lab 2 enciendes \textbf{los dos}: primero el Acceso privado y después Cloud NAT.
+\begin{exampleblock}{Lo haces de dos maneras}
+\small Una red con \textbf{clics} y otra con \textbf{comandos}. Hacen lo mismo: son las dos puertas de la Sesión 17.
 \end{exampleblock}
 \column{.48\textwidth}
-\begin{alertblock}{¿Y cómo entro sin IP externa?}
-\small Con \textbf{IAP}: Google te abre un túnel seguro hasta la VM. Es la opción \texttt{--tunnel-through-iap} que ya usaste.
+\begin{alertblock}{Si algo falla}
+\small Copia los nombres, la región y la zona \textbf{tal cual} los da el lab. Y sigue la guía del lab paso a paso: ahí está cada clic.
 \end{alertblock}
 \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------------ Lab 2
-\separador{Lab 2, paso a paso}{\emph{Implementa el Acceso privado a Google y Cloud NAT}}
-
-\begin{frame}{Mapa del lab 2}
-\begin{block}{De qué trata}
-\small Creas una máquina \textbf{sin IP externa} y compruebas tres veces lo mismo: \textbf{no funciona}, enciendes algo, \textbf{ahora funciona}.
-\end{block}
-\renewcommand{\arraystretch}{1.3}
-\centering\small
-\begin{tabular}{@{}p{0.7cm}p{5.9cm}p{6.1cm}@{}}
-\toprule
-\textbf{\#} & \textbf{Tarea} & \textbf{Lo que aprendes}\\
-\midrule
-1 & Crea la instancia de VM & Una VM sin IP externa no sale a Internet\\
-2 & Habilita el Acceso privado a Google & Ahora la VM llega a Cloud Storage\\
-3 & Configura Cloud NAT & Ahora la VM se actualiza desde Internet\\
-4 & Mira los registros de Cloud NAT & Queda anotado todo lo que salió\\
-\bottomrule
-\end{tabular}
-\par\vspace{2mm}
-\begin{alertblock}{Un nombre repetido}
-\small La red se llama \texttt{privatenet}, igual que una del lab 1. No es la misma: cada lab tiene su \textbf{propio proyecto}.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}[fragile]{Lab 2, tarea 1: crea la VM sin IP externa}
-\begin{columns}[T,onlytextwidth]
-\column{.52\textwidth}
-\begin{block}{Paso a paso}
-\small
-\textbf{1.} Crea la red \texttt{privatenet}, modo \textbf{Personalizado}, con la subred \texttt{privatenet-us} y el rango \texttt{10.130.0.0/20}.\par\smallskip
-\textbf{2.} Crea la regla \texttt{privatenet-allow-ssh}: origen \texttt{35.235.240.0/20}, TCP, puerto \texttt{22}.\par\smallskip
-\textbf{3.} Crea la VM \texttt{vm-internal} en esa subred. En \textbf{Dirección IPv4 externa}, elige \textbf{Ninguna}.
-\end{block}
-\column{.44\textwidth}
-\begin{exampleblock}{¿Qué es ese rango raro?}
-\small \texttt{35.235.240.0/20} son las direcciones de \textbf{IAP}, el servicio de Google que te abre la terminal.
-\end{exampleblock}
-\begin{alertblock}{Error típico}
-\small Dejar la IP externa en \emph{Efímera}: la tarea no se pone en verde.
-\end{alertblock}
-\end{columns}
-\par\vspace{1mm}
-\begin{block}{La primera prueba, en Cloud Shell}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-gcloud compute ssh vm-internal --zone ZONA_DEL_LAB --tunnel-through-iap
-ping -c 2 www.google.com
-exit
-\end{lstlisting}
-\end{block}
-{\small El \texttt{ping} \textbf{no responde}: la máquina no tiene cómo salir a Internet. Es lo esperado.\par}
-\end{frame}
-
-\begin{frame}[fragile]{Lab 2, tarea 2: enciende el Acceso privado a Google}
-\begin{block}{Los comandos}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
-export MY_BUCKET=nombre-de-tu-bucket
-gcloud storage cp gs://cloud-training/gcpnet/private/access.svg gs://$MY_BUCKET
-gcloud storage cp gs://$MY_BUCKET/*.svg .
-\end{lstlisting}
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.52\textwidth}
-\begin{block}{Paso a paso}
-\small
-\textbf{1.} Crea un bucket \textbf{Multirregión} con un nombre único.\par
-\textbf{2.} En Cloud Shell, ejecuta las líneas 1 y 2: la imagen queda en tu bucket.\par
-\textbf{3.} Entra a \texttt{vm-internal} y ejecuta la línea 3: \textbf{se cuelga}. Corta con \texttt{Ctrl + C}.\par
-\textbf{4.} Edita la subred \texttt{privatenet-us}: Acceso privado a Google \textbf{Activo}.\par
-\textbf{5.} Repite la línea 3 en la VM: \textbf{ahora funciona}.
-\end{block}
-\column{.44\textwidth}
-\begin{exampleblock}{Cómo leerlo}
-\small \texttt{export}: guarda el nombre. \texttt{cp}: copia. \texttt{gs://}: es un bucket.
-\end{exampleblock}
-\begin{alertblock}{Error típico}
-\small La variable \texttt{MY\_BUCKET} vive en \textbf{Cloud Shell}. Dentro de la VM no existe: hay que repetir el \texttt{export} ahí.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}[fragile]{Lab 2, tareas 3 y 4: configura Cloud NAT}
-\begin{columns}[T,onlytextwidth]
-\column{.52\textwidth}
-\begin{block}{Paso a paso}
-\small
-\textbf{1.} Dentro de \texttt{vm-internal}, ejecuta \texttt{sudo apt-get update}. Solo avanza con lo que es de Google; el resto \textbf{se cuelga}. Corta con \texttt{Ctrl + C} y sal con \texttt{exit}.\par\smallskip
-\textbf{2.} Busca \textbf{Servicios de red} $\rightarrow$ \textbf{Cloud NAT} $\rightarrow$ \textbf{Comenzar}.\par\smallskip
-\textbf{3.} Nombre: \texttt{nat-config}. Red: \texttt{privatenet}. Región: la del lab.\par\smallskip
-\textbf{4.} Cloud Router: \textbf{Crear router nuevo}, \texttt{nat-router}. Clic en \textbf{Crear}.\par\smallskip
-\textbf{5.} Espera el estado \textbf{En ejecución} y repite el comando en la VM: \textbf{ahora funciona}.
-\end{block}
-\column{.44\textwidth}
-\begin{exampleblock}{¿Qué hace \texttt{apt-get update}?}
-\small Le pregunta a Internet qué actualizaciones hay para Linux. Es una prueba simple de ``¿puedo salir?''.
-\end{exampleblock}
-\begin{block}{¿Y el Cloud Router?}
-\small La pieza sobre la que trabaja Cloud NAT. Solo le pones nombre.
-\end{block}
-\begin{alertblock}{Ten paciencia}
-\small Cloud NAT puede tardar \textbf{hasta 3 minutos} en hacer efecto. Si falla al primer intento, espera y repite.
-\end{alertblock}
-\end{columns}
-\par\vspace{1mm}
-{\raggedright\small \textbf{Tarea 4:} edita \texttt{nat-config} y, en \textbf{Registros}, elige \textbf{Traducción y errores}. Repite el comando y mira las líneas nuevas en el \textbf{Explorador de registros}.\par}
-\end{frame}
-
-\begin{frame}{El lab 2 en una tabla: antes y después}
-\begin{block}{La misma máquina, tres momentos}
-\small \texttt{vm-internal} nunca recibe una IP externa. Lo único que cambia es lo que vas \textbf{encendiendo} a su alrededor.
-\end{block}
-\renewcommand{\arraystretch}{1.35}
-\centering\small
-\begin{tabular}{@{}p{4.9cm}p{2.3cm}p{2.6cm}p{2.6cm}@{}}
-\toprule
-\textbf{Prueba dentro de la VM} & \textbf{Al inicio} & \textbf{+ Acceso privado} & \textbf{+ Cloud NAT}\\
-\midrule
-Traer la imagen del bucket & No llega & \textbf{Funciona} & Funciona\\
-\texttt{sudo apt-get update} & No llega & Solo lo de Google & \textbf{Funciona}\\
-Que alguien de Internet entre & No & No & \textbf{No}\\
-\bottomrule
-\end{tabular}
-\par\vspace{2mm}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Qué significa}
-\small Cada servicio abre \textbf{un camino de salida} distinto: uno hacia Google, el otro hacia Internet.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{alertblock}{La conclusión del lab}
-\small La máquina \textbf{trabaja con normalidad} y sigue \textbf{invisible} desde Internet.
-\end{alertblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Errores frecuentes en los dos labs}
-\renewcommand{\arraystretch}{1.3}
-\centering\small
-\begin{tabular}{@{}p{4.4cm}p{4.3cm}p{4.3cm}@{}}
-\toprule
-\textbf{Lo que ves} & \textbf{Por qué} & \textbf{Qué hacer}\\
-\midrule
-La tarea no se pone en verde & Zona, región o nombre distinto al del lab & Copia los valores tal cual\\
-La terminal de la VM no abre & Falta la regla de SSH o, en el lab 1, la etiqueta \texttt{iap-gce} & Revisa la regla y la etiqueta\\
-El \texttt{ping} interno ``se cuelga'' & La otra VM está en otra red & Es lo esperado en el lab 1, tarea 4\\
-Un comando da error de nombre & Lo ejecutaste dentro de la VM & Escribe \texttt{exit} y repite\\
-No deja borrar la red & Aún tiene reglas de firewall & Borra primero las reglas\\
-La copia del bucket da error en la VM & Falta repetir el \texttt{export} dentro de la VM & Vuelve a escribirlo ahí\\
-\texttt{apt-get update} sigue fallando & Cloud NAT aún no hace efecto & Espera hasta 3 minutos\\
-\bottomrule
-\end{tabular}
 \end{frame}
 
 % ------------------------------------------------------------ Practica
-\separador{Práctica}{El aplicativo y los dos labs reales}
+\separador{Práctica}{El lab real}
 
-\begin{frame}{Práctica: redes VPC y Cloud NAT \textnormal{\small(en clase + tarea)}}
+\begin{frame}{Práctica: redes VPC \textnormal{\small(en clase + tarea)}}
 \begin{block}{En clase}
 \small
-1. Abre \texttt{Sesion19/apps/redes/index.html} y responde el repaso.\par\smallskip
-2. En \textbf{¿Dónde vive?}, ubica cada pieza en la jerarquía, en una región o en una zona.\par\smallskip
-3. En el \textbf{laboratorio de ping}, adivina antes de probar: ¿responde o no llega?\par\smallskip
-4. En la \textbf{VM sin IP externa}, enciende el Acceso privado y Cloud NAT y mira qué cambia.\par\smallskip
-5. Inicia el lab real 1: \emph{Crea y configura redes de VPC}.
+1. Antes de empezar, responde en tu cuaderno la \textbf{pregunta del lab}: desde \texttt{mynet-us-vm}, ¿a cuáles de las otras tres llega un \texttt{ping}?\par\smallskip
+2. Haz el lab real: \emph{Crea y configura redes de VPC}.\par\smallskip
+3. Al llegar a la última tarea, compara lo que salió con lo que respondiste.
 \end{block}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
 \begin{exampleblock}{De tarea}
-\small Terminar el lab 1 y hacer el lab 2: \emph{Implementa el Acceso privado a Google y Cloud NAT}.
+\small Terminar el lab si no alcanzó el tiempo en clase.
 \end{exampleblock}
 \column{.48\textwidth}
 \begin{alertblock}{Entregable}
-\small Captura de cada lab con sus tareas en verde y captura del aplicativo con las misiones cumplidas.
+\small Captura del lab con sus tareas en verde.
 \end{alertblock}
 \end{columns}
 \end{frame}
@@ -998,11 +621,10 @@ La copia del bucket da error en la VM & Falta repetir el \texttt{export} dentro 
 2. Una red VPC, una subred y una máquina virtual: ¿cuál es global, cuál es regional y cuál es zonal?\par\medskip
 3. ¿Para qué sirve un gateway? ¿Quién hace ese trabajo dentro de una VPC?\par\medskip
 4. Dos VMs están en la misma red, una en EE.\,UU. y otra en Europa. ¿Se hablan por su IP interna? ¿Y dos VMs de redes distintas en la misma zona?\par\medskip
-5. ¿Qué hace el firewall con lo que entra y con lo que sale, si no agregas ninguna regla?\par\medskip
-6. Una VM sin IP externa necesita leer un bucket y descargar actualizaciones. ¿Qué enciendes para cada cosa?
+5. ¿Qué hace el firewall con lo que entra y con lo que sale, si no agregas ninguna regla?
 \end{block}
 \begin{alertblock}{Lo que viene}
-\small Las \textbf{máquinas virtuales} por dentro: tipos de máquina, discos e imágenes.
+\small Máquinas \textbf{sin dirección pública}: cómo llegan a Google y a Internet con \textbf{Acceso privado a Google} y \textbf{Cloud NAT}.
 \end{alertblock}
 \end{frame}
 
@@ -1019,11 +641,8 @@ La copia del bucket da error en la VM & Falta repetir el \texttt{export} dentro 
   \item Google Skills: ruta \emph{Certificación de Associate Cloud Engineer}, \texttt{skills.google/paths/11}.
   \item Google Skills: \emph{Infraestructura esencial de Google Cloud: conceptos básicos}, \texttt{skills.google/course\_templates/50}, módulo \emph{Redes virtuales}.
   \item Google Skills: lab \emph{Crea y configura redes de VPC}.
-  \item Google Skills: lab \emph{Implementa el Acceso privado a Google y Cloud NAT}, \texttt{skills.google/catalog\_lab/2526}.
   \item Google Cloud: \emph{Resource hierarchy}, \texttt{cloud.google.com/resource-manager/docs}.
   \item Google Cloud: \emph{VPC networks} y \emph{VPC firewall rules}, \texttt{cloud.google.com/vpc/docs}.
-  \item Google Cloud: \emph{Private Google Access}, \texttt{cloud.google.com/vpc/docs/private-google-access}.
-  \item Google Cloud: \emph{Cloud NAT overview}, \texttt{cloud.google.com/nat/docs/overview}.
   \item Material de repaso: \texttt{Sesion18/slides/slides.tex}.
   \item Las respuestas de todas las preguntas de esta sesión están en \texttt{respuestas.md}.
 \end{itemize}
