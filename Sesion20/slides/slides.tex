@@ -175,92 +175,127 @@ Al finalizar, podrás explicar con tus palabras \textbf{qué es una red VPC} y \
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{¿Qué es una ruta en una VPC?}
+\begin{frame}{¿Qué es una ruta?}
+\begin{center}
+{\Large Una ruta es un \textbf{letrero}: ``para ir \textbf{allá}, ve por \textbf{aquí}''.}
+\end{center}
+\vspace{1mm}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.2cm,minimum height=0.9cm,align=center}]
+  \node[caja,fill=white] (v) at (0,0) {\textbf{Tu VM}};
+  \node[caja,fill=utpRojo!10] (a) at (8,0.9) {\textbf{Otra VM de tu red}};
+  \node[caja,fill=utpRojo!30] (b) at (8,-0.9) {\textbf{Internet}};
+  \draw[-latex,thick] (v.east) -- node[above,sloped,font=\footnotesize] {por dentro} (a.west);
+  \draw[-latex,thick] (v.east) -- node[below,sloped,font=\footnotesize] {hacia afuera} (b.west);
+\end{tikzpicture}
+\end{center}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
-\begin{block}{Qué es}
-\small Una indicación de la red: ``para llegar a \textbf{tal destino}, ve por \textbf{aquí}''.
-\end{block}
-\begin{block}{Las que ya vienen en toda red}
-\small
-\textbf{Una por cada subred:} para que las máquinas de la red se encuentren, aunque estén en subredes distintas.\par\smallskip
-\textbf{Una hacia Internet:} para todo lo demás. Se escribe \texttt{0.0.0.0/0}, que significa ``cualquier otra dirección''.
-\end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Una comparación}
-\small Los \textbf{letreros de la carretera}: ``Arequipa, por la derecha''. No manejan por ti; solo indican el camino.
+\begin{exampleblock}{Como en la carretera}
+\small ``Arequipa $\rightarrow$''. El letrero no maneja por ti: solo te indica el camino.
 \end{exampleblock}
-\begin{alertblock}{La ruta no basta}
-\small Que exista el camino no significa que puedas usarlo. Para \textbf{entrar}, el firewall tiene que permitirlo. Para \textbf{salir a Internet}, la máquina necesita una IP externa\ldots{} o lo que vemos en la parte 2.
+\column{.48\textwidth}
+\begin{alertblock}{Pero el letrero no basta}
+\small Para salir a Internet, la VM necesita una \textbf{IP externa}. ¿Y si no tiene? Eso es la parte 2.
 \end{alertblock}
 \end{columns}
-\par\vspace{1mm}
-\begin{block}{Para este curso}
-\small No creas rutas: Google las crea y las mantiene. Las puedes mirar en \textbf{Red de VPC} $\rightarrow$ \textbf{Rutas}.
-\end{block}
+\par\vspace{2mm}
+\centering\small Google pone estos dos letreros en toda red. \textbf{Tú no haces nada.}
 \end{frame}
 
 % --------------------------------------- Parte 2: Acceso privado y Cloud NAT
-\separador{Parte 2: Acceso privado a Google y Cloud NAT}{Máquinas sin dirección pública que igual pueden trabajar}
+\separador{Parte 2: Acceso privado a Google y Cloud NAT}{Un ejemplo: vamos a desplegar una webapp}
 
-\begin{frame}{El punto de partida: una VM sin IP externa}
+\begin{frame}{Nuestro ejemplo: la webapp de una tienda}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.2cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=utpRojo!10] (s) at (0,0) {\textbf{Bucket}\\\footnotesize fotos de los productos};
+  \node[caja,fill=white,very thick] (v) at (5.2,0) {\textbf{VM con la webapp}};
+  \node[caja,fill=utpRojo!30] (i) at (10.4,0) {\textbf{Internet}\\\footnotesize actualizaciones};
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {lee las fotos} (s);
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {se actualiza} (i);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{block}{Necesita 1}
+\small Leer las \textbf{fotos} que guardamos en un bucket de \textbf{Cloud Storage}.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Necesita 2}
+\small Descargar \textbf{actualizaciones} y programas de Internet.
+\end{block}
+\column{.31\textwidth}
+\begin{alertblock}{Y una regla}
+\small \textbf{Nadie} de Internet debe poder entrar a esta VM.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Por seguridad, la VM va sin IP externa}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.2cm,minimum height=1.1cm,align=center},
+  cortado/.style={-latex,thick,dashed,black!45}]
+  \node[caja,fill=utpRojo!10] (s) at (0,0) {\textbf{Bucket}\\\footnotesize fotos};
+  \node[caja,fill=white,very thick] (v) at (5.2,0) {\textbf{VM con la webapp}\\\footnotesize sin IP externa};
+  \node[caja,fill=utpRojo!30] (i) at (10.4,0) {\textbf{Internet}};
+  \draw[cortado] (v) -- node[font=\Large\bfseries,text=utpRojo] {$\times$} (s);
+  \draw[cortado] ([yshift=2.2mm]v.east) -- node[above,font=\Large\bfseries,text=utpRojo] {$\times$} ([yshift=2.2mm]i.west);
+  \draw[cortado] ([yshift=-2.2mm]i.west) -- node[below,font=\footnotesize,text=black] {nadie entra} ([yshift=-2.2mm]v.east);
+\end{tikzpicture}
+\end{center}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
-\begin{block}{Por qué se hace}
-\small Una máquina \textbf{sin IP externa} no se ve desde Internet: nadie de afuera puede tocarla. Es lo más \textbf{seguro} para una base de datos o un servidor interno.
-\end{block}
-\begin{exampleblock}{Una comparación}
-\small Un empleado con \textbf{anexo pero sin número público}: nadie de la calle puede llamarlo directo.
+\begin{exampleblock}{Lo bueno}
+\small Desde Internet \textbf{nadie la ve}: nadie puede intentar entrar.
 \end{exampleblock}
 \column{.48\textwidth}
-\begin{alertblock}{El problema}
-\small La puerta queda cerrada en \textbf{los dos sentidos}. Esa máquina tampoco puede:\par\smallskip
-\textbf{1.} Usar los \textbf{servicios de Google}, como Cloud Storage.\par
-\textbf{2.} \textbf{Salir a Internet} para descargar actualizaciones.
+\begin{alertblock}{Lo malo}
+\small Tampoco \textbf{sale}: no llega a las fotos ni a las actualizaciones. La webapp \textbf{no funciona}.
 \end{alertblock}
-\begin{block}{Lo que sí puede}
-\small Hablar con las máquinas de \textbf{su misma red}, por su IP interna.
-\end{block}
 \end{columns}
 \par\vspace{1mm}
-\begin{block}{Las dos soluciones de hoy}
-\small Para el problema 1: \textbf{Acceso privado a Google}. Para el problema 2: \textbf{Cloud NAT}.
+\begin{block}{Lo que buscamos}
+\small Abrirle caminos de \textbf{salida} sin abrirle una puerta de \textbf{entrada}. Uno para las fotos y otro para Internet.
 \end{block}
 \end{frame}
 
-\begin{frame}{Acceso privado a Google}
+\begin{frame}{Para las fotos: Acceso privado a Google}
 \begin{center}
 \begin{tikzpicture}[font=\small,
-  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.9cm,minimum height=1.0cm,align=center}]
-  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
-  \node[caja,fill=utpRojo!30] (g) at (8.4,0) {\textbf{Servicios de Google}\\\footnotesize Cloud Storage y otros};
-  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {por dentro de la red de Google} (g);
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.2cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=utpRojo!10] (s) at (0,0) {\textbf{Bucket}\\\footnotesize fotos};
+  \node[caja,fill=white,very thick] (v) at (7,0) {\textbf{VM con la webapp}\\\footnotesize sin IP externa};
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {por dentro de Google} (s);
 \end{tikzpicture}
 \end{center}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
 \begin{block}{Qué es}
-\small Un \textbf{interruptor} de la subred. Al encenderlo, sus máquinas sin IP externa pueden usar los \textbf{servicios de Google}.
+\small Un \textbf{interruptor} de la \textbf{subred}. Lo enciendes y sus VMs llegan a los servicios de Google, como Cloud Storage.
 \end{block}
-\begin{block}{Dónde se enciende}
-\small En la \textbf{subred}, no en la máquina. Vale para todas las VMs de esa subred.
-\end{block}
-\column{.48\textwidth}
-\begin{exampleblock}{Una comparación}
-\small Un \textbf{pasillo interno} entre tu oficina y el almacén de la misma empresa: llegas sin salir a la calle.
-\end{exampleblock}
-\begin{alertblock}{Lo que no hace}
-\small No te lleva al \textbf{resto de Internet}. Solo a Google.
+\begin{alertblock}{Solo llega a Google}
+\small Las actualizaciones de Internet \textbf{siguen sin llegar}.
 \end{alertblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Como en una empresa}
+\small Un \textbf{pasillo interno} hasta el almacén: llegas sin salir a la calle.
+\end{exampleblock}
+\begin{block}{Dónde se enciende}
+\small En la \textbf{subred}, no en la VM. Vale para todas las VMs de esa subred.
+\end{block}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Cloud NAT}
+\begin{frame}{Para las actualizaciones: Cloud NAT}
 \begin{center}
 \begin{tikzpicture}[font=\small,
-  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.7cm,minimum height=1.0cm,align=center}]
-  \node[caja,fill=white] (v) at (0,0) {\textbf{VM}\\\footnotesize sin IP externa};
-  \node[caja,fill=utpRojo!30] (n) at (4.3,0) {\textbf{Cloud NAT}\\\footnotesize presta una IP pública};
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.9cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=white,very thick] (v) at (0,0) {\textbf{VM con la webapp}\\\footnotesize sin IP externa};
+  \node[caja,fill=utpRojo!30] (n) at (4.6,0) {\textbf{Cloud NAT}\\\footnotesize le presta una IP};
   \node[caja,fill=utpRojo!10] (i) at (10.6,0) {\textbf{Internet}};
   \draw[-latex,thick] ([yshift=2.2mm]v.east) -- node[above,font=\footnotesize] {sale} ([yshift=2.2mm]n.west);
   \draw[-latex,thick] ([yshift=2.2mm]n.east) -- node[above,font=\footnotesize] {sale con la IP prestada} ([yshift=2.2mm]i.west);
@@ -270,45 +305,45 @@ Al finalizar, podrás explicar con tus palabras \textbf{qué es una red VPC} y \
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
 \begin{block}{Qué es}
-\small Un servicio que deja a las máquinas sin IP externa \textbf{salir a Internet}. La respuesta vuelve, pero nadie de afuera puede \textbf{empezar} una conexión hacia ellas.
-\end{block}
-\begin{block}{Una palabra nueva}
-\small \textbf{NAT:} \emph{traducción de direcciones}. Cambia la IP interna por una pública al salir.
+\small Deja a la VM \textbf{salir} a Internet. La respuesta vuelve, pero nadie de afuera puede \textbf{empezar} una conexión hacia ella.
 \end{block}
 \column{.48\textwidth}
-\begin{exampleblock}{Una comparación}
-\small La \textbf{central telefónica} de la empresa: llamas afuera y se ve el número de la empresa. Desde afuera nadie marca directo a tu anexo.
+\begin{exampleblock}{Ya lo usas en casa}
+\small Tu \textbf{router wifi}: tu celular navega y nadie de Internet entra a él.
 \end{exampleblock}
-\begin{alertblock}{Ya lo usas en casa}
-\small Tu \textbf{router wifi} hace NAT: por eso tu celular navega y nadie de Internet entra a él.
-\end{alertblock}
 \end{columns}
+\par\vspace{1mm}
+\begin{block}{¿Y NAT?}
+\small \emph{Traducción de direcciones}: al salir, cambia la IP interna de la VM por una pública.
+\end{block}
 \end{frame}
 
-\begin{frame}{¿Cuál necesito?}
-\renewcommand{\arraystretch}{1.4}
+\begin{frame}{La webapp completa}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.0cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!10] (s) at (0,0) {\textbf{Bucket}\\\footnotesize fotos};
+  \node[caja,fill=white,very thick] (v) at (5.2,0) {\textbf{VM con la webapp}\\\footnotesize sin IP externa};
+  \node[caja,fill=utpRojo!30] (i) at (10.4,0) {\textbf{Internet}};
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {Acceso privado} (s);
+  \draw[-latex,thick] ([yshift=2.2mm]v.east) -- node[above,font=\footnotesize] {Cloud NAT} ([yshift=2.2mm]i.west);
+  \draw[-latex,thick,dashed,black!45] ([yshift=-2.2mm]i.west) -- node[below,font=\footnotesize,text=black] {nadie entra} ([yshift=-2.2mm]v.east);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.35}
 \centering\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.3cm}p{3.5cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.3cm}p{3.6cm}@{}}
 \toprule
-\textbf{Mi VM sin IP externa quiere\ldots} & \textbf{Se usa} & \textbf{Se configura en}\\
+\textbf{La webapp necesita\ldots} & \textbf{Enciendes} & \textbf{Dónde}\\
 \midrule
-Usar Cloud Storage u otro servicio de Google & \textbf{Acceso privado a Google} & la subred\\
-Descargar actualizaciones de Internet & \textbf{Cloud NAT} & la red y una región\\
-Que yo entre a su terminal & \textbf{IAP}: un túnel de Google & una regla de firewall\\
-Que el público la visite & Una \textbf{IP externa} & la propia VM\\
+Leer las fotos del bucket & \textbf{Acceso privado a Google} & en la subred\\
+Descargar actualizaciones & \textbf{Cloud NAT} & en la red y la región\\
 \bottomrule
 \end{tabular}
-\par\vspace{3mm}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{exampleblock}{Se pueden usar juntos}
-\small En el lab enciendes \textbf{los dos}: primero el Acceso privado y después Cloud NAT.
-\end{exampleblock}
-\column{.48\textwidth}
-\begin{alertblock}{¿Y cómo entro sin IP externa?}
-\small Con \textbf{IAP}: Google te abre un túnel seguro hasta la terminal de la VM. El lab de hoy entra así.
+\par\vspace{2mm}
+\begin{alertblock}{El resultado}
+\small La webapp \textbf{trabaja con normalidad} y sigue \textbf{invisible} desde Internet. En el lab haces justo esto, en este orden.
 \end{alertblock}
-\end{columns}
 \end{frame}
 
 % ------------------------------------------------------------------ Lab
@@ -331,8 +366,8 @@ Que el público la visite & Una \textbf{IP externa} & la propia VM\\
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
 \begin{block}{Las dos pruebas del lab}
-\small \textbf{¿Llego a Google?} Traer una imagen de un bucket.\par\smallskip
-\textbf{¿Llego a Internet?} Pedir actualizaciones con \texttt{sudo apt-get update}.
+\small \textbf{¿Llego a Google?} Traer una imagen de un bucket, como las fotos de la tienda.\par\smallskip
+\textbf{¿Llego a Internet?} Pedir actualizaciones con \texttt{sudo apt-get update}, como la webapp.
 \end{block}
 \column{.48\textwidth}
 \begin{exampleblock}{El ritmo del lab}
@@ -427,7 +462,7 @@ Que alguien de Internet entre & No & No & \textbf{No}\\
 2. ¿Qué dice una ruta? ¿Qué dos tipos de ruta trae toda red VPC?\par\medskip
 3. La ruta hacia Internet ya existe. ¿Basta para que una máquina sin IP externa salga a Internet?\par\medskip
 4. ¿Por qué querrías una máquina sin IP externa?\par\medskip
-5. Una VM sin IP externa necesita leer un bucket y descargar actualizaciones. ¿Qué enciendes para cada cosa?\par\medskip
+5. La VM de tu webapp no tiene IP externa y necesita leer fotos de un bucket y descargar actualizaciones. ¿Qué enciendes para cada cosa?\par\medskip
 6. Con Cloud NAT encendido, ¿puede alguien de Internet entrar a la máquina? ¿Por qué?
 \end{block}
 \begin{alertblock}{Lo que viene}
