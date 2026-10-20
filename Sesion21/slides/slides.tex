@@ -1,0 +1,356 @@
+% Motor: XeLaTeX. Sesión 21 - material docente UTP.
+% Estructura docente de la Sesión 20, condensada a 20 diapositivas.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{De una idea a una webapp: frontend, backend, datos y archivos}
+\date{Semana 11 - Sesión 21}
+\author{Rel Guzman}
+
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: los bloques que ya construiste}
+\renewcommand{\arraystretch}{1.28}
+\centering\small
+\begin{tabular}{@{}p{3.0cm}p{5.0cm}p{5.0cm}@{}}
+\toprule
+\textbf{Laboratorio} & \textbf{Lo que hiciste} & \textbf{El bloque de una webapp}\\
+\midrule
+Lab 01 & Creaste buckets, subiste objetos y usaste Cloud Shell & \textbf{Archivos} y una forma de administrar recursos\\
+Lab 02 & Implementaste una pila LAMP desde Marketplace & \textbf{Servidor web, PHP y base de datos} en una VM\\
+Lab 03 y 04 & Probaste VPC, una VM privada, Acceso privado y Cloud NAT & \textbf{Red} y salida segura de los servidores\\
+Lab 05 y 06 & Configuraste VMs, discos, firewall, copias y scripts & \textbf{Cómputo}, datos persistentes y operación\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{La pregunta de hoy}
+\small Cuando una aplicación necesita varios bloques, ¿cuál va en cada lugar y por qué?
+\end{alertblock}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: una aplicación que sí terminaste}
+\begin{block}{El servidor de Minecraft del Lab 06}
+\small No era solo una VM. Tenía una IP externa para los jugadores, una regla de firewall para el puerto \texttt{25565}, un disco para el mundo, copias en un bucket y scripts para iniciar y detener el servicio.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.55cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25] (u) at (0,0) {\textbf{Jugadores}\\\footnotesize Internet};
+  \node[caja,fill=white,very thick] (v) at (4,0) {\textbf{VM}\\\footnotesize Minecraft};
+  \node[caja,fill=utpRojo!10] (d) at (8,0.8) {\textbf{Disco}\\\footnotesize mundo};
+  \node[caja,fill=utpRojo!10] (b) at (8,-0.8) {\textbf{Bucket}\\\footnotesize copias};
+  \draw[-latex,thick] (u) -- node[above,font=\footnotesize] {firewall} (v);
+  \draw[-latex,thick] (v) -- (d);
+  \draw[-latex,thick] (v) -- (b);
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Pregunta rápida}
+\small Si guardas el mundo solo dentro de la VM, ¿qué riesgo corres cuando la borras o su disco falla?
+\end{alertblock}
+\end{frame}
+
+% 4
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás reconocer las partes básicas de una webapp, explicar qué hace cada una y proponer una arquitectura inicial en Google Cloud que conecte \textbf{frontend}, \textbf{backend}, \textbf{base de datos}, \textbf{archivos} y \textbf{seguridad}.
+\end{block}
+\end{frame}
+
+% 5
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{11pt}
+  \item Cuando abres una tienda en línea, ¿qué ves primero: el sitio, la base de datos o el servidor?
+  \item Si una persona sube una foto de perfil, ¿debería quedar en la base de datos o como archivo?
+  \item En una aplicación con usuarios y pedidos, ¿qué información no debería ser pública?
+\end{itemize}
+\end{frame}
+
+% 6
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large En un proyecto real no eliges un servicio por su nombre. Primero identificas \textbf{qué necesita la aplicación}: mostrar una página, ejecutar una regla, guardar datos, conservar archivos o proteger una clave. Luego eliges el servicio que cumple esa función.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 7
+\begin{frame}{Plan de hoy: dos partes y una práctica}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{1.55cm}>{\raggedright\arraybackslash}p{5.8cm}>{\raggedright\arraybackslash}p{5.45cm}@{}}
+\toprule
+\textbf{Parte} & \textbf{Qué vemos} & \textbf{Lo conectamos con}\\
+\midrule
+1. Teoría & Las cinco piezas de una webapp & La tienda, la galería y el servidor de Minecraft\\
+2. Teoría & Cuándo usar un servicio gestionado o una VM & Lo que ya configuraste en los labs\\
+\textbf{Práctica} & Diseñar la arquitectura inicial de un inventario & El caso del curso y tus decisiones\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Regla de hoy}
+\small Una aplicación no tiene que usar todos los servicios. Solo usa los bloques que realmente necesita.
+\end{alertblock}
+\end{frame}
+
+% 8
+\separador{Parte 1: las piezas de una webapp}{Del navegador a los datos y archivos}
+
+% 9
+\begin{frame}{Una webapp en cinco piezas}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.45cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25] (user) at (0,0) {\textbf{Persona}\\\footnotesize navegador};
+  \node[caja,fill=utpRojo!10] (front) at (3.2,0) {\textbf{Frontend}\\\footnotesize lo que ve};
+  \node[caja,fill=white,very thick] (back) at (6.4,0) {\textbf{Backend}\\\footnotesize las reglas};
+  \node[caja,fill=utpRojo!10] (db) at (9.6,0.9) {\textbf{Base de datos}\\\footnotesize usuarios y pedidos};
+  \node[caja,fill=utpRojo!10] (files) at (9.6,-0.9) {\textbf{Almacenamiento}\\\footnotesize fotos y documentos};
+  \draw[-latex,thick] (user) -- (front);
+  \draw[-latex,thick] (front) -- (back);
+  \draw[-latex,thick] (back) -- (db);
+  \draw[-latex,thick] (back) -- (files);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.24}
+\centering\small
+\begin{tabular}{@{}p{2.8cm}p{8.9cm}@{}}
+\toprule
+\textbf{Pieza} & \textbf{Su trabajo}\\
+\midrule
+Frontend & Muestra páginas, botones e imágenes en el navegador.\\
+Backend & Recibe pedidos, valida reglas y conversa con los demás servicios.\\
+Datos y archivos & Guardan información que debe sobrevivir cuando la aplicación se reinicia.\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 10
+\begin{frame}{Frontend: lo que llega al navegador}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Qué contiene}
+\small HTML, CSS, JavaScript, imágenes, íconos y fuentes. Es la parte visible de una landing, un catálogo o un panel.
+\end{block}
+\begin{exampleblock}{Caso simple}
+\small Si las páginas ya están listas antes de la visita, puedes publicarlas como sitio estático. El navegador descarga los archivos y los muestra.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{En Google Cloud}
+\small Un bucket puede guardar objetos. Para un sitio web público debes decidir explícitamente qué contenido será público y qué contenido se mantendrá privado.
+\end{block}
+\begin{alertblock}{Recuerda el Lab 01}
+\small Ya creaste un bucket y copiaste archivos desde Cloud Shell. El mismo bloque sirve para conservar archivos de una aplicación.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 11
+\begin{frame}{Backend: donde viven las reglas de la aplicación}
+\begin{block}{Qué hace}
+\small Una API o backend recibe una petición, comprueba permisos, aplica una regla y devuelve una respuesta. Por ejemplo: ``registrar pedido'', ``calcular total'' o ``mostrar mis facturas''.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Cuando una VM tiene sentido}
+\small Necesitas controlar el sistema operativo, instalar software propio o mantener un proceso encendido. El servidor de Minecraft y la pila LAMP fueron ejemplos de este caso.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Cuando conviene que lo gestione el proveedor}
+\small Para una API pequeña o un contenedor, un servicio gestionado evita administrar parches, arranque y escalado de servidores.
+\end{exampleblock}
+\end{columns}
+\par\vspace{2mm}
+\begin{alertblock}{La decisión no cambia la función}
+\small En ambos casos el backend sigue siendo el lugar donde viven las reglas. Lo que cambia es quién administra la infraestructura.
+\end{alertblock}
+\end{frame}
+
+% 12
+\begin{frame}{Base de datos: información que la aplicación consulta}
+\renewcommand{\arraystretch}{1.32}
+\centering\small
+\begin{tabular}{@{}p{3.3cm}p{4.7cm}p{4.3cm}@{}}
+\toprule
+\textbf{Si guardas\ldots} & \textbf{Una opción básica} & \textbf{Ejemplo}\\
+\midrule
+Tablas relacionadas & Base de datos relacional o SQL & Usuarios, productos, pedidos y facturas\\
+Documentos flexibles & Base de datos de documentos o NoSQL & Perfiles con campos que cambian según el usuario\\
+Datos temporales & Caché de clave y valor & Sesiones, contadores o resultados rápidos\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{No confundas dato con archivo}
+\small Un pedido puede guardar el nombre de una factura y su enlace. El PDF completo es un archivo, no una fila de texto.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{Conexión con el Lab 02}
+\small MariaDB de LAMP era una base relacional dentro de la VM. Una base gestionada mantiene la misma función, pero el proveedor administra el servidor.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 13
+\begin{frame}{Archivos y secretos: no todo se publica}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{3.3cm}p{4.1cm}p{4.9cm}@{}}
+\toprule
+\textbf{Recurso} & \textbf{Dónde va} & \textbf{Regla básica}\\
+\midrule
+Foto de un producto & Bucket público o entrega pública & Cualquiera puede verla si forma parte del catálogo\\
+Factura o CV & Bucket privado y enlace temporal & El backend revisa quién puede descargarlo\\
+Copia de seguridad y registros & Bucket privado separado & No se exponen desde la aplicación\\
+Clave de API o archivo \texttt{.env} & Gestor de secretos & Nunca en el repositorio ni en un bucket\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{La idea del Lab 06}
+\small El mundo de Minecraft vivía en un disco y sus copias iban a un bucket. Separar la aplicación de su copia reduce el riesgo de perder ambos a la vez.
+\end{alertblock}
+\end{frame}
+
+% 14
+\separador{Parte 2: elegir dónde corre cada pieza}{Servicio gestionado, VM y seguridad}
+
+% 15
+\begin{frame}{Servicio gestionado o VM}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{3.2cm}p{4.45cm}p{4.75cm}@{}}
+\toprule
+\textbf{Pregunta} & \textbf{Servicio gestionado} & \textbf{Máquina virtual}\\
+\midrule
+¿Quién aplica parches? & El proveedor se encarga del servicio & Tú actualizas el sistema operativo y el software\\
+¿Cuándo encaja? & Necesitas una función común: API, contenedor, base de datos o cola & Necesitas control del sistema, software especial o un proceso permanente\\
+¿Qué debes vigilar? & Configuración, permisos y costos & Lo anterior, más disco, firewall, copias y mantenimiento\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{exampleblock}{No hay una respuesta única}
+\small Una webapp puede usar frontend y base de datos gestionados, pero conservar una VM para un servicio que debe estar encendido todo el tiempo.
+\end{exampleblock}
+\end{frame}
+
+% 16
+\begin{frame}{Una arquitectura inicial en Google Cloud}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.55cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25] (u) at (0,0) {\textbf{Cliente}\\\footnotesize navegador};
+  \node[caja,fill=utpRojo!10] (f) at (3.0,0) {\textbf{Frontend}\\\footnotesize archivos públicos};
+  \node[caja,fill=white,very thick] (a) at (6.0,0) {\textbf{Backend}\\\footnotesize VM o servicio};
+  \node[caja,fill=utpRojo!10] (d) at (9.2,0.85) {\textbf{BD}\\\footnotesize datos privados};
+  \node[caja,fill=utpRojo!10] (s) at (9.2,-0.85) {\textbf{Bucket}\\\footnotesize archivos privados};
+  \draw[-latex,thick] (u) -- (f);
+  \draw[-latex,thick] (f) -- (a);
+  \draw[-latex,thick] (a) -- (d);
+  \draw[-latex,thick] (a) -- (s);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Lo que ya sabes proteger}
+\small La VPC organiza la red; el firewall decide qué tráfico entra; Cloud NAT permite que una VM privada salga a Internet para actualizarse.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Lo que no debe cambiar}
+\small El backend debe conservar acceso solo a los datos y archivos que necesita. Las claves van en un gestor de secretos.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 17
+\begin{frame}{Caso: inventario de una tienda}
+\begin{block}{La necesidad}
+\small La tienda muestra productos, permite iniciar sesión, genera reportes, guarda facturas de proveedores y necesita respaldos. El equipo también quiere conservar las claves fuera del código.
+\end{block}
+\renewcommand{\arraystretch}{1.26}
+\centering\small
+\begin{tabular}{@{}p{4.0cm}p{5.2cm}p{3.3cm}@{}}
+\toprule
+\textbf{Elemento} & \textbf{Decisión inicial} & \textbf{Razón}\\
+\midrule
+Catálogo y fotos de producto & Frontend y archivos de lectura pública & Los clientes deben verlos\\
+Usuarios, productos y pedidos & Base de datos relacional & Hay relaciones entre las tablas\\
+Facturas y reportes & Bucket privado con entrega controlada & Solo personal autorizado los consulta\\
+Claves de producción & Gestor de secretos & No viajan con el código\\
+Respaldos y registros & Bucket privado separado & No forman parte del sitio público\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 18
+\begin{frame}{Práctica: dibuja una arquitectura inicial}
+\begin{block}{En grupos de dos}
+\small Elijan una galería de fotos, una plataforma de entregas o una biblioteca de grabaciones. Dibujen solo los bloques necesarios y las flechas importantes.
+\end{block}
+\renewcommand{\arraystretch}{1.15}
+\centering\small
+\begin{tabular}{@{}p{2.8cm}p{6.2cm}p{3.2cm}@{}}
+\toprule
+\textbf{Decidan} & \textbf{Pregunta que deben responder} & \textbf{Evidencia de los labs}\\
+\midrule
+Frontend & ¿Qué ve el visitante? & Bucket y objetos del Lab 01\\
+Backend & ¿Qué regla ejecuta la aplicación? & LAMP o VM de los Labs 02, 05 y 06\\
+Datos y archivos & ¿Qué queda privado? ¿Qué necesita copia? & Disco, bucket y backup del Lab 06\\
+Red y acceso & ¿Qué puerto se abre? ¿Qué queda privado? & VPC, firewall y NAT de los Labs 03 y 04\\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5mm}
+\begin{alertblock}{Entregable}
+\small Un diagrama con al menos cuatro bloques y una frase que justifique cada decisión importante.
+\end{alertblock}
+\end{frame}
+
+% 19
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Qué hace el frontend y qué hace el backend?\\\medskip
+2. ¿Por qué una factura PDF no debe guardarse igual que un pedido?\\\medskip
+3. ¿Qué diferencia hay entre un bucket público y uno privado?\\\medskip
+4. ¿Cuándo una VM tiene más sentido que un servicio gestionado?\\\medskip
+5. En la tienda, ¿qué elementos dejarías sin IP externa y por qué?\\\medskip
+6. ¿Qué laboratorio usarías como ejemplo para explicar copias de seguridad?
+\end{block}
+\begin{alertblock}{Idea final}
+\small Una arquitectura comienza al separar responsabilidades: interfaz, reglas, datos, archivos y seguridad.
+\end{alertblock}
+\end{frame}
+
+% 20
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Material base de esta sesión: \texttt{/Users/rgap/Desktop/Notas\_Clases\_GCP}: diagramas de frontend, API/backend, bases de datos, almacenamiento y otras cargas.
+  \item Casos de práctica: \texttt{Notas\_Clases\_GCP/niveles/niveles.md}.
+  \item Evidencias de laboratorios: \texttt{/Users/rgap/Desktop/Modelos\_labs/Lab01} a \texttt{Lab06}.
+  \item Material previo del curso: Sesiones 19 y 20, redes VPC, Acceso privado a Google y Cloud NAT.
+  \item Google Cloud: Cloud Storage, Compute Engine, VPC, Cloud NAT, Cloud SQL, Firestore y Secret Manager.
+  \item Las respuestas de las preguntas y de la práctica están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}

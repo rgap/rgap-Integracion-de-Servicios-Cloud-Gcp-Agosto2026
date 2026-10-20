@@ -1,0 +1,157 @@
+{
+  "nodes": [
+    {
+      "type": "text",
+      "id": "central",
+      "x": -688.1289805228453,
+      "y": -238.245815931637,
+      "width": 380,
+      "height": 170,
+      "color": "4",
+      "text": "# Infraestructura y servicios en una VM\n\nIntegración de virtualización, Linux, redes, servicios y comunicación."
+    },
+    {
+      "type": "text",
+      "id": "infra",
+      "x": -631.8201160978653,
+      "y": 120.61685786252994,
+      "width": 340,
+      "height": 190,
+      "color": "1",
+      "text": "## Cloud y virtualización\n\n• Soluciones cloud y GCP\n• Hipervisor y virtualización\n• Diseño de arquitectura\n• Recursos de la VM"
+    },
+    {
+      "type": "text",
+      "id": "linux",
+      "x": -739.9417614742092,
+      "y": 429.6386382242188,
+      "width": 350,
+      "height": 210,
+      "color": "3",
+      "text": "## Linux y administración\n\n• Ubuntu, terminal y shell\n• Sistema de archivos\n• Paquetes con apt\n• Usuarios, permisos, alias y funciones"
+    },
+    {
+      "type": "text",
+      "id": "red",
+      "x": -167.55459415541605,
+      "y": 563.1399776576773,
+      "width": 360,
+      "height": 220,
+      "color": "5",
+      "text": "## Redes y conectividad\n\n• Interfaces e IP\n• Rutas y DNS\n• Puertos y direcciones de escucha\n• Modo puente, NAT y salida a Internet"
+    },
+    {
+      "type": "text",
+      "id": "servicios",
+      "x": 416.7860023556823,
+      "y": 672.8188582647989,
+      "width": 370,
+      "height": 220,
+      "color": "6",
+      "text": "## Servicios y seguridad\n\n• systemctl y ciclo de vida\n• Nginx\n• UFW\n• Proxy inverso\n• Servidor web y servidor de aplicaciones"
+    },
+    {
+      "type": "text",
+      "id": "programacion",
+      "x": 808.5812877894825,
+      "y": 91.9093074204982,
+      "width": 350,
+      "height": 190,
+      "color": "2",
+      "text": "## Comunicación cliente-servidor\n\n• Roles cliente y servidor\n• TCP en Python\n• Peticiones HTTP\n• Lectura de respuestas"
+    },
+    {
+      "type": "text",
+      "id": "flujo",
+      "x": 15.81823753704981,
+      "y": 1.443190532681129,
+      "width": 380,
+      "height": 200,
+      "color": "4",
+      "text": "## Análisis del flujo de red\n\n• Datos reales de red\n• Observación del tráfico\n• Recorrido de paquetes\n• Diagramas de secuencia y bloques"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "central",
+      "fromSide": "right",
+      "toNode": "infra",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "se sustenta en"
+    },
+    {
+      "id": "e2",
+      "fromNode": "infra",
+      "fromSide": "right",
+      "toNode": "linux",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "proporciona la VM donde se ejecuta"
+    },
+    {
+      "id": "e3",
+      "fromNode": "linux",
+      "fromSide": "right",
+      "toNode": "red",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "configura y administra"
+    },
+    {
+      "id": "e4",
+      "fromNode": "red",
+      "fromSide": "right",
+      "toNode": "servicios",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "permite publicar"
+    },
+    {
+      "id": "e5",
+      "fromNode": "servicios",
+      "fromSide": "right",
+      "toNode": "programacion",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "atiende y recibe solicitudes de"
+    },
+    {
+      "id": "e6",
+      "fromNode": "red",
+      "fromSide": "right",
+      "toNode": "flujo",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "se analiza mediante"
+    },
+    {
+      "id": "e7",
+      "fromNode": "programacion",
+      "fromSide": "right",
+      "toNode": "flujo",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "genera tráfico observable"
+    },
+    {
+      "id": "e8",
+      "fromNode": "servicios",
+      "fromSide": "right",
+      "toNode": "flujo",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "produce tráfico y rutas de comunicación"
+    },
+    {
+      "id": "e9",
+      "fromNode": "central",
+      "fromSide": "right",
+      "toNode": "flujo",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "se comprende observando"
+    }
+  ]
+}
