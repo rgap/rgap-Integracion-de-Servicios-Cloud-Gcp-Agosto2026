@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 5 - Crea un estado persistente en Cloud Shell
 
@@ -44,3 +45,4 @@ C4Deployment
     Rel(navegador, terminal2, "Cierra y abre una sesión nueva", "WebSocket")
     Rel(home, terminal2, "Carga .profile e infraclass/config al iniciar")
     Rel(terminal2, estudiante, "Confirma INFRACLASS_PROJECT_ID con echo")
+```

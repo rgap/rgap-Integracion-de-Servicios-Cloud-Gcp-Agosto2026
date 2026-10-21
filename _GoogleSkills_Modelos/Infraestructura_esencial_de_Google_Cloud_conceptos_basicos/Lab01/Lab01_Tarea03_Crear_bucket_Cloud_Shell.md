@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 3 - Crea un bucket con Cloud Shell
 
@@ -40,3 +41,4 @@ C4Deployment
     Rel(api, bucket2, "Aprovisiona")
     Rel(navegador, consola, "Actualiza Cloud Storage > Buckets", "HTTPS")
     Rel(consola, api, "Lista los buckets", "HTTPS / REST")
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 4 - Sube un archivo y cópialo a un bucket
 
@@ -54,3 +55,4 @@ C4Deployment
     %% @step navegador home | Descarga los archivos | GET / HTTP/1.1\nHost: ejemplo.com\nAccept: text/html
     %% @step home navegador | Devuelve los archivos | HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ … }
     %% @step navegador estudiante | Ve la página
+```

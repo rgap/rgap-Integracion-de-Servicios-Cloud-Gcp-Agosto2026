@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 6 - Repaso
 
@@ -41,3 +42,4 @@ C4Deployment
     Rel(api, storage, "Crea, lista y carga")
     Rel(navegador, laboratorio, "Hace clic en Finalizar lab", "HTTPS")
     Rel(laboratorio, api, "Elimina los recursos del proyecto")
+```

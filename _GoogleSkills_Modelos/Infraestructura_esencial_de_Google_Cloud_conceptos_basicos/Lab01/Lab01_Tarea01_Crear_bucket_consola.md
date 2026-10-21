@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 1 - Crea un bucket desde la consola
 
@@ -34,3 +35,4 @@ C4Deployment
     Rel(api, bucket, "Crea y configura")
     Rel(api, notificaciones, "Publica el resultado")
     Rel(consola, notificaciones, "Consulta el historial", "HTTPS")
+```

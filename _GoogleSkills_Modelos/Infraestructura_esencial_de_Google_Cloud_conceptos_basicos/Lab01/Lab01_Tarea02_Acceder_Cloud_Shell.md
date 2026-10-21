@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab01 - Tarea 2 - Accede a Cloud Shell
 
@@ -45,3 +46,4 @@ C4Deployment
     %% @step navegador consola | Pide la página | GET / HTTP/1.1\nHost: console.cloud.google.com\nAccept: text/html
     %% @step consola navegador | Devuelve la página generada con los datos | HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!doctype html>…
     %% @step navegador estudiante | Ve la página
+```
