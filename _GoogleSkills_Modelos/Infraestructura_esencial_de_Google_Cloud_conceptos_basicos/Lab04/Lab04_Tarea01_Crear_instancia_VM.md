@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab04 - Tarea 1 - Crea la instancia de VM
 
@@ -87,3 +88,4 @@ C4Deployment
     %% @step sshd bash_vm | El prompt cambia a estudiante@vm-internal
     %% @step bash_vm internet | ping -c 2 www.google.com
     %% @step bash_vm bash_vm | 100% packet loss: sin salida a Internet
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab04 - Tarea 3 - Configura una puerta de enlace de Cloud NAT
 
@@ -105,3 +106,4 @@ C4Deployment
     %% @step debian nat | Hit: bookworm InRelease
     %% @step nat bash_vm | Devuelve la respuesta a 10.130.0.2
     %% @step bash_vm bash_vm | Reading package lists... Done; exit
+```

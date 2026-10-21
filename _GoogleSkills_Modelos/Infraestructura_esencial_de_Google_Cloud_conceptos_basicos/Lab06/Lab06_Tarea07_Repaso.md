@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 7 - Repaso
 
@@ -86,3 +87,4 @@ C4Deployment
     %% @step backup bucket | Una copia del mundo por fecha y hora
     %% @step script_inicio screen | Al iniciar la VM: monta el disco y arranca el servidor
     %% @step script_apagado screen | Al detenerla: /stop, y el mundo se guarda
+```

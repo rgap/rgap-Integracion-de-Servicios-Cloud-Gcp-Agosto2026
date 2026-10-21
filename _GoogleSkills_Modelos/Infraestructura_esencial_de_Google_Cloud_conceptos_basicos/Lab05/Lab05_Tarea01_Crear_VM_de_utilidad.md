@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab05 - Tarea 1 - Crea una máquina virtual de utilidad
 
@@ -60,3 +61,4 @@ C4Deployment
     %% @step navegador consola | Políticas de disponibilidad
     %% @step consola logging | Registros > Logging | POST /v2/entries:list HTTP/1.1\nHost: logging.googleapis.com\n\n{"resourceNames": ["projects/PROYECTO"],\n "filter": "resource.type=\\"gce_instance\\" AND resource.labels.instance_id=\\"…\\""}
     %% @step logging consola | Expande una entrada: la creación de utility-vm
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab03 - Tarea 3 - Crea redes de modo personalizado
 
@@ -91,3 +92,4 @@ C4Deployment
     %% @step gcloud api_compute | Crea privatenet-us-vm | POST /compute/v1/projects/PROYECTO/zones/us-central1-c/instances HTTP/1.1\nHost: compute.googleapis.com\n\n{"name": "privatenet-us-vm", "machineType": "…/e2-micro",\n "networkInterfaces": [{"subnetwork": "…/privatesubnet-us"}]}
     %% @step api_compute nic_priv | Le da 172.16.0.2 en privatesubnet-us
     %% @step gcloud terminal | instances list: 4 VMs, 3 redes
+```

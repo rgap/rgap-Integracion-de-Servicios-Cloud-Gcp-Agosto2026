@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 5 - Programa copias de seguridad periódicas
 
@@ -108,3 +109,4 @@ C4Deployment
     %% @step bash_vm cron | sudo crontab -e: 0 */4 * * * … | $ sudo crontab -e\nno crontab for root - using an empty one\n…\ncrontab: installing new crontab
     %% @step cron backup | Cada 4 horas, como root: ahí sí encuentra mcs
     %% @step screen minecraft | Saved the game | [18:00:00] [Server thread/INFO]: Saving the game (this may take a moment!)\n[18:00:00] [Server thread/INFO]: Saved the game\n[18:00:00] [Server thread/INFO]: Automatic saving is now disabled
+```

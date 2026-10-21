@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab04 - Tarea 4 - Configura y visualiza los registros de Cloud NAT
 
@@ -102,3 +103,4 @@ C4Deployment
     %% @step nat bash_vm | Devuelve la respuesta a 10.130.0.2
     %% @step estudiante navegador | Vuelve al Explorador de registros
     %% @step consola logging | Aparecen entradas de nat-config: la VPC, la VM y la conexión
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab05 - Tarea 4 - Repaso
 
@@ -94,3 +95,4 @@ C4Deployment
     %% @step navegador ssh_navegador | utility-cm, por SSH en el navegador
     %% @step ssh_navegador sshd | default-allow-ssh deja pasar el 22
     %% @step sshd bash_vm | free, nproc y lscpu confirman lo configurado
+```

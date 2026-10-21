@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab02 - Tarea 3 - Repaso
 
@@ -66,3 +67,4 @@ C4Deployment
     %% @step estudiante navegador | Termina el lab
     %% @step navegador laboratorio | Hace clic en Finalizar lab
     %% @step laboratorio api_compute | Borra lamp-1-vm, su disco y sus reglas
+```

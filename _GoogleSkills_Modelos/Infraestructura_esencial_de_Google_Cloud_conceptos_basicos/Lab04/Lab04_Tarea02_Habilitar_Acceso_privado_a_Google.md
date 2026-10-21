@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab04 - Tarea 2 - Habilita el Acceso privado a Google
 
@@ -110,3 +111,4 @@ C4Deployment
     %% @step bash_vm gcloud_vm | Vuelve a copiarla | gcloud storage cp gs://$MY_BUCKET/*.svg .
     %% @step gcloud_vm bucket | Ahora llega
     %% @step gcloud_vm home_vm | Guarda access.svg en la VM
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 1 - Crea la VM
 
@@ -64,3 +65,4 @@ C4Deployment
     %% @step api_compute disco_datos | minecraft-disk: SSD de 50 GB, en blanco
     %% @step ip_estatica nic | mc-server-ip apunta a nic0
     %% @step api_compute consola | En ejecución, con IP externa 203.0.113.30
+```

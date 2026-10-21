@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab03 - Tarea 1 - Explora la red predeterminada
 
@@ -67,3 +68,4 @@ C4Deployment
     %% @step api_compute consola | No hay ninguna red: la VM no tiene dónde ir | HTTP/1.1 400 Bad Request\n\n{"error": {"message": "Invalid value for field 'resource.networkInterfaces[0].network'"}}
     %% @step consola navegador | Ver los problemas: en Redes, «No hay más redes disponibles»
     %% @step navegador estudiante | Sin una red de VPC no se puede crear una VM
+```

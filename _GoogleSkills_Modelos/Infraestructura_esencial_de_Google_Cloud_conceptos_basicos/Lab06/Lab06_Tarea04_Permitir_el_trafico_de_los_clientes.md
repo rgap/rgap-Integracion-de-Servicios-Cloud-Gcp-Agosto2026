@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 4 - Permite el tráfico de los clientes
 
@@ -69,3 +70,4 @@ C4Deployment
     %% @step ip_estatica nic | 203.0.113.30 → 10.128.0.2
     %% @step nic minecraft | Entrega al puerto 25565
     %% @step comprobador navegador | En línea | En línea\nJugadores: 0 / 20 · MOTD: A Minecraft Server
+```

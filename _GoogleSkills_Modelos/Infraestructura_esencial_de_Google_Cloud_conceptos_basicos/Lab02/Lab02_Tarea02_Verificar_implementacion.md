@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab02 - Tarea 2 - Verifica la implementación
 
@@ -74,3 +75,4 @@ C4Deployment
     %% @step ip_externa internet | Viaja de vuelta por Internet
     %% @step internet navegador | Entrega la respuesta
     %% @step navegador estudiante | Muestra «¡Felicitaciones! Tu pila LAMP está funcionando»
+```

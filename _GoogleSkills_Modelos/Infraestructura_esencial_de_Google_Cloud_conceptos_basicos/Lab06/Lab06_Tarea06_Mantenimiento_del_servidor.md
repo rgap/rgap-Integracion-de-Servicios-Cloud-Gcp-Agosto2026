@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 6 - Mantenimiento del servidor
 
@@ -102,3 +103,4 @@ C4Deployment
     %% @step script_apagado metadatos | Al detener la VM: shutdown-script-url
     %% @step script_apagado training | Descarga shutdown.sh | #!/bin/bash\nsudo screen -r -X stuff '/stop\n'
     %% @step script_apagado screen | /stop: el servidor guarda el mundo antes de apagarse
+```

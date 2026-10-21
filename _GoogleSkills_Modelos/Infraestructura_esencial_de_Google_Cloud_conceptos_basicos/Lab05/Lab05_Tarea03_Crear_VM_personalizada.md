@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab05 - Tarea 3 - Crea una máquina virtual personalizada
 
@@ -79,3 +80,4 @@ C4Deployment
     %% @step bash_vm bash_vm | nproc: 2
     %% @step bash_vm bash_vm | lscpu: 1 núcleo con 2 hilos | Architecture:            x86_64\nCPU(s):                  2\nVendor ID:               GenuineIntel\n  Model name:            Intel(R) Xeon(R) CPU @ 2.20GHz\n    Thread(s) per core:  2\n    Core(s) per socket:  1\n    Socket(s):           1\nVirtualization features:\n  Hypervisor vendor:     KVM\n  Virtualization type:   full
     %% @step bash_vm bash_vm | exit
+```

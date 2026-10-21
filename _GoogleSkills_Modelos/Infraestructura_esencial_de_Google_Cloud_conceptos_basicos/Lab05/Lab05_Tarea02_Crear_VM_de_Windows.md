@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab05 - Tarea 2 - Crea una máquina virtual de Windows
 
@@ -80,3 +81,4 @@ C4Deployment
     %% @step navegador consola | Copia la contraseña y Cerrar
     %% @step ip_externa nic | Un cliente RDP entraría por la IP externa (fuera del lab)
     %% @step nic rdp | default-allow-rdp deja pasar el 3389
+```

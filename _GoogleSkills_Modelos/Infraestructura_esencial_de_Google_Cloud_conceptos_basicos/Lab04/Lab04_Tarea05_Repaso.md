@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab04 - Tarea 5 - Repaso
 
@@ -112,3 +113,4 @@ C4Deployment
     %% @step nat debian | Solo conexiones que abre la VM
     %% @step nat logging | Cada traducción queda registrada
     %% @step consola logging | Se ven en el Explorador de registros
+```

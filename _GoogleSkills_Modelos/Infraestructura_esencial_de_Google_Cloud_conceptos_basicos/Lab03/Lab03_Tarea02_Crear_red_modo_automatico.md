@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab03 - Tarea 2 - Crea una red de modo automático
 
@@ -107,3 +108,4 @@ C4Deployment
     %% @step estudiante navegador | Editar mynetwork: modo de subredes Personalizado
     %% @step consola api_compute | Pasa mynetwork a modo personalizado | POST /compute/v1/projects/PROYECTO/global/networks/mynetwork/switchToCustomMode HTTP/1.1\nHost: compute.googleapis.com
     %% @step api_compute consola | Modo: Personalizado; ya no se agregan subredes solas
+```

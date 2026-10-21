@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 3 - Instala y ejecuta la aplicación
 
@@ -99,3 +100,4 @@ C4Deployment
     %% @step minecraft disco_datos | Crea world/ y logs/ en /home/minecraft
     %% @step bash_vm screen | Ctrl+A, Ctrl+D: el servidor sigue en mcs
     %% @step bash_vm bash_vm | exit: cierra SSH; screen sigue
+```

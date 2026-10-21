@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab06 - Tarea 2 - Prepara el disco de datos
 
@@ -62,3 +63,4 @@ C4Deployment
     %% @step bash_vm disco_datos | sudo mkfs.ext4 -F … google-minecraft-disk | $ sudo mkfs.ext4 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/disk/by-id/google-minecraft-disk\nmke2fs 1.47.0 (5-Feb-2023)\nDiscarding device blocks: done\nCreating filesystem with 13107200 4k blocks and 3276800 inodes\nFilesystem UUID: …\nSuperblock backups stored on blocks:\n    32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,\n    4096000, 7962624, 11239424\n\nAllocating group tables: done\nWriting inode tables: done\nCreating journal (65536 blocks): done\nWriting superblocks and filesystem accounting information: done
     %% @step bash_vm disco_datos | sudo mount … /home/minecraft | $ sudo mount -o discard,defaults /dev/disk/by-id/google-minecraft-disk /home/minecraft
     %% @step bash_vm bash_vm | El disco de 50 GB queda en /home/minecraft
+```

@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab02 - Tarea 1 - Implementa una pila LAMP con Cloud Marketplace
 
@@ -92,3 +93,4 @@ C4Deployment
     %% @step infra_manager consola | Software instalado: devuelve el resumen con la URL del sitio
     %% @step consola navegador | Muestra el resumen de lamp-1
     %% @step navegador estudiante | Ve la URL del sitio y la contraseña de MySQL
+```

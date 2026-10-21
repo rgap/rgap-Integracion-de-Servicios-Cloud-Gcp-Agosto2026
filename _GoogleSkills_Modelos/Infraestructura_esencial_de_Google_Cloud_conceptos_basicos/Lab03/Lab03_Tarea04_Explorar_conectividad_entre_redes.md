@@ -1,3 +1,4 @@
+```
 C4Deployment
     title Lab03 - Tarea 4 - Explora la conectividad entre redes
 
@@ -104,3 +105,4 @@ C4Deployment
     %% @step bash_us nic_priv | ping -c 3 172.16.0.2
     %% @step bash_us bash_us | 100% packet loss: sin peering ni VPN, las IP internas no cruzan entre redes de VPC
     %% @step bash_us bash_us | Por IP interna solo se llega dentro de la misma red de VPC
+```
