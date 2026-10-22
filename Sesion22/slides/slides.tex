@@ -1,0 +1,367 @@
+% Motor: XeLaTeX. Sesión 22 - material docente UTP.
+% Estructura docente de la Sesión 21: 20 diapositivas.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{IAM: quién puede hacer qué y sobre qué recurso}
+\date{Semana 11 - Sesión 22}
+\author{Rel Guzman}
+
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: la arquitectura de la sesión anterior}
+\renewcommand{\arraystretch}{1.28}
+\centering\small
+\begin{tabular}{@{}p{3.0cm}p{4.9cm}p{5.1cm}@{}}
+\toprule
+\textbf{Bloque} & \textbf{Lo que decidimos} & \textbf{La pregunta que faltó}\\
+\midrule
+Backend en una VM & Ejecuta las reglas de la aplicación & ¿Con qué identidad guarda los archivos?\\
+Bucket privado & Guarda facturas y reportes & ¿Quién puede leerlos y quién puede crearlos?\\
+Proyecto de Google Cloud & Agrupa la VM, el bucket y la red & ¿Quién puede cambiar sus recursos?\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{La pregunta de hoy}
+\small En la Sesión 21 dijimos que el backend solo debe acceder a lo que necesita. Hoy vemos \textbf{cómo} se configura eso en Google Cloud: con IAM.
+\end{alertblock}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: una aplicación de facturas}
+\begin{block}{Pedidos Express (proyecto \texttt{pedidos-express-prod})}
+\small Laura emite facturas desde el navegador. La aplicación corre en una VM de Compute Engine, crea el PDF y el XML y los guarda en el bucket \texttt{pe-facturas-prod}.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.55cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25] (u) at (0,0) {\textbf{Laura}\\\footnotesize navegador};
+  \node[caja,fill=white,very thick] (v) at (5.2,0) {\textbf{VM}\\\footnotesize app de facturas};
+  \node[caja,fill=utpRojo!10] (b) at (10.4,0) {\textbf{Bucket}\\\footnotesize PDF y XML};
+  \draw[-latex,thick] (u) -- node[above,font=\footnotesize] {emite la factura} (v);
+  \draw[-latex,thick] (v) -- node[above,font=\footnotesize] {guarda archivos} (b);
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Pregunta rápida}
+\small Para que Laura pudiera descargar las facturas le dieron el rol \textbf{Editor} en todo el proyecto. Funciona. ¿Qué podría salir mal?
+\end{alertblock}
+\end{frame}
+
+% 4
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar cómo IAM controla el acceso en Google Cloud, asignar a cada identidad el \textbf{rol} mínimo sobre el \textbf{recurso} que necesita y usar una \textbf{cuenta de servicio} para que una VM acceda a Cloud Storage sin usar la cuenta de una persona.
+\end{block}
+\end{frame}
+
+% 5
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{11pt}
+  \item En una empresa, ¿la persona de contabilidad debería tener la llave del cuarto de servidores?
+  \item Si una aplicación usa la cuenta personal de un desarrollador y esa persona deja la empresa, ¿qué le pasa a la aplicación?
+  \item En el Lab 01 creaste un bucket. ¿Quién más podía ver sus archivos?
+\end{itemize}
+\end{frame}
+
+% 6
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large En un proyecto real casi nunca trabajas solo. Contabilidad necesita leer facturas, un desarrollador necesita desplegar una VM y la aplicación necesita guardar archivos. Con IAM das a cada uno \textbf{solo lo que su tarea requiere}, y un error de una persona no derriba todo el proyecto.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 7
+\begin{frame}{Plan de hoy: dos partes y una práctica}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{1.55cm}>{\raggedright\arraybackslash}p{5.8cm}>{\raggedright\arraybackslash}p{5.45cm}@{}}
+\toprule
+\textbf{Parte} & \textbf{Qué vemos} & \textbf{Lo conectamos con}\\
+\midrule
+1. Teoría & Identidad, rol y recurso: las tres piezas de IAM & El caso de facturas de Pedidos Express\\
+2. Teoría & Cuentas de servicio y el rol \texttt{Service Account User} & El laboratorio \textit{Explora IAM}\\
+\textbf{Práctica} & Corregir los permisos de un proyecto & Una tabla de identidad, recurso y rol\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Regla de hoy}
+\small Si una identidad no necesita un permiso para su tarea, no se lo des.
+\end{alertblock}
+\end{frame}
+
+% 8
+\separador{Parte 1: quién, qué y sobre qué}{Las tres piezas de una asignación de IAM}
+
+% 9
+\begin{frame}{IAM en una frase}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=3.0cm,minimum height=1.1cm,align=center}]
+  \node[caja,fill=utpRojo!25] (q) at (0,0) {\textbf{Quién}\\\footnotesize identidad};
+  \node[caja,fill=white,very thick] (r) at (4.6,0) {\textbf{Qué puede hacer}\\\footnotesize rol};
+  \node[caja,fill=utpRojo!10] (s) at (9.2,0) {\textbf{Sobre qué}\\\footnotesize recurso};
+  \draw[-latex,thick] (q) -- node[above,font=\footnotesize] {recibe} (r);
+  \draw[-latex,thick] (r) -- node[above,font=\footnotesize] {en} (s);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.24}
+\centering\small
+\begin{tabular}{@{}p{2.8cm}p{9.4cm}@{}}
+\toprule
+\textbf{Pieza} & \textbf{En el caso de facturas}\\
+\midrule
+Identidad & \texttt{laura@pedidosexpress.com}\\
+Rol & \texttt{Storage Object Viewer}: listar y descargar objetos\\
+Recurso & El bucket \texttt{pe-facturas-prod}\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{block}{Se lee así}
+\small ``Laura puede ver los objetos del bucket de facturas''. Nada más: ni borrarlos, ni tocar la VM.
+\end{block}
+\end{frame}
+
+% 10
+\begin{frame}{Identidades: personas y cuentas de servicio}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Cuenta de una persona}
+\small Un correo como \texttt{laura@pedidosexpress.com}. La persona inicia sesión en la consola o en Cloud Shell.
+\end{block}
+\begin{exampleblock}{En el lab}
+\small Trabajaste con dos usuarios: \textbf{Username 1} administraba el proyecto y \textbf{Username 2} solo tenía acceso de lectura.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{block}{Cuenta de servicio}
+\small Una identidad para una aplicación, no para una persona: \\\texttt{\footnotesize sa-generador-facturas@\\pedidos-express-prod.iam.gserviceaccount.com}
+\end{block}
+\begin{alertblock}{No inicia sesión}
+\small Nadie escribe su contraseña. La VM la usa para llamar a otros servicios, como Cloud Storage.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 11
+\begin{frame}{Roles: un paquete de permisos}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}p{4.3cm}p{4.6cm}p{3.6cm}@{}}
+\toprule
+\textbf{Rol} & \textbf{Qué permite} & \textbf{Alcance}\\
+\midrule
+\texttt{Owner} / \texttt{Editor} / \texttt{Viewer} & Administrar, cambiar o ver casi todo & Muy amplio: roles básicos\\
+\texttt{Storage Object Viewer} & Listar y descargar objetos & Solo Cloud Storage\\
+\texttt{Storage Object Creator} & Crear objetos, sin leer ni borrar & Solo Cloud Storage\\
+\texttt{Compute Instance Admin} & Crear y administrar VMs & Solo Compute Engine\\
+\texttt{Service Account User} & Asociar una cuenta de servicio a una VM & Una cuenta de servicio\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{La idea clave}
+\small No asignas permisos sueltos: asignas un \textbf{rol}. Prefiere el rol más específico que cubra la tarea antes que \texttt{Editor}.
+\end{alertblock}
+\end{frame}
+
+% 12
+\begin{frame}{Dónde se asigna: proyecto o recurso}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.6cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25,minimum width=3.4cm] (p) at (0,0) {\textbf{Proyecto}\\\footnotesize pedidos-express-prod};
+  \node[caja,fill=white,very thick] (v) at (5.2,0.75) {\textbf{VM}\\\footnotesize facturación};
+  \node[caja,fill=utpRojo!10] (b) at (5.2,-0.75) {\textbf{Bucket}\\\footnotesize pe-facturas-prod};
+  \draw[-latex,thick] (p) -- (v);
+  \draw[-latex,thick] (p) -- (b);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Rol en el proyecto}
+\small Vale para \textbf{todos} sus recursos. Se asigna en \textbf{IAM y administración > IAM}. En el lab diste \texttt{Storage Object Viewer} a Username 2 en el proyecto.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Rol en un recurso}
+\small Vale solo para \textbf{ese} recurso. Se asigna en la pestaña \textbf{Permisos} del bucket o de la cuenta de servicio.
+\end{block}
+\end{columns}
+\par\vspace{2mm}
+\begin{alertblock}{Elige el lugar más pequeño}
+\small Si Laura solo usa un bucket, el rol va en ese bucket, no en el proyecto.
+\end{alertblock}
+\end{frame}
+
+% 13
+\begin{frame}{Mínimo privilegio: el problema de Laura}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{alertblock}{Antes: \texttt{Editor} en el proyecto}
+\small Laura descarga facturas, pero también podría borrar la VM, cambiar la red o modificar otros recursos por error.
+\end{alertblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Después: \texttt{Storage Object Viewer} en el bucket}
+\small Laura descarga las facturas para conciliarlas. No puede borrarlas ni tocar la infraestructura.
+\end{exampleblock}
+\end{columns}
+\par\vspace{4mm}
+\begin{block}{Principio de mínimo privilegio}
+\small Cada identidad recibe el permiso mínimo necesario para realizar su tarea, sobre el recurso más pequeño posible. Si luego necesita más, se le concede solo esa acción.
+\end{block}
+\par\vspace{2mm}
+\begin{block}{Dos pasos en la consola}
+\small 1. \textbf{IAM y administración > IAM}: quitar a Laura el rol \texttt{Editor}.\\
+2. \textbf{Cloud Storage > Buckets > pe-facturas-prod > Permisos}: agregar a Laura con \texttt{Storage Object Viewer}.
+\end{block}
+\end{frame}
+
+% 14
+\separador{Parte 2: cuentas de servicio}{Una VM que accede a Cloud Storage con su propia identidad}
+
+% 15
+\begin{frame}{Lo que hiciste en \textit{Explora IAM}}
+\renewcommand{\arraystretch}{1.24}
+\centering\small
+\begin{tabular}{@{}p{4.6cm}p{4.3cm}p{3.6cm}@{}}
+\toprule
+\textbf{Paso} & \textbf{Qué hiciste} & \textbf{Qué comprobaste}\\
+\midrule
+Explorar la consola de IAM & Viste los roles de Username 1 y 2 & Quién tiene qué rol\\
+Preparar un bucket & Username 1 creó un bucket y subió \texttt{sample.txt} & Username 2 podía verlo\\
+Quitar acceso al proyecto & Retiraste el rol \texttt{Viewer} a Username 2 & Ya no ve el proyecto\\
+Agregar permisos de almacenamiento & Diste \texttt{Storage Object Viewer} a Username 2 & Lista el bucket desde Cloud Shell\\
+Configurar una cuenta de servicio & Creaste \texttt{read-bucket-objects} y la VM \texttt{demoiam} & La VM lee, pero no escribe\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{Lo que muestra el lab}
+\small Al quitar un rol amplio y dar uno específico, Username 2 conserva justo lo que necesita: leer objetos.
+\end{alertblock}
+\end{frame}
+
+% 16
+\begin{frame}{Una VM con cuenta de servicio}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,rounded corners=4pt,minimum width=2.7cm,minimum height=1.0cm,align=center}]
+  \node[caja,fill=utpRojo!25] (d) at (0,0) {\textbf{Diego}\\\footnotesize despliega};
+  \node[caja,fill=white,very thick] (v) at (5.2,0) {\textbf{VM}\\\footnotesize sa-generador-facturas};
+  \node[caja,fill=utpRojo!10] (b) at (10.4,0) {\textbf{Bucket}\\\footnotesize pe-facturas-prod};
+  \draw[-latex,thick] (d) -- node[above,font=\scriptsize,align=center] {Service Account\\User} (v);
+  \draw[-latex,thick] (v) -- node[above,font=\scriptsize,align=center] {Storage Object\\Creator} (b);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{La cuenta de servicio}
+\small \texttt{sa-generador-facturas} tiene \texttt{Storage Object Creator} sobre el bucket: crea el CSV diario, pero no lee ni borra facturas anteriores.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Diego}
+\small Tiene \texttt{Service Account User} sobre esa cuenta: puede elegirla al crear la VM, sin usar sus permisos desde su propia cuenta.
+\end{block}
+\end{columns}
+\par\vspace{2mm}
+\begin{exampleblock}{Igual que \texttt{demoiam} en el lab}
+\small Desde la VM, \texttt{gcloud compute instances list} falló y la copia hacia el bucket fue rechazada; descargar \texttt{sample.txt} sí funcionó. La VM solo hace lo que permite el rol de su cuenta de servicio.
+\end{exampleblock}
+\end{frame}
+
+% 17
+\begin{frame}{Caso: la configuración de Pedidos Express}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.9cm}@{}}
+\toprule
+\textbf{Identidad} & \textbf{Recurso} & \textbf{Rol} & \textbf{Motivo}\\
+\midrule
+Laura & Bucket \texttt{pe-facturas-prod} & \texttt{Storage Object Viewer} & Descarga facturas para conciliarlas\\
+\texttt{\footnotesize sa-generador-facturas} & Bucket \texttt{pe-facturas-prod} & \texttt{Storage Object Creator} & La VM sube el CSV diario\\
+Diego & Cuenta de servicio \texttt{\footnotesize sa-generador-facturas} & \texttt{Service Account User} & Asocia la cuenta a la VM\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{La factura no se guarda con la cuenta de Laura}
+\small Laura emite la factura; la VM guarda el PDF y el XML con su cuenta de servicio.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Si Diego deja la empresa}
+\small La aplicación sigue funcionando: usa su propia cuenta de servicio, no la de Diego.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 18
+\begin{frame}{Práctica: corrige los permisos de un proyecto}
+\begin{block}{En grupos de dos}
+\small Una librería tiene el proyecto \texttt{libreria-prod}, una VM que genera reportes de ventas cada noche y el bucket \texttt{libreria-reportes}. Hoy \textbf{todos} tienen \texttt{Editor} en el proyecto.
+\end{block}
+\renewcommand{\arraystretch}{1.15}
+\centering\small
+\begin{tabular}{@{}p{3.6cm}p{8.6cm}@{}}
+\toprule
+\textbf{Identidad} & \textbf{Tarea que realmente hace}\\
+\midrule
+Carla, contadora & Descarga los reportes para revisar las ventas\\
+VM de reportes & Sube un reporte nuevo cada noche\\
+Andrés, desarrollador & Crea la VM y le asocia su cuenta de servicio\\
+Sofía, practicante & Solo necesita revisar la configuración, sin cambiar nada\\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5mm}
+\begin{alertblock}{Entregable}
+\small Una tabla con identidad, recurso, rol y motivo. Indiquen qué rol \texttt{Editor} retirarían.
+\end{alertblock}
+\end{frame}
+
+% 19
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Cuáles son las tres piezas de una asignación de IAM?\\\medskip
+2. ¿Por qué dar \texttt{Editor} en el proyecto a Laura era un riesgo?\\\medskip
+3. ¿Qué diferencia hay entre asignar un rol en el proyecto y en el bucket?\\\medskip
+4. ¿Por qué la VM usa una cuenta de servicio y no la cuenta de un desarrollador?\\\medskip
+5. ¿Para qué sirve el rol \texttt{Service Account User}?\\\medskip
+6. En el lab, ¿por qué \texttt{demoiam} pudo leer \texttt{sample.txt} pero no escribir en el bucket?
+\end{block}
+\begin{alertblock}{Idea final}
+\small IAM responde siempre tres preguntas: quién, qué puede hacer y sobre qué recurso. La mejor respuesta es la más pequeña que permite trabajar.
+\end{alertblock}
+\end{frame}
+
+% 20
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Laboratorio: \textit{Explora IAM}, curso \textit{Essential Google Cloud Infrastructure: Core Services}: \texttt{cloudskillsboost.google/focuses/19082}.
+  \item Material base de esta sesión: \texttt{/Users/rgap/Desktop/labs/ejemplo-explora-iam.md}.
+  \item Diagrama del sistema desplegado: \texttt{labs/diagramas/iam\_sistema\_de\_facturas\_desplegado.md}.
+  \item Simulación visual del caso: \texttt{labs/proyecto-facturas-web}.
+  \item Material previo del curso: Sesión 21, arquitectura inicial de una webapp.
+  \item Google Cloud: IAM, cuentas de servicio, Cloud Storage y Compute Engine.
+  \item Las respuestas de las preguntas y de la práctica están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
