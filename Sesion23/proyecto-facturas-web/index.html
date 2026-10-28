@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102331" />
+    <title>Facturas protegidas</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="login" id="login">
+      <form class="card" id="login-form">
+        <h1>Pedidos Express</h1>
+        <p class="muted">Facturación</p>
+        <label>
+          Correo
+          <input type="email" id="email" autocomplete="username" />
+        </label>
+        <label>
+          Contraseña
+          <input type="password" id="password" autocomplete="current-password" />
+        </label>
+        <p class="error" id="login-error" role="alert" hidden></p>
+        <button type="submit">Ingresar</button>
+        <p class="divider">Entrar como</p>
+        <div class="quick" id="quick"></div>
+      </form>
+    </main>
+
+    <div id="billing" hidden>
+      <header class="topbar">
+        <a href="./" class="brand" id="home">Pedidos Express · Facturación</a>
+        <span>
+          <span id="user-label"></span>
+          <button class="link" id="logout">Salir</button>
+        </span>
+      </header>
+
+      <main class="layout" id="layout">
+        <form class="card" id="invoice-form">
+          <div class="row">
+            <h2>Nueva factura</h2>
+            <button type="button" class="link" id="use-example">Usar ejemplo</button>
+          </div>
+          <label>
+            Cliente
+            <input name="client" placeholder="Razón social" />
+          </label>
+          <label>
+            RUC
+            <input name="ruc" inputmode="numeric" maxlength="11" placeholder="11 dígitos" />
+          </label>
+          <label>
+            Concepto
+            <input name="concept" placeholder="Qué se vende" />
+          </label>
+          <label>
+            Total con IGV (S/)
+            <input name="total" inputmode="decimal" placeholder="0.00" />
+          </label>
+          <p id="invoice-message" role="status" hidden></p>
+          <button type="submit" id="issue">Emitir factura · S/ 0.00</button>
+        </form>
+
+        <section class="card">
+          <h2>Facturas emitidas</h2>
+          <table>
+            <tbody id="invoices"></tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+:root { font-family: Roboto, sans-serif; font-size: 16px; color: #1d3640; background: #f1f4f3; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+/* Toda la app se ve al 120% con el navegador al 100%. */
+body { margin: 0; min-width: 320px; zoom: 1.2; }
+button, input { font: inherit; }
+h1, h2 { margin: 0; letter-spacing: -.02em; }
+h1 { font-size: 26px; }
+h2 { font-size: 20px; }
+
+.card { background: white; border: 1px solid #dbe3e1; border-radius: 10px; padding: 24px; }
+
+label { display: block; margin-top: 14px; color: #4a6169; font-size: 13px; font-weight: 500; }
+input { display: block; width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid #c4d1ce; border-radius: 6px; }
+input:focus { outline: 2px solid #167b73; border-color: transparent; }
+
+button { cursor: pointer; }
+button[type="submit"] { width: 100%; margin-top: 20px; padding: 13px; border: 0; border-radius: 6px; background: #167b73; color: white; font-weight: 700; }
+button[type="submit"]:hover { background: #10645d; }
+.link { border: 0; padding: 0; background: none; color: #167b73; font-size: 14px; font-weight: 500; }
+
+.muted { margin: 4px 0 8px; color: #6b8087; }
+.error, .success { margin: 16px 0 0; padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+.error { background: #fdecea; color: #8a2d1f; }
+.success { background: #e2f3ee; color: #155f58; }
+
+/* Inicio de sesión */
+.login { min-height: calc(100vh / 1.2); display: grid; place-items: center; padding: 16px; }
+.login .card { width: 100%; max-width: 380px; }
+.divider { margin: 22px 0 10px; color: #6b8087; font-size: 13px; text-align: center; }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.quick button { padding: 10px 6px; border: 1px solid #c4d1ce; border-radius: 6px; background: white; color: #1d3640; font-size: 13px; line-height: 1.3; }
+.quick button:hover { border-color: #167b73; background: #f1f8f6; }
+.quick small { display: block; color: #6b8087; font-size: 11px; }
+
+/* Facturación */
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 24px; background: #123946; color: white; font-size: 14px; }
+.topbar span { display: flex; gap: 16px; color: #c4d8d8; }
+.topbar .link { color: #ffd46d; }
+.brand { color: white; font-weight: 700; text-decoration: none; }
+.brand:hover { text-decoration: underline; }
+
+.layout { max-width: 1000px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.layout.single { grid-template-columns: minmax(0, 560px); justify-content: center; }
+.row { display: flex; justify-content: space-between; align-items: center; }
+
+table { width: 100%; margin-top: 12px; border-collapse: collapse; font-size: 14px; }
+td { padding: 12px 0; border-top: 1px solid #e6ecea; vertical-align: top; }
+td small { display: block; margin-top: 3px; color: #6b8087; }
+.amount { text-align: right; font-weight: 500; white-space: nowrap; }
+.files { padding-left: 14px; color: #167b73; font-size: 12px; white-space: nowrap; text-align: right; }
+
+@media (max-width: 720px) {
+  body { zoom: 1; }
+  .login { min-height: 100vh; }
+  .layout { grid-template-columns: 1fr; }
+  .topbar { padding: 12px 16px; }
+  .topbar span { font-size: 0; }
+  .topbar .link { font-size: 14px; }
+}
