@@ -22,10 +22,10 @@ En la carpeta [`practica/`](practica/) está el notebook [`practica_bigquery_pyt
 | Bloque | Diapositivas | Minutos |
 | --- | --- | ---: |
 | Inicio y repaso de Cloud SQL | 1–8 | 14 |
-| Parte 1: Big Data | 9–13 | 12 |
-| Parte 2: BigQuery y SQL para analizar | 14–18 | 12 |
-| Práctica 1: laboratorio | 19 | 24 |
-| Práctica 2: Python + DuckDB | 20 | 14 |
+| Parte 1: Big Data | 9–13 | 10 |
+| Parte 2: BigQuery y SQL para analizar | 14–18 | 10 |
+| Práctica 1: laboratorio | 19 | 30 |
+| Práctica 2: Python + DuckDB | 20 | 12 |
 | Cierre | 21–22 | 4 |
 
 ## Compilar

@@ -319,7 +319,7 @@ P-1001 & 2025-12-31 & Ana & Hogar & 149\\
  & \textbf{Cloud SQL} & \textbf{BigQuery}\\
 \midrule
 \textbf{Para qué} & Registrar lo que pasa en la app & Analizar el historial\\
-\textbf{Qué creas} & Una instancia: eliges motor y máquina & Un dataset y sus tablas; ningún servidor\\
+\textbf{Qué creas} & Una instancia: eliges motor y máquina & Un conjunto de datos y sus tablas; ningún servidor\\
 \textbf{Cuántas filas} & Miles o millones & Millones o miles de millones\\
 \textbf{Consulta típica} & Trae el pedido P-1001 & Suma las ventas de 3 años por categoría\\
 \textbf{Cómo cobra} & Por las horas que la instancia está encendida & Por los datos guardados y los que lee cada consulta\\
@@ -335,27 +335,36 @@ P-1001 & 2025-12-31 & Ana & Hogar & 149\\
 \begin{frame}[fragile]{Cómo se organiza BigQuery}
 \begin{center}
 \begin{tikzpicture}[font=\small,
- nivel/.style={draw=utpRojo,thick,rounded corners=4pt,align=center,minimum width=4.4cm,minimum height=0.85cm}]
-  \node[font=\bfseries] at (0,3.3) {Cloud SQL};
-  \node[nivel,fill=utpRojo!30] (a1) at (0,2.5) {Instancia \texttt{mysql-server}};
-  \node[nivel,fill=utpRojo!14] (a2) at (0,1.3) {Base de datos \texttt{ventas}};
+ nivel/.style={draw=utpRojo,thick,rounded corners=4pt,align=center,minimum width=4.4cm,minimum height=0.75cm}]
+  \node[font=\bfseries] at (0,2.9) {Cloud SQL};
+  \node[nivel,fill=utpRojo!30] (a1) at (0,2.2) {Instancia \texttt{mysql-server}};
+  \node[nivel,fill=utpRojo!14] (a2) at (0,1.15) {Base de datos \texttt{ventas}};
   \node[nivel,fill=white] (a3) at (0,0.1) {Tabla \texttt{pedidos}};
   \draw[-latex,thick] (a1) -- (a2); \draw[-latex,thick] (a2) -- (a3);
-  \node[font=\bfseries] at (7.6,3.3) {BigQuery};
-  \node[nivel,fill=utpRojo!30] (b1) at (7.6,2.5) {Proyecto de Google Cloud};
-  \node[nivel,fill=utpRojo!14] (b2) at (7.6,1.3) {Dataset \texttt{billing\_dataset}};
+  \node[font=\bfseries] at (7.6,2.9) {BigQuery};
+  \node[nivel,fill=utpRojo!30] (b1) at (7.6,2.2) {Proyecto de Google Cloud};
+  \node[nivel,fill=utpRojo!14] (b2) at (7.6,1.15) {Conjunto de datos \texttt{billing\_dataset}};
   \node[nivel,fill=white] (b3) at (7.6,0.1) {Tabla \texttt{sampleinfotable}};
   \draw[-latex,thick] (b1) -- (b2); \draw[-latex,thick] (b2) -- (b3);
-  \foreach \y/\t in {1.3/grupo de tablas,0.1/donde están las filas} {
+  \foreach \y/\t in {1.15/grupo de tablas,0.1/donde están las filas} {
     \node[font=\scriptsize,color=utpGris] at (3.8,\y) {\t};
   }
 \end{tikzpicture}
 \end{center}
-\begin{block}{En la consulta se escribe \texttt{dataset.tabla}}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{En la consulta: \texttt{conjunto.tabla}}
 \begin{lstlisting}
-SELECT * FROM `billing_dataset.sampleinfotable` LIMIT 10
+SELECT *
+FROM `billing_dataset.sampleinfotable`
+LIMIT 10
 \end{lstlisting}
 \end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{En la consola de BigQuery}
+\small En el panel \textbf{Explorador}, los tres puntos (\textbf{Ver acciones}) junto al proyecto llevan a \textbf{Crear conjunto de datos}; junto al conjunto de datos, a \textbf{Crear tabla}.
+\end{exampleblock}
+\end{columns}
 \end{frame}
 
 % 17
