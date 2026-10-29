@@ -1,0 +1,540 @@
+% Motor: XeLaTeX. Sesión 24 - material docente UTP.
+% Estructura docente de la Sesión 23.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywordstyle=\color{utpRojo}\bfseries,
+  morekeywords={SELECT,FROM,WHERE,GROUP,BY,ORDER,DESC,LIMIT,AS,COUNT,SUM,ROUND,import},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Big Data y BigQuery: preguntas a millones de filas con SQL}
+\date{Semana 12 - Sesión 24}
+\author{Rel Guzman}
+
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+% Tabla pequeña de pedidos que usan las diapositivas de SQL.
+\newcommand{\filaA}{\rowcolor{utpRojo!30}}
+\newcommand{\filaB}{\rowcolor{utpRojo!12}}
+\newcommand{\filaC}{\rowcolor{utpGrisClaro}}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: Cloud SQL por dentro}
+\begin{columns}[c,onlytextwidth]
+\column{.50\textwidth}
+\centering
+\begin{tikzpicture}[font=\small]
+  \draw[utpRojo,thick,rounded corners=5pt,fill=utpRojo!8] (0,0) rectangle (6.4,4.6);
+  \node[anchor=north west,align=left] at (0.15,4.5) {\textbf{Instancia} \texttt{wordpress-db}\\\footnotesize Motor: MySQL 8.0};
+  \draw[utpRojo,thick,rounded corners=4pt,fill=white] (0.4,0.3) rectangle (6.0,3.3);
+  \node[anchor=north west] at (0.55,3.2) {\textbf{Base de datos} \texttt{wordpress}};
+  \foreach \t/\x in {wp\_posts/1.45,wp\_users/3.2,wp\_comments/4.95} {
+    \draw[utpRojo,fill=utpRojo!25] (\x-0.75,1.85) rectangle (\x+0.75,2.15);
+    \draw[utpRojo] (\x-0.75,1.0) grid[xstep=0.5,ystep=0.283] (\x+0.75,1.85);
+    \node[font=\scriptsize] at (\x,0.65) {\texttt{\t}};
+  }
+\end{tikzpicture}
+\column{.46\textwidth}
+\small
+\textbf{Instancia:} el servidor MySQL que Google crea y mantiene. Al crearla eliges el motor.\par\medskip
+\textbf{Base de datos:} un espacio con nombre dentro de la instancia. Una instancia puede tener varias.\par\medskip
+\textbf{Tabla:} donde quedan las filas. WordPress creó las suyas al instalarse.\par\vspace{3mm}
+\begin{alertblock}{Pregunta rápida}
+\small Si mañana necesitas otra base de datos, ¿tienes que crear otra instancia?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Caso de estudio: Pedidos Express crece}
+\begin{block}{Enunciado}
+\small Pedidos Express ya tiene cuatro áreas: \textbf{ventas}, \textbf{inventario}, \textbf{facturación} y \textbf{recursos humanos}. Cada una necesita guardar sus datos en Cloud SQL. Diseña cómo quedaría.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+ dato/.style={draw=utpRojo,thick,rounded corners=3pt,fill=white,minimum width=3.1cm,minimum height=0.8cm,align=center}]
+  \node[dato] at (0,0.6) {Pedido P-1001 de Ana};
+  \node[dato] at (3.5,0.6) {Stock de audífonos: 35};
+  \node[dato] at (7.0,0.6) {Factura F-101: S/ 250};
+  \node[dato] at (10.5,0.6) {Sueldo de un repartidor};
+  \node[dato] at (1.75,-0.5) {Producto: Mouse, S/ 59};
+  \node[dato] at (5.25,-0.5) {Pago de la factura F-101};
+  \node[dato] at (8.75,-0.5) {Asistencia de un empleado};
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Responde}
+\small 1. ¿Cuántas instancias creas? \quad 2. ¿Cuántas bases de datos y con qué nombres? \quad 3. ¿En qué base va cada dato de arriba?
+\end{alertblock}
+\end{frame}
+
+% 4
+\begin{frame}{Caso de estudio: una solución}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ nivel/.style={draw=utpRojo,thick,rounded corners=4pt,align=center,minimum height=0.7cm},
+ bd/.style={nivel,fill=utpRojo!10,minimum width=2.9cm},
+ tabla/.style={font=\scriptsize\ttfamily,align=center}]
+  \node[nivel,fill=utpRojo!35,minimum width=3.2cm] (c) at (0,2.6) {\textbf{Cloud SQL}};
+  \node[nivel,fill=utpRojo!22,minimum width=5.6cm] (i) at (0,1.7) {Instancia: \texttt{mysql-server} \quad Motor: MySQL};
+  \draw[-latex,thick] (c) -- (i);
+  \foreach \n/\x/\t [count=\k] in {ventas/-5.1/{clientes\\pedidos},inventario/-1.7/{productos\\stock},facturacion/1.7/{facturas\\pagos},recursos\_humanos/5.1/{empleados\\asistencia}} {
+    \node[bd] (b\k) at (\x,0.4) {BD: \texttt{\n}};
+    \draw[-latex,thick] (i.south) -- (b\k.north);
+    \node[tabla,below=1mm of b\k] {\t};
+  }
+\end{tikzpicture}
+\end{center}
+\vspace{-1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{¿Por qué así?}
+\small \textbf{Una instancia:} un solo servidor que pagar y mantener; alcanza para empezar.\\
+\textbf{Una base por área:} cada área encuentra rápido sus tablas y los sueldos no se mezclan con los pedidos.
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{En la consola}
+\small Cloud SQL $\rightarrow$ \texttt{mysql-server} $\rightarrow$ \textbf{Bases de datos} $\rightarrow$ \textbf{Crear base de datos}. Se repite una vez por área.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 5
+\begin{frame}{Revisión: la pregunta de hoy}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center}]
+  \node[caja,fill=utpRojo!25,minimum width=2.2cm,minimum height=1cm] (app) at (0,0) {\textbf{Aplicación}};
+  \node[caja,fill=white,minimum width=2.4cm,minimum height=1cm] (sql) at (4.4,0) {\textbf{Cloud SQL}\\\footnotesize BD \texttt{ventas}};
+  \draw[-latex,thick] (app) -- node[above,font=\scriptsize,align=center]{guarda\\P-1001} node[below,font=\scriptsize,align=center]{1 fila,\\al instante} (sql);
+  \foreach \i in {0,...,7} \draw[utpRojo,fill=white] (6.4+\i*0.12,-0.9+\i*0.12) rectangle (8.0+\i*0.12,0.1+\i*0.12);
+  \node[font=\footnotesize,align=center,fill=white,inner sep=1pt] at (7.62,-0.05) {\textbf{1.2 millones}\\de pedidos};
+  \node[font=\footnotesize] at (7.6,-1.3) {3 años de historial};
+  \node[caja,fill=utpRojo!10,text width=2.9cm,font=\footnotesize] (g) at (11.3,0) {El gerente pregunta:\\\textbf{¿Qué categoría vendió más en 3 años?}};
+  \draw[-latex,thick] (g.west) -- (9.1,0);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Registrar}
+\small La app guarda un pedido a la vez. Cada operación toca \textbf{una fila}. Cloud SQL está hecho para eso.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Analizar}
+\small La pregunta del gerente debe recorrer \textbf{todas las filas} del historial. Si corre en la misma base, la app se pone lenta mientras tanto.
+\end{block}
+\end{columns}
+\par\vspace{2mm}
+\begin{alertblock}{La idea de hoy}
+\small Para preguntas sobre millones de filas se usa una herramienta pensada para analizar: \textbf{BigQuery}.
+\end{alertblock}
+\end{frame}
+
+% 6
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar qué es \textbf{Big Data} y por qué \textbf{BigQuery} responde rápido sobre millones de filas, cargar una tabla en BigQuery y responder preguntas de negocio con consultas \textbf{SQL} que filtran, agrupan y suman.
+\end{block}
+\end{frame}
+
+% 7
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{11pt}
+  \item ¿Cuántas filas crees que caben en una hoja de Excel?
+  \item Pedidos Express recibe unos 1\,100 pedidos al día. ¿Cuántos pedidos tendrá después de 3 años? ¿Podrías abrirlos en Excel?
+  \item Tienes la lista de todos los pedidos con su categoría y su monto. ¿Cómo sacarías cuánto se vendió en cada categoría?
+\end{itemize}
+\end{frame}
+
+% 8
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Las empresas acumulan años de ventas, cobros y registros de uso. Si sabes hacerles preguntas con \textbf{SQL} (qué se vende más, en qué mes, en qué distrito, en qué se gasta), esos datos se convierten en decisiones. Con \textbf{BigQuery} lo haces sin instalar ni administrar servidores.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 9
+\separador{Parte 1: ¿qué es Big Data?}{Cuando los datos ya no caben en las herramientas de siempre}
+
+% 10
+\begin{frame}{¿Cuándo los datos son ``grandes''?}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,x=1.2cm]
+  % Escala: cada marca es 10 veces la anterior (de 100 a 1000 millones).
+  \foreach \e/\t in {0/100,1/1 mil,2/10 mil,3/100 mil,4/1 M,5/10 M,6/100 M,7/1000 M} {
+    \draw[utpGrisMedio!60] (\e,0.4) -- (\e,3.5);
+    \node[font=\scriptsize,color=utpGris] at (\e,0.2) {\t};
+  }
+  \foreach \y/\l/\v/\n in {3.1/Contactos de tu celular/0.699/500,
+                          2.35/Tienda de barrio: 1 año/2.261/18\,250,
+                          1.6/Pedidos Express: 3 años/4.079/1\,200\,000,
+                          0.85/GPS de repartidores: 3 años/6.635/432\,000\,000} {
+    \node[anchor=east,align=right] at (-0.15,\y) {\l};
+    \fill[utpRojo!70] (0,\y-0.24) rectangle (\v,\y+0.24);
+    \node[anchor=west,font=\scriptsize\bfseries] at (\v,\y) {\n};
+  }
+  \draw[utpNegro,very thick,dashed] (4.0206,0.4) -- (4.0206,3.5);
+  \node[anchor=south,font=\scriptsize\bfseries,fill=white,inner sep=1pt] at (4.0206,3.5) {Límite de Excel: 1\,048\,576 filas};
+\end{tikzpicture}
+\end{center}
+\vspace{-1mm}
+{\scriptsize\color{utpGris} Cada línea vertical vale 10 veces la anterior (M = millones). GPS: 1 posición cada 5 s durante 30 min de reparto = 360 por pedido.}
+\begin{block}{Big Data}
+\small Datos tan grandes, que llegan tan rápido o tan variados que una hoja de cálculo o una sola computadora ya no los procesa a tiempo.
+\end{block}
+\end{frame}
+
+% 11
+\begin{frame}{Las tres V de Big Data}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ v/.style={draw=utpRojo,thick,rounded corners=5pt,fill=white,text width=3.7cm,minimum height=3.5cm,align=center,anchor=north}]
+  \node[v,fill=utpRojo!10] at (0,0) {{\Large\bfseries Volumen}\\[2pt]\footnotesize ¿Cuántos datos hay?\\[8pt]\small 1.2 millones de pedidos\\432 millones de posiciones GPS};
+  \node[v] at (4.6,0) {{\Large\bfseries Velocidad}\\[2pt]\footnotesize ¿Qué tan rápido llegan?\\[8pt]\small Cada repartidor envía su ubicación cada 5 segundos, todo el día};
+  \node[v,fill=utpRojo!10] at (9.2,0) {{\Large\bfseries Variedad}\\[2pt]\footnotesize ¿En qué forma llegan?\\[8pt]\small Tablas de pedidos, fotos de productos, reseñas escritas y coordenadas GPS};
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Basta con una}
+\small Si solo una de las tres V crece mucho, la hoja de cálculo o la base de siempre empiezan a quedarse cortas.
+\end{alertblock}
+\end{frame}
+
+% 12
+\begin{frame}{Registrar y analizar no son lo mismo}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+{\color{utpRojo}\bfseries Registrar:} {\small ``Guarda el pedido P-1001 de Ana''}\par\vspace{2mm}
+\centering\scriptsize\setlength\tabcolsep{4pt}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{pedido} & \textbf{fecha} & \textbf{cliente} & \textbf{categoria} & \textbf{monto}\\
+\midrule
+P-0998 & 2025-12-31 & Luis & Moda & 98\\
+P-0999 & 2025-12-31 & Rosa & Supermercado & 24\\
+P-1000 & 2025-12-31 & Carlos & Electrónica & 59\\
+\rowcolor{utpRojo!35} P-1001 & 2025-12-31 & Ana & Hogar & 149\\
+\bottomrule
+\end{tabular}\par\vspace{2mm}
+\raggedright\footnotesize La app agrega \textbf{una fila nueva}, con todas sus columnas, y termina.
+\column{.48\textwidth}
+{\color{utpRojo}\bfseries Analizar:} {\small ``¿Cuánto se vendió por categoría?''}\par\vspace{2mm}
+\centering\scriptsize\setlength\tabcolsep{4pt}
+\begin{tabular}{@{}lll>{\columncolor{utpRojo!35}}l>{\columncolor{utpRojo!35}}l@{}}
+\toprule
+\textbf{pedido} & \textbf{fecha} & \textbf{cliente} & \textbf{categoria} & \textbf{monto}\\
+\midrule
+P-0001 & 2023-01-01 & Marta & Moda & 98\\
+P-0002 & 2023-01-01 & Jorge & Electrónica & 295\\
+$\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$\\
+P-1001 & 2025-12-31 & Ana & Hogar & 149\\
+\bottomrule
+\end{tabular}\par\vspace{2mm}
+\raggedright\footnotesize Lee \textbf{todas las filas} de los 3 años, pero solo \textbf{2 columnas}: \texttt{categoria} y \texttt{monto}. Suma los montos de cada categoría.
+\end{columns}
+\par\vspace{3mm}
+\renewcommand{\arraystretch}{1.1}
+\centering\footnotesize
+\begin{tabular}{@{}p{3.6cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+ & \textbf{Registrar} {\color{utpGris}(Cloud SQL)} & \textbf{Analizar} {\color{utpGris}(BigQuery)}\\
+\midrule
+\textbf{Filas que usa} & 1, la del pedido nuevo & Todas: 1.2 millones\\
+\textbf{Columnas que usa} & Todas las de esa fila & Solo las que pide la pregunta\\
+\textbf{Cuánto tarda} & Milisegundos & Segundos\\
+\textbf{Cuántas veces al día} & Miles: una por pedido & Pocas: una por reporte\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 13
+\begin{frame}{¿Cómo responde rápido BigQuery? Dos ideas}
+\begin{columns}[T,onlytextwidth]
+\column{.47\textwidth}
+\begin{block}{1. Guarda cada columna por separado}
+\small Si la consulta usa \texttt{categoria} y \texttt{monto}, lee \textbf{solo esas dos} de las 11 columnas.
+\end{block}
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+  \foreach \cname [count=\i] in {pedido\_id,fecha,cliente\_id,distrito,categoria,producto,cantidad,precio,monto,metodo\_pago,estado} {
+    \pgfmathsetmacro{\x}{(\i-1)*0.55}
+    \ifnum\i=5 \def\col{utpRojo!70}\else\ifnum\i=9 \def\col{utpRojo!70}\else\def\col{utpGrisClaro}\fi\fi
+    \fill[\col] (\x,0) rectangle (\x+0.42,2.4);
+    \draw[utpGrisMedio] (\x,0) rectangle (\x+0.42,2.4);
+    \node[rotate=90,anchor=east] at (\x+0.21,-0.1) {\cname};
+  }
+\end{tikzpicture}
+\column{.49\textwidth}
+\begin{block}{2. Reparte el trabajo entre muchas máquinas}
+\small Cada máquina suma su parte al mismo tiempo; al final se juntan los resultados.
+\end{block}
+\centering
+\begin{tikzpicture}[font=\scriptsize,
+ caja/.style={draw=utpRojo,thick,rounded corners=3pt,align=center}]
+  \node[caja,fill=utpRojo!25,minimum width=5.6cm] (t) at (0,2.2) {\footnotesize 1.2 millones de filas};
+  \foreach \i in {1,...,4} {
+    \node[caja,fill=white,minimum width=1.2cm,minimum height=0.9cm] (m\i) at (-2.8+\i*1.4,0.9) {máquina \i\\300 mil};
+    \draw[-latex] (t.south -| m\i.north) -- (m\i.north);
+  }
+  \node[caja,fill=utpRojo!10,minimum width=3.2cm] (r) at (0,-0.4) {\footnotesize suma de las 4 partes};
+  \foreach \i in {1,...,4} \draw[-latex] (m\i.south) -- (r.north);
+\end{tikzpicture}\par\vspace{2mm}
+{\footnotesize Google usa cientos o miles de máquinas. Tú solo escribes la consulta.}
+\end{columns}
+\end{frame}
+
+% 14
+\separador{Parte 2: BigQuery}{Guardar tablas enormes y hacerles preguntas con SQL}
+
+% 15
+\begin{frame}{¿Qué es BigQuery?}
+\begin{block}{Definición}
+\small Servicio de Google Cloud para guardar tablas muy grandes y responder preguntas sobre ellas con SQL. \textbf{No creas servidores:} cargas los datos y escribes la consulta.
+\end{block}
+\renewcommand{\arraystretch}{1.15}
+\centering\small
+\begin{tabular}{@{}p{2.6cm}>{\raggedright\arraybackslash}p{4.9cm}>{\raggedright\arraybackslash}p{5.0cm}@{}}
+\toprule
+ & \textbf{Cloud SQL} & \textbf{BigQuery}\\
+\midrule
+\textbf{Para qué} & Registrar lo que pasa en la app & Analizar el historial\\
+\textbf{Qué creas} & Una instancia: eliges motor y máquina & Un dataset y sus tablas; ningún servidor\\
+\textbf{Cuántas filas} & Miles o millones & Millones o miles de millones\\
+\textbf{Consulta típica} & Trae el pedido P-1001 & Suma las ventas de 3 años por categoría\\
+\textbf{Cómo cobra} & Por las horas que la instancia está encendida & Por los datos guardados y los que lee cada consulta\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{alertblock}{Las dos hablan SQL}
+\small Lo que aprendas a consultar en una sirve en la otra.
+\end{alertblock}
+\end{frame}
+
+% 16
+\begin{frame}[fragile]{Cómo se organiza BigQuery}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ nivel/.style={draw=utpRojo,thick,rounded corners=4pt,align=center,minimum width=4.4cm,minimum height=0.85cm}]
+  \node[font=\bfseries] at (0,3.3) {Cloud SQL};
+  \node[nivel,fill=utpRojo!30] (a1) at (0,2.5) {Instancia \texttt{mysql-server}};
+  \node[nivel,fill=utpRojo!14] (a2) at (0,1.3) {Base de datos \texttt{ventas}};
+  \node[nivel,fill=white] (a3) at (0,0.1) {Tabla \texttt{pedidos}};
+  \draw[-latex,thick] (a1) -- (a2); \draw[-latex,thick] (a2) -- (a3);
+  \node[font=\bfseries] at (7.6,3.3) {BigQuery};
+  \node[nivel,fill=utpRojo!30] (b1) at (7.6,2.5) {Proyecto de Google Cloud};
+  \node[nivel,fill=utpRojo!14] (b2) at (7.6,1.3) {Dataset \texttt{billing\_dataset}};
+  \node[nivel,fill=white] (b3) at (7.6,0.1) {Tabla \texttt{sampleinfotable}};
+  \draw[-latex,thick] (b1) -- (b2); \draw[-latex,thick] (b2) -- (b3);
+  \foreach \y/\t in {1.3/grupo de tablas,0.1/donde están las filas} {
+    \node[font=\scriptsize,color=utpGris] at (3.8,\y) {\t};
+  }
+\end{tikzpicture}
+\end{center}
+\begin{block}{En la consulta se escribe \texttt{dataset.tabla}}
+\begin{lstlisting}
+SELECT * FROM `billing_dataset.sampleinfotable` LIMIT 10
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+% 17
+\begin{frame}[fragile]{SQL para analizar (1): elegir y filtrar}
+\begin{columns}[c,onlytextwidth]
+\column{.28\textwidth}
+\centering
+{\small\bfseries Tabla \texttt{pedidos}}\par\vspace{1mm}
+\scriptsize\setlength\tabcolsep{3pt}
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{pedido} & \textbf{categoria} & \textbf{monto}\\
+\midrule
+\filaA P-1 & Moda & 98\\
+\filaA P-2 & Electrónica & 295\\
+P-3 & Supermercado & 12\\
+P-4 & Supermercado & 0\\
+P-5 & Supermercado & 56\\
+P-6 & Electrónica & 59\\
+\bottomrule
+\end{tabular}
+\column{.04\textwidth}
+\column{.34\textwidth}
+\begin{lstlisting}
+SELECT pedido, monto
+FROM pedidos
+WHERE monto > 60
+ORDER BY monto DESC
+\end{lstlisting}
+\centering
+\begin{tikzpicture}\draw[-latex,very thick,utpRojo] (0,0) -- (1.2,0);\end{tikzpicture}\par\vspace{1mm}
+\footnotesize
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{pedido} & \textbf{monto}\\
+\midrule
+P-2 & 295\\
+P-1 & 98\\
+\bottomrule
+\end{tabular}
+\column{.28\textwidth}
+\renewcommand{\arraystretch}{1.25}
+\footnotesize
+\begin{tabular}{@{}>{\color{utpRojo}\bfseries\ttfamily}l>{\raggedright\arraybackslash}p{2.0cm}@{}}
+SELECT & qué columnas\\
+FROM & de qué tabla\\
+WHERE & qué filas\\
+ORDER BY & en qué orden\\
+LIMIT & cuántas filas\\
+\end{tabular}
+\end{columns}
+\par\vspace{4mm}
+\begin{alertblock}{Se lee así}
+\small ``Muéstrame el pedido y el monto de la tabla \texttt{pedidos}, solo los que pasan de 60, del más caro al más barato''.
+\end{alertblock}
+\end{frame}
+
+% 18
+\begin{frame}[fragile]{SQL para analizar (2): agrupar, contar y sumar}
+\begin{columns}[c,onlytextwidth]
+\column{.28\textwidth}
+\centering
+{\small\bfseries Tabla \texttt{pedidos}}\par\vspace{1mm}
+\scriptsize\setlength\tabcolsep{3pt}
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{pedido} & \textbf{categoria} & \textbf{monto}\\
+\midrule
+\filaB P-1 & Moda & 98\\
+\filaA P-2 & Electrónica & 295\\
+\filaC P-3 & Supermercado & 12\\
+\filaC P-4 & Supermercado & 0\\
+\filaC P-5 & Supermercado & 56\\
+\filaA P-6 & Electrónica & 59\\
+\bottomrule
+\end{tabular}
+\column{.04\textwidth}
+\column{.34\textwidth}
+\begin{lstlisting}
+SELECT categoria,
+  COUNT(*) AS pedidos,
+  SUM(monto) AS total
+FROM pedidos
+GROUP BY categoria
+ORDER BY total DESC
+\end{lstlisting}
+\column{.30\textwidth}
+\centering
+{\small\bfseries Resultado}\par\vspace{1mm}
+\scriptsize\setlength\tabcolsep{3pt}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{categoria} & \textbf{pedidos} & \textbf{total}\\
+\midrule
+\filaA Electrónica & 2 & 354\\
+\filaB Moda & 1 & 98\\
+\filaC Supermercado & 3 & 68\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\par\vspace{4mm}
+\begin{block}{Qué hace cada parte}
+\small \texttt{GROUP BY} junta las filas con la misma categoría (mismo color). \texttt{COUNT(*)} cuenta las filas de cada grupo y \texttt{SUM(monto)} suma sus montos.
+\end{block}
+\begin{alertblock}{Mira el resultado}
+\small Supermercado tiene \textbf{más pedidos}, pero Electrónica \textbf{vende más dinero}. Contar y sumar responden preguntas distintas.
+\end{alertblock}
+\end{frame}
+
+% 19
+\begin{frame}[c]{Práctica 1}
+\begin{block}{Realiza el laboratorio}
+\large \textit{Examina los datos de facturación con BigQuery}\par\vspace{1mm}
+\small\texttt{skills.google/catalog\_lab/1784}
+\end{block}
+\begin{exampleblock}{Al terminar}
+\small Sabes qué servicio de Google Cloud generó el mayor costo en los datos de ejemplo.
+\end{exampleblock}
+\end{frame}
+
+% 20
+\begin{frame}[fragile]{Práctica 2: BigQuery sin BigQuery}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\begin{block}{Qué harás}
+\small Consultas como las del lab con \textbf{Python} y \textbf{DuckDB}: un motor SQL que corre dentro de Python y, como BigQuery, lee por columnas. No necesitas cuenta de Google Cloud.
+\end{block}
+\begin{block}{De dónde salen los datos}
+\small No se descargan: la primera celda del notebook ejecuta \texttt{generar\_ventas.py}, que crea \texttt{ventas.csv} con \textbf{1.2 millones} de pedidos de Pedidos Express (2023--2025). Todos obtienen los mismos datos.
+\end{block}
+\column{.53\textwidth}
+\begin{lstlisting}
+import duckdb
+
+duckdb.sql("""
+  SELECT categoria,
+    ROUND(SUM(monto), 2) AS total_soles
+  FROM ventas
+  GROUP BY categoria
+  ORDER BY total_soles DESC
+""")
+\end{lstlisting}
+\par\vspace{2mm}
+\begin{exampleblock}{Cómo empezar}
+\scriptsize 1. En Colab: \textbf{Archivo} $\rightarrow$ \textbf{Abrir cuaderno} $\rightarrow$ \textbf{GitHub}.\par
+2. Pega el repositorio del curso:\par
+\hspace*{3mm}\texttt{github.com/rgap/}\par
+\hspace*{3mm}\texttt{rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}\par
+3. Elige \texttt{Sesion24/practica/practica\_bigquery\_python.ipynb}, ejecuta las celdas en orden y resuelve los 5 retos del final.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 21
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. En el caso de estudio, ¿por qué basta una instancia con cuatro bases de datos?\\\medskip
+2. Nombra las tres V de Big Data con un ejemplo de Pedidos Express.\\\medskip
+3. ¿Por qué BigQuery lee menos datos si la consulta usa solo dos columnas?\\\medskip
+4. En una consulta que suma los montos por categoría, ¿qué hace \texttt{GROUP BY}?\\\medskip
+5. En la práctica, ¿la categoría con más pedidos fue la que más dinero vendió? ¿Por qué?
+\end{block}
+\begin{alertblock}{Idea final}
+\small Cloud SQL registra el día a día; BigQuery responde preguntas sobre todo el historial. Las dos se consultan con SQL.
+\end{alertblock}
+\end{frame}
+
+% 22
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Laboratorio: \textit{Examina los datos de facturación con BigQuery} (\textit{Examining Billing Data with BigQuery}), curso \textit{Essential Google Cloud Infrastructure: Core Services}: \texttt{skills.google/catalog\_lab/1784}.
+  \item Práctica de la sesión: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion24/practica/} (\texttt{practica\_bigquery\_python.ipynb} y \texttt{generar\_ventas.py}).
+  \item DuckDB: \texttt{duckdb.org}.
+  \item Material previo del curso: Sesión 23, bases de datos en Google Cloud y Cloud SQL.
+  \item Google Cloud: BigQuery, Cloud SQL y Cloud Storage.
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
