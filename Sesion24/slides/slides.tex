@@ -9,7 +9,7 @@
   frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
   columns=fullflexible,keepspaces=true,breaklines=true,
   keywordstyle=\color{utpRojo}\bfseries,
-  morekeywords={SELECT,FROM,WHERE,GROUP,BY,ORDER,DESC,LIMIT,AS,COUNT,SUM,ROUND,import},
+  morekeywords={SELECT,FROM,WHERE,GROUP,BY,ORDER,DESC,LIMIT,AS,COUNT,SUM,ROUND},
   xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
 
 \title{Integración de Servicios Cloud GCP}
@@ -475,7 +475,7 @@ ORDER BY total DESC
 \end{frame}
 
 % 19
-\begin{frame}[c]{Práctica 1}
+\begin{frame}[c]{Práctica}
 \begin{block}{Realiza el laboratorio}
 \large \textit{Examina los datos de facturación con BigQuery}\par\vspace{1mm}
 \small\texttt{skills.google/catalog\_lab/1784}
@@ -486,39 +486,6 @@ ORDER BY total DESC
 \end{frame}
 
 % 20
-\begin{frame}[fragile]{Práctica 2: BigQuery sin BigQuery}
-\begin{columns}[T,onlytextwidth]
-\column{.44\textwidth}
-\begin{block}{Qué harás}
-\small Consultas como las del lab con \textbf{Python} y \textbf{DuckDB}: un motor SQL que corre dentro de Python y, como BigQuery, lee por columnas. No necesitas cuenta de Google Cloud.
-\end{block}
-\begin{block}{De dónde salen los datos}
-\small No se descargan: la primera celda del notebook ejecuta \texttt{generar\_ventas.py}, que crea \texttt{ventas.csv} con \textbf{1.2 millones} de pedidos de Pedidos Express (2023--2025). Todos obtienen los mismos datos.
-\end{block}
-\column{.53\textwidth}
-\begin{lstlisting}
-import duckdb
-
-duckdb.sql("""
-  SELECT categoria,
-    ROUND(SUM(monto), 2) AS total_soles
-  FROM ventas
-  GROUP BY categoria
-  ORDER BY total_soles DESC
-""")
-\end{lstlisting}
-\par\vspace{2mm}
-\begin{exampleblock}{Cómo empezar}
-\scriptsize 1. En Colab: \textbf{Archivo} $\rightarrow$ \textbf{Abrir cuaderno} $\rightarrow$ \textbf{GitHub}.\par
-2. Pega el repositorio del curso:\par
-\hspace*{3mm}\texttt{github.com/rgap/}\par
-\hspace*{3mm}\texttt{rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}\par
-3. Elige \texttt{Sesion24/practica/practica\_bigquery\_python.ipynb}, ejecuta las celdas en orden y resuelve los 5 retos del final.
-\end{exampleblock}
-\end{columns}
-\end{frame}
-
-% 21
 \begin{frame}{Cierre: preguntas para comprobar}
 \begin{block}{Responde con tus palabras}
 \small
@@ -526,20 +493,18 @@ duckdb.sql("""
 2. Nombra las tres V de Big Data con un ejemplo de Pedidos Express.\\\medskip
 3. ¿Por qué BigQuery lee menos datos si la consulta usa solo dos columnas?\\\medskip
 4. En una consulta que suma los montos por categoría, ¿qué hace \texttt{GROUP BY}?\\\medskip
-5. En la práctica, ¿la categoría con más pedidos fue la que más dinero vendió? ¿Por qué?
+5. En el ejemplo de \texttt{GROUP BY}, ¿la categoría con más pedidos fue la que más dinero vendió? ¿Por qué?
 \end{block}
 \begin{alertblock}{Idea final}
 \small Cloud SQL registra el día a día; BigQuery responde preguntas sobre todo el historial. Las dos se consultan con SQL.
 \end{alertblock}
 \end{frame}
 
-% 22
+% 21
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{4pt}
   \item Laboratorio: \textit{Examina los datos de facturación con BigQuery} (\textit{Examining Billing Data with BigQuery}), curso \textit{Essential Google Cloud Infrastructure: Core Services}: \texttt{skills.google/catalog\_lab/1784}.
-  \item Práctica de la sesión: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion24/practica/} (\texttt{practica\_bigquery\_python.ipynb} y \texttt{generar\_ventas.py}).
-  \item DuckDB: \texttt{duckdb.org}.
   \item Material previo del curso: Sesión 23, bases de datos en Google Cloud y Cloud SQL.
   \item Google Cloud: BigQuery, Cloud SQL y Cloud Storage.
   \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.

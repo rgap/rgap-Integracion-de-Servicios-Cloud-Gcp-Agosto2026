@@ -1,0 +1,731 @@
+% Motor: XeLaTeX. Sesión 25 - material docente UTP.
+% Estructura docente de la Sesión 24.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywordstyle=\color{utpRojo}\bfseries,
+  morekeywords={SELECT,FROM,GROUP,BY,ORDER,DESC,AS,SUM,ROUND,import},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Supervisión, alta disponibilidad y balanceo de carga}
+\date{Semana 13 - Sesión 25}
+\author{Rel Guzman}
+
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ vm/.style={draw=utpRojo,thick,rounded corners=3pt,fill=white,minimum width=1.6cm,minimum height=0.75cm,align=center,font=\scriptsize},
+ vmmal/.style={vm,draw=utpGrisMedio,fill=utpGrisClaro,text=utpGris},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+}
+\newcommand{\cruz}[1]{\draw[utpRojo,line width=2pt] ($(#1)+(-0.25,-0.25)$) -- ($(#1)+(0.25,0.25)$) ($(#1)+(-0.25,0.25)$) -- ($(#1)+(0.25,-0.25)$);}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}[fragile]{Revisión: BigQuery sin BigQuery}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\begin{block}{Qué harás}
+\small Las consultas del lab de la sesión anterior, ahora con \textbf{Python} y \textbf{DuckDB}: un motor SQL que corre dentro de Python y, como BigQuery, lee por columnas. No necesitas cuenta de Google Cloud.
+\end{block}
+\begin{block}{De dónde salen los datos}
+\small No se descargan: la primera celda del notebook ejecuta \texttt{generar\_ventas.py}, que crea \texttt{ventas.csv} con \textbf{1.2 millones} de pedidos de Pedidos Express (2023--2025). Todos obtienen los mismos datos.
+\end{block}
+\column{.53\textwidth}
+\begin{lstlisting}
+import duckdb
+
+duckdb.sql("""
+  SELECT categoria,
+    ROUND(SUM(monto), 2) AS total_soles
+  FROM ventas
+  GROUP BY categoria
+  ORDER BY total_soles DESC
+""")
+\end{lstlisting}
+\par\vspace{2mm}
+\begin{exampleblock}{Cómo empezar}
+\scriptsize 1. En Colab: \textbf{Archivo} $\rightarrow$ \textbf{Abrir cuaderno} $\rightarrow$ \textbf{GitHub}.\par
+2. Pega el repositorio del curso:\par
+\hspace*{3mm}\texttt{github.com/rgap/}\par
+\hspace*{3mm}\texttt{rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}\par
+3. Elige \texttt{Sesion25/practica/practica\_bigquery\_python.ipynb}, ejecuta las celdas en orden y resuelve los 5 retos del final.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: compara tus resultados}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\renewcommand{\arraystretch}{1.35}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}p{2.3cm}@{}}
+\toprule
+\textbf{Pregunta del notebook} & \textbf{Tu resultado}\\
+\midrule
+¿Cuántas filas tiene la tabla? & \\
+4.3 ¿Qué categoría tiene más pedidos? & \\
+4.5 ¿Qué categoría vende más dinero? & \\
+Paso 5: ¿cuánto ocupa el CSV? ¿Y el Parquet? & \\
+\bottomrule
+\end{tabular}
+\column{.44\textwidth}
+\begin{alertblock}{Responde}
+\small
+1. ¿La categoría con más pedidos es la que más dinero vende? ¿Por qué?\par\medskip
+2. ¿Por qué la consulta sobre Parquet termina antes que la consulta sobre CSV?\par\medskip
+3. ¿Qué tienen en común DuckDB y BigQuery?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 4
+\begin{frame}{Revisión: la pregunta de hoy}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \foreach \i in {0,1,2} \node[caja,fill=utpRojo!12,minimum width=1.6cm] (c\i) at (0,1.1-\i*1.1) {cliente};
+  \node[vm,minimum width=3.2cm,minimum height=1.2cm,font=\small] (w) at (5.2,0) {\textbf{VM} \texttt{web-1}\\\footnotesize zona \texttt{us-central1-a}};
+  \foreach \i in {0,1,2} \draw[flecha] (c\i.east) -- (w.west);
+  \node[caja,fill=utpRojo!10,text width=3.9cm,font=\footnotesize] at (9.6,0) {Viernes, 20:00. Hora de la cena.\\Llegan 10 veces más pedidos.\\\textbf{La página no carga.}};
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{1. Supervisar}
+\small ¿Cómo te enteras \textbf{antes} de que llamen los clientes?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{2. Alta disponibilidad}
+\small Si \texttt{web-1} se apaga, ¿qué sigue respondiendo?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{3. Balanceo de carga}
+\small Si pones 3 VMs, ¿cómo se reparten los clientes entre ellas?
+\end{block}
+\end{columns}
+\end{frame}
+
+% 5
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar qué es \textbf{supervisar recursos} y qué ofrece \textbf{Google Cloud Observability}, crear en \textbf{Cloud Monitoring} un panel, una alerta y una verificación de tiempo de actividad, y explicar cómo la \textbf{alta disponibilidad}, el \textbf{balanceador de carga} y \textbf{Cloud CDN} mantienen una aplicación en línea.
+\end{block}
+\end{frame}
+
+% 6
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{11pt}
+  \item Si una página web tarda 10 segundos en cargar, ¿qué podría estar pasando en el servidor?
+  \item Creaste una VM en la zona \texttt{us-central1-a}. ¿Qué le pasa a tu página si esa zona tiene una falla?
+  \item Tienes tres VMs con la misma página y cada una tiene su propia IP externa. ¿Qué dirección les das a los clientes?
+\end{itemize}
+\end{frame}
+
+% 7
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Toda aplicación en producción falla alguna vez: se llena un disco, la CPU llega al 100\,\%, una VM se reinicia. Si sabes \textbf{supervisar}, te enteras por una alerta y no por un cliente. Si sabes repartir la aplicación entre varias VMs detrás de un \textbf{balanceador}, una falla no deja a nadie sin servicio.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 8
+\separador{Parte 1: supervisar recursos}{Saber qué pasa en tus servidores antes de que te lo digan los clientes}
+
+% 9
+\begin{frame}{¿Qué es supervisar un recurso?}
+\begin{block}{Definición}
+\small Medir de forma continua el estado de los recursos (VMs, bases de datos, aplicaciones), guardar esas medidas y \textbf{avisar} cuando algo sale de lo normal.
+\end{block}
+\vspace{1mm}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ p/.style={draw=utpRojo,thick,rounded corners=5pt,fill=white,text width=3.9cm,minimum height=3.3cm,align=center,anchor=north}]
+  \node[p,fill=utpRojo!10] at (0,0) {{\Large\bfseries Métricas}\\[2pt]\footnotesize Números que cambian en el tiempo\\[8pt]\scriptsize\ttfamily web-1 · uso de CPU\\20:00 \quad 35 \%\\20:01 \quad 62 \%\\20:02 \quad 95 \%};
+  \node[p] at (4.6,0) {{\Large\bfseries Registros}\\[2pt]\footnotesize Líneas de texto con lo que pasó (\textit{logs})\\[8pt]\scriptsize\ttfamily\raggedright 20:02:14 GET /menu 200\\20:02:15 GET /pagar 500\\20:02:15 ERROR: no se pudo conectar a la base};
+  \node[p,fill=utpRojo!10] at (9.2,0) {{\Large\bfseries Alertas}\\[2pt]\footnotesize Reglas que avisan a una persona\\[8pt]\small Si el uso de CPU pasa de \textbf{80\,\%} durante \textbf{5 min}, envía un correo al equipo};
+\end{tikzpicture}
+\end{center}
+\begin{alertblock}{Cada pieza responde una pregunta}
+\small Métricas: \textbf{¿cuánto?} \quad Registros: \textbf{¿qué pasó exactamente?} \quad Alertas: \textbf{¿a quién aviso?}
+\end{alertblock}
+\end{frame}
+
+% 10
+\begin{frame}{Las métricas que más se revisan}
+\renewcommand{\arraystretch}{1.05}
+\centering\small
+\begin{tabular}{@{}p{2.6cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{5.4cm}@{}}
+\toprule
+\textbf{Métrica} & \textbf{Qué mide} & \textbf{Señal de problema}\\
+\midrule
+\textbf{Uso de CPU} & Qué porcentaje del procesador se usa & Se queda sobre el 80\,\% por varios minutos\\
+\textbf{Memoria} & Cuánta RAM ocupa la aplicación & Llega cerca del 100\,\%: la aplicación se cierra\\
+\textbf{Disco} & Espacio usado del disco & Pasa del 90\,\%: pronto no se podrá guardar nada\\
+\textbf{Red} & Bytes que entran y salen de la VM & Cae a 0 en horario de atención\\
+\textbf{Latencia} & Cuánto tarda en llegar una respuesta & Sube de 200 ms a 3 s\\
+\textbf{Errores} & Respuestas con código 5xx (falla del servidor) & Aparecen muchas de golpe\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\begin{alertblock}{Dato útil}
+\small Una VM envía sola su uso de CPU, red y lecturas de disco. Para ver la \textbf{memoria} y el \textbf{espacio de disco} se instala en la VM el \textbf{Agente de operaciones} (\textit{Ops Agent}).
+\end{alertblock}
+\end{frame}
+
+% 11
+\begin{frame}{Leer una gráfica de uso de CPU}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,x=0.46cm,y=0.032cm]
+  % Ejes: horas del día (0 a 24) y porcentaje (0 a 100).
+  \foreach \y in {0,20,40,60,80,100} {
+    \draw[utpGrisClaro] (0,\y) -- (24,\y);
+    \node[anchor=east,color=utpGris] at (0,\y) {\y\,\%};
+  }
+  \foreach \x in {0,4,8,12,16,20,24} \node[anchor=north,color=utpGris] at (\x,0) {\x:00};
+  \draw[utpGrisMedio] (0,0) -- (24,0);
+  \draw[utpNegro,thick,dashed] (0,80) -- (24,80);
+  \node[anchor=south west,font=\scriptsize\bfseries,fill=white,inner sep=1pt] at (0.2,81) {umbral de la alerta: 80\,\%};
+  \draw[utpRojo,very thick,line join=round]
+    (0,8) -- (2,5) -- (4,5) -- (6,8) -- (8,20) -- (10,30) -- (12,62) -- (13,70) -- (14,48)
+    -- (16,34) -- (18,52) -- (19,82) -- (20,95) -- (21,90) -- (22,50) -- (23,24) -- (24,12);
+  \node[caja,fill=white,font=\scriptsize,anchor=east] (pc) at (17.6,104) {cena: 95\,\%, sobre el umbral};
+  \draw[-latex] (pc.east) -- (19.8,96);
+  \node[caja,fill=white,font=\scriptsize] (pa) at (9,60) {almuerzo: 70\,\%};
+  \draw[-latex] (pa.east) -- (12.8,71);
+  \node[caja,fill=white,font=\scriptsize] (pm) at (4,30) {madrugada: 5\,\%};
+  \draw[-latex] (pm.south) -- (3,6);
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Lo normal}
+\small La CPU sube en hora punta y baja de madrugada. Un pico corto no es una falla.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Lo raro}
+\small Que se quede alta mucho tiempo, que esté alta sin clientes o que la línea desaparezca (la VM no envía datos).
+\end{block}
+\end{columns}
+\end{frame}
+
+% 12
+\begin{frame}{Problemas que ocurren seguido}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.7cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{4.6cm}@{}}
+\toprule
+\textbf{Qué pasa} & \textbf{Qué ves} & \textbf{Qué se hace}\\
+\midrule
+Hora punta: muchos más pedidos & CPU al 95\,\% y latencia alta & Agregar VMs (Parte 3)\\
+Los registros llenan el disco & Disco al 100\,\% y errores al guardar & Borrar registros viejos o agrandar el disco\\
+La VM se detuvo o se reinició & La verificación de tiempo de actividad falla; la gráfica se corta & Revisar los registros y tener otra VM (Parte 2)\\
+Se subió una versión con un error & Errores 5xx justo después de la hora del cambio & Volver a la versión anterior\\
+Un proceso quedó trabado & CPU al 100\,\% a las 4 a.\,m., sin clientes & Revisar el proceso y reiniciarlo\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{El orden de trabajo}
+\small La \textbf{alerta} avisa $\rightarrow$ la \textbf{métrica} dice desde cuándo y cuánto $\rightarrow$ los \textbf{registros} dicen por qué.
+\end{alertblock}
+\end{frame}
+
+% 13
+\begin{frame}{Google Cloud Observability}
+\begin{block}{Definición}
+\small Conjunto de servicios de Google Cloud para supervisar tus recursos. Ya viene activado en cada proyecto: las VMs, Cloud SQL y los buckets envían métricas y registros sin que instales nada.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=white,minimum width=2.6cm] (r1) at (0,1.2) {VMs};
+  \node[caja,fill=white,minimum width=2.6cm] (r2) at (0,0.35) {Cloud SQL};
+  \node[caja,fill=white,minimum width=2.6cm] (r3) at (0,-0.5) {Cloud Storage};
+  \node[caja,fill=utpRojo!25,text width=5.4cm] (m) at (5.6,1.05) {\textbf{Cloud Monitoring}\\\footnotesize métricas, paneles, alertas y verificaciones\\de tiempo de actividad};
+  \node[caja,fill=utpRojo!12,text width=5.4cm] (l) at (5.6,-0.45) {\textbf{Cloud Logging}\\\footnotesize registros; se buscan en el \textbf{Explorador de registros}};
+  \foreach \r in {r1,r2,r3} { \draw[flecha] (\r.east) -- (m.west); \draw[flecha] (\r.east) -- (l.west); }
+  \node[caja,fill=utpRojo!10,minimum width=2.0cm] (c) at (10.9,1.05) {correo\\\footnotesize al equipo};
+  \draw[flecha] (m.east) -- node[above,font=\scriptsize]{alerta} (c.west);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.15}
+\centering\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{6.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{Cloud Monitoring} {\color{utpGris}(lo usas en el lab)} & \textbf{Cloud Logging}\\
+\midrule
+¿Cuánta CPU usó \texttt{web-1} entre 19:00 y 21:00? & ¿Qué error dio la página \texttt{/pagar} a las 20:02?\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 14
+\begin{frame}{Cloud Monitoring: lo que harás en el lab}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ h/.style={draw=utpRojo,thick,rounded corners=5pt,fill=white,text width=5.6cm,minimum height=1.55cm,align=left,anchor=north west}]
+  \node[h,fill=utpRojo!10] at (0,0) {\textbf{Panel} (\textit{dashboard})\\\footnotesize Una página con gráficos que tú eliges. En el lab: \texttt{My dashboard} con un gráfico de líneas del uso de CPU.};
+  \node[h] at (6.3,0) {\textbf{Explorador de métricas}\\\footnotesize Ver una métrica al momento, sin guardarla en un panel.};
+  \node[h] at (0,-1.85) {\textbf{Política de alertas}\\\footnotesize Una regla: métrica + umbral + a quién avisar. En el lab: \texttt{My Alert Policy}.};
+  \node[h,fill=utpRojo!10] at (6.3,-1.85) {\textbf{Grupo}\\\footnotesize Junta recursos por su nombre para verlos juntos. En el lab: las VMs cuyo nombre contiene \texttt{nginx}.};
+  \node[h,fill=utpRojo!10,text width=11.9cm] at (0,-3.7) {\textbf{Verificación de tiempo de actividad} (\textit{uptime check})\\\footnotesize Google pide tu página por HTTP cada minuto desde varias partes del mundo. Si no responde, te avisa. En el lab: \texttt{My Uptime check} sobre el grupo.};
+\end{tikzpicture}
+\end{center}
+\vspace{-1mm}
+{\footnotesize\color{utpGris} El lab ya trae tres VMs con un servidor web: \texttt{nginxstack-1}, \texttt{nginxstack-2} y \texttt{nginxstack-3}.}
+\end{frame}
+
+% 15
+\begin{frame}{Cómo funciona una política de alertas}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+ paso/.style={caja,fill=white,text width=2.55cm,minimum height=1.9cm}]
+  \node[paso,fill=utpRojo!10] (a) at (0,0) {\textbf{Métrica}\\[3pt]\footnotesize Instancia de VM\\$\rightarrow$ Uso de CPU};
+  \node[paso] (b) at (3.4,0) {\textbf{Condición}\\[3pt]\footnotesize Por encima de \textbf{20\,\%}\\ventana de 1 min};
+  \node[paso,fill=utpRojo!10] (c) at (6.8,0) {\textbf{Incidente}\\[3pt]\footnotesize se abre cuando la condición se cumple};
+  \node[paso] (d) at (10.2,0) {\textbf{Canal de notificación}\\[3pt]\footnotesize correo electrónico};
+  \draw[flecha] (a) -- (b); \draw[flecha] (b) -- (c); \draw[flecha] (c) -- (d);
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{En el lab}
+\small La política tiene \textbf{dos condiciones} y se dispara solo si se cumplen todas (\textit{All conditions are met}). El umbral es 20\,\% para que la veas dispararse; en producción se usa algo como 80\,\%.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Elegir el umbral}
+\small Muy bajo: llegan correos todo el día y el equipo deja de leerlos. Muy alto: avisa cuando los clientes ya se fueron.
+\end{block}
+\end{columns}
+\par\vspace{2mm}
+\begin{alertblock}{Al terminar el lab}
+\small Desactiva la política (tarea 6). Las alertas siguen activas un tiempo después de borrar el proyecto.
+\end{alertblock}
+\end{frame}
+
+% 16
+\separador{Parte 2: alta disponibilidad}{Que la aplicación siga en línea aunque falle una pieza}
+
+% 17
+\begin{frame}{¿Qué es la disponibilidad?}
+\begin{block}{Disponibilidad}
+\small El porcentaje del tiempo en que el servicio responde. Un año tiene $365 \times 24 = 8\,760$ horas.
+\end{block}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}lrr>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+\textbf{Disponibilidad} & \textbf{Caída al año} & \textbf{Caída al mes} & \textbf{Ejemplo}\\
+\midrule
+99\,\% & 87.6 horas & 7.3 horas & Una VM sola que a veces se reinicia\\
+99.9\,\% & 8.8 horas & 44 minutos & Varias VMs en una zona\\
+99.99\,\% & 53 minutos & 4.4 minutos & Varias VMs en varias zonas\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+{\scriptsize\color{utpGris} Cálculo: 1\,\% de 8\,760 horas = 87.6 horas. Los ejemplos son orientativos.}
+\par\vspace{2mm}
+\begin{alertblock}{Alta disponibilidad}
+\small Diseñar el sistema para que la falla de \textbf{una pieza} (una VM, un disco, una zona) no apague el servicio.
+\end{alertblock}
+\end{frame}
+
+% 18
+\begin{frame}{Punto único de falla}
+\begin{columns}[T,onlytextwidth]
+\column{.42\textwidth}
+\centering{\color{utpRojo}\bfseries Una VM en una zona}\par\vspace{2mm}
+\begin{tikzpicture}[font=\small]
+  \draw[zona] (-1.5,-0.8) rectangle (1.5,0.8);
+  \node[font=\scriptsize,color=utpGris,anchor=north west] at (-1.5,0.8) {us-central1-a};
+  \node[vmmal] (w) at (0,-0.1) {\texttt{web-1}};
+  \cruz{w}
+  \node[caja,fill=utpRojo!10,text width=3.6cm,font=\footnotesize] at (0,-1.8) {Falla \texttt{web-1} o la zona:\\\textbf{0 servidores, página caída}};
+\end{tikzpicture}
+\column{.56\textwidth}
+\centering{\color{utpRojo}\bfseries Tres VMs en tres zonas}\par\vspace{2mm}
+\begin{tikzpicture}[font=\small]
+  \foreach \z/\n/\x in {a/1/0,b/2/2.3,c/3/4.6} {
+    \draw[zona] (\x-1.05,-0.8) rectangle (\x+1.05,0.8);
+    \node[font=\scriptsize,color=utpGris,anchor=north west] at (\x-1.05,0.8) {us-central1-\z};
+  }
+  \node[vmmal] (w1) at (0,-0.1) {\texttt{web-1}};
+  \cruz{w1}
+  \node[vm] at (2.3,-0.1) {\texttt{web-2}};
+  \node[vm] at (4.6,-0.1) {\texttt{web-3}};
+  \node[caja,fill=utpRojo!10,text width=5.4cm,font=\footnotesize] at (2.3,-1.8) {Falla la zona \texttt{a}:\\\textbf{quedan 2 servidores, la página sigue}};
+\end{tikzpicture}
+\end{columns}
+\par\vspace{4mm}
+\begin{block}{Punto único de falla}
+\small Una pieza que, si falla, apaga todo el sistema. Para quitarlo: \textbf{duplicar} la pieza y poner las copias en \textbf{zonas distintas} de la región.
+\end{block}
+\end{frame}
+
+% 19
+\begin{frame}{Alta disponibilidad en Google Cloud}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{2.6cm}>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{Pieza} & \textbf{Sin alta disponibilidad} & \textbf{Con alta disponibilidad}\\
+\midrule
+\textbf{Servidores web} & Una VM en una zona & \textbf{Grupo de instancias administrado}: varias VMs iguales, creadas desde una plantilla, en varias zonas. Si una VM se detiene, el grupo la vuelve a crear.\\
+\textbf{Base de datos} & Cloud SQL en una zona & \textbf{Cloud SQL con alta disponibilidad}: una copia en espera en otra zona. Si la principal falla, la copia toma su lugar sola.\\
+\textbf{Archivos} & Un disco en una VM & \textbf{Cloud Storage}: guarda varias copias de cada archivo sin que hagas nada.\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{La regla}
+\small Más de una copia, en zonas distintas, y algo que detecte la falla y cambie solo.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{El costo}
+\small Tres VMs cuestan tres veces una. Se elige según cuánto le cuesta al negocio una hora caída.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 20
+\separador{Parte 3: balanceo de carga y CDN}{Una sola dirección para muchos servidores}
+
+% 21
+\begin{frame}{El balanceador de carga}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \foreach \i in {0,...,3} \node[caja,fill=utpRojo!12,minimum width=1.5cm,font=\footnotesize] (c\i) at (0,1.65-\i*1.1) {cliente};
+  \node[caja,fill=utpRojo!30,text width=3.2cm,minimum height=1.4cm] (lb) at (4.3,0) {\textbf{Balanceador}\\\footnotesize una sola IP pública\\\texttt{34.120.10.5}};
+  \foreach \i in {0,...,3} \draw[flecha] (c\i.east) -- (lb.west);
+  \foreach \n/\y in {1/1.2,2/0,3/-1.2} {
+    \node[vm] (w\n) at (9.0,\y) {\texttt{web-\n}};
+    \draw[flecha] (lb.east) -- node[pos=0.68,above,sloped,font=\scriptsize]{100 por seg.} (w\n.west);
+  }
+  \node[font=\scriptsize,color=utpGris,align=center] at (4.3,-1.35) {300 solicitudes\\por segundo};
+\end{tikzpicture}
+\end{center}
+\vspace{-2mm}
+\begin{block}{Balanceador de carga}
+\small Servicio que recibe todas las solicitudes en una sola dirección IP y las \textbf{reparte} entre varios servidores. Los clientes no saben cuántas VMs hay detrás.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{exampleblock}{Sin balanceador}
+\small Tres IPs distintas. Si publicas la de \texttt{web-1}, las otras dos no reciben a nadie.
+\end{exampleblock}
+\column{.48\textwidth}
+\begin{exampleblock}{Con balanceador}
+\small Una IP. Cada VM atiende una parte; si agregas una cuarta, el balanceador la usa.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 22
+\begin{frame}{Verificación de estado: no enviar tráfico a una VM caída}
+\begin{columns}[c,onlytextwidth]
+\column{.44\textwidth}
+\centering
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpRojo!30,minimum width=2.1cm,minimum height=1.1cm] (lb) at (0,0) {\textbf{Balanceador}};
+  \node[vm] (w1) at (4.0,1.2) {\texttt{web-1}};
+  \node[vmmal] (w2) at (4.0,0) {\texttt{web-2}};
+  \node[vm] (w3) at (4.0,-1.2) {\texttt{web-3}};
+  \draw[flecha] (lb.east) -- node[pos=0.62,above,sloped,font=\scriptsize]{150 por seg.} (w1.west);
+  \draw[thick,dashed,utpGrisMedio] (lb.east) -- node[pos=0.55,above,font=\scriptsize,text=utpGris]{0} (w2.west);
+  \draw[flecha] (lb.east) -- node[pos=0.62,below,sloped,font=\scriptsize]{150 por seg.} (w3.west);
+  \cruz{w2}
+\end{tikzpicture}
+\column{.54\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Hora} & \textbf{Pregunta a \texttt{web-2}} & \textbf{Estado}\\
+\midrule
+20:00:00 & \texttt{GET /} $\rightarrow$ 200 OK & sana\\
+20:00:05 & \texttt{GET /} $\rightarrow$ sin respuesta & sana (1 falla)\\
+\rowcolor{utpRojo!20} 20:00:10 & \texttt{GET /} $\rightarrow$ sin respuesta & \textbf{no sana}\\
+\bottomrule
+\end{tabular}
+\par\vspace{1mm}
+{\scriptsize\color{utpGris} Valores por defecto: pregunta cada 5 s; 2 fallas seguidas la marcan como no sana.}
+\end{columns}
+\par\vspace{3mm}
+\begin{block}{Verificación de estado (\textit{health check})}
+\small El balanceador pregunta a cada VM cada pocos segundos si responde. Si no responde, deja de enviarle clientes; cuando vuelve a responder, la usa otra vez.
+\end{block}
+\renewcommand{\arraystretch}{1.15}
+\centering\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{6.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{Verificación de estado} (balanceador) & \textbf{Verificación de tiempo de actividad} (Monitoring)\\
+\midrule
+Decide sola a qué VM enviar tráfico & Avisa a una persona que algo no responde\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 23
+\begin{frame}{Tipos de balanceador}
+\renewcommand{\arraystretch}{1.35}
+\centering\small
+\begin{tabular}{@{}p{2.6cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{5.0cm}@{}}
+\toprule
+ & \textbf{De aplicaciones} & \textbf{De red}\\
+\midrule
+\textbf{Protocolo} & HTTP y HTTPS & TCP, UDP y TCP con SSL\\
+\textbf{Qué mira} & La URL de cada solicitud & Solo la IP y el puerto\\
+\textbf{Qué puede hacer} & Enviar \texttt{/api} a un grupo de VMs y \texttt{/imagenes} a un bucket; manejar el certificado HTTPS & Repartir conexiones sin abrir su contenido\\
+\textbf{Ejemplo} & La página y la app de Pedidos Express & Un servidor de juegos o de video en vivo\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Externo}
+\small Recibe tráfico de Internet. Es el que ven los clientes.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Interno}
+\small Reparte tráfico entre servicios dentro de tu red VPC. No tiene IP pública.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 24
+\begin{frame}{Autoescalado: más VMs cuando hace falta}
+\begin{columns}[c,onlytextwidth]
+\column{.50\textwidth}
+\begin{block}{Autoescalado}
+\small El grupo de instancias agrega o quita VMs según una métrica. Usa la misma métrica que ves en Cloud Monitoring.
+\end{block}
+\begin{exampleblock}{Configuración de Pedidos Express}
+\small Mínimo \textbf{2} VMs, máximo \textbf{6}.\\
+Objetivo: uso de CPU promedio de \textbf{60\,\%}.
+\end{exampleblock}
+\column{.46\textwidth}
+\renewcommand{\arraystretch}{1.3}
+\centering\small
+\begin{tabular}{@{}lrc@{}}
+\toprule
+\textbf{Hora} & \textbf{CPU promedio} & \textbf{VMs}\\
+\midrule
+04:00 & 10\,\% & 2 {\color{utpGris}(mínimo)}\\
+13:00 & 75\,\% $\rightarrow$ 58\,\% & 2 $\rightarrow$ 3\\
+\rowcolor{utpRojo!20} 20:00 & 90\,\% $\rightarrow$ 60\,\% & 3 $\rightarrow$ 5\\
+23:30 & 20\,\% & 5 $\rightarrow$ 2\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\par\vspace{4mm}
+\begin{alertblock}{Cómo encaja con el balanceador}
+\small El balanceador envía tráfico al grupo. Cuando el grupo crea una VM nueva, el balanceador empieza a usarla apenas pasa la verificación de estado.
+\end{alertblock}
+\end{frame}
+
+% 25
+\begin{frame}{Cloud CDN: copias cerca del cliente}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpRojo!12,minimum width=1.9cm,minimum height=0.9cm] (u) at (0,0) {cliente\\\footnotesize en Lima};
+  \node[caja,fill=utpRojo!30,text width=2.6cm,minimum height=1.3cm] (cdn) at (4.3,0) {\textbf{Caché de Cloud CDN}\\\footnotesize cerca del cliente};
+  \node[caja,fill=white,text width=2.4cm,minimum height=1.3cm] (lb) at (9.4,0) {\textbf{Balanceador}\\\footnotesize y VMs en \texttt{us-central1}};
+  \draw[flecha] (u.east) -- node[above,font=\scriptsize]{\texttt{logo.png}} (cdn.west);
+  \draw[flecha,dashed] (cdn.east) -- node[above,font=\scriptsize]{solo la 1.\textsuperscript{a} vez} (lb.west);
+\end{tikzpicture}
+\end{center}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Primera solicitud}
+\small La caché no tiene \texttt{logo.png}: lo pide a las VMs, se lo entrega al cliente y \textbf{guarda una copia}.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Siguientes solicitudes}
+\small La caché responde con su copia. La solicitud \textbf{no llega} a las VMs.
+\end{block}
+\end{columns}
+\par\vspace{2mm}
+\renewcommand{\arraystretch}{1.15}
+\centering\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{6.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{Sí va en la CDN} (igual para todos) & \textbf{No va en la CDN} (cambia por cliente)\\
+\midrule
+Fotos de productos, logo, CSS, JavaScript & Carrito, pedidos de Ana, estado del pago\\
+\bottomrule
+\end{tabular}
+\par\vspace{2mm}
+\raggedright\small Cloud CDN se activa con una casilla en el balanceador de aplicaciones externo.
+\end{frame}
+
+% 26
+\begin{frame}{Todo junto: Pedidos Express en línea}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpRojo!12,minimum width=1.6cm] (u) at (0,1.0) {clientes};
+  \node[caja,fill=utpRojo!30,text width=2.5cm,minimum height=1.1cm] (lb) at (3.1,1.0) {\textbf{Balanceador}\\\footnotesize + Cloud CDN};
+  \draw[flecha] (u) -- (lb);
+  \draw[utpRojo,thick,rounded corners=4pt] (5.3,-1.25) rectangle (12.95,2.05);
+  \node[font=\scriptsize\bfseries,color=utpRojo,anchor=south east] at (12.95,2.05) {región us-central1};
+  \draw[thick] (lb.east) -- (5.75,1.0) |- (11.65,1.65);
+  \foreach \z/\n/\x in {a/1/6.65,b/2/9.15,c/3/11.65} {
+    \draw[zona] (\x-1.15,-1.1) rectangle (\x+1.15,1.9);
+    \node[font=\scriptsize,color=utpGris,anchor=south] at (\x,-1.1) {zona \z};
+    \node[vm] (w\n) at (\x,1.0) {\texttt{web-\n}};
+    \draw[flecha] (\x,1.65) -- (w\n.north);
+  }
+  \node[caja,fill=utpRojo!10,font=\scriptsize,minimum width=1.9cm] (s1) at (6.65,-0.25) {Cloud SQL\\principal};
+  \node[caja,fill=white,font=\scriptsize,minimum width=1.9cm] (s2) at (9.15,-0.25) {Cloud SQL\\en espera};
+  \draw[-latex,dashed] (s1) -- node[above,font=\tiny]{copia} (s2);
+  \node[caja,fill=white,text width=2.5cm,font=\footnotesize] (mon) at (3.1,-0.4) {\textbf{Cloud Monitoring}\\alertas por correo};
+  \draw[dashed,utpGrisMedio,thick] (mon.east) -- (5.3,-0.4);
+\end{tikzpicture}
+\end{center}
+\renewcommand{\arraystretch}{1.1}
+\centering\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{9.2cm}@{}}
+\toprule
+\textbf{Si pasa esto\dots} & \textbf{\dots responde esto}\\
+\midrule
+Falla \texttt{web-1} & La verificación de estado la saca; \texttt{web-2} y \texttt{web-3} atienden\\
+Llega la hora de la cena & El autoescalado agrega VMs; la CDN entrega las fotos sin tocar las VMs\\
+Falla la base principal & Cloud SQL pasa a la copia en espera de la zona \texttt{b}\\
+Algo sale de lo normal & Cloud Monitoring envía un correo al equipo\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 27
+\begin{frame}[fragile]{Práctica 1: balanceo con Nginx en tu computadora}
+\begin{block}{Caso de estudio}
+\small Pedidos Express prepara su tienda online para el Cyber Day: tres copias del servidor (Node.js) detrás de \textbf{Nginx}, que reparte por turnos: 3001, 3002, 3003, 3001\dots{} (\textit{round robin}).
+\end{block}
+\begin{columns}[c,onlytextwidth]
+\column{.38\textwidth}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpRojo!12,minimum width=1.3cm,font=\footnotesize] (c) at (0,0) {clientes};
+  \node[caja,fill=utpRojo!30,minimum width=1.3cm,align=center] (n) at (2.0,0) {\textbf{Nginx}\\\footnotesize :8080};
+  \draw[flecha] (c) -- (n);
+  \foreach \p/\y in {3001/0.9,3002/0,3003/-0.9} {
+    \node[vm,minimum width=1.1cm,minimum height=0.6cm] (s\p) at (4.0,\y) {\texttt{\p}};
+    \draw[flecha] (n.east) -- (s\p.west);
+  }
+\end{tikzpicture}
+\column{.60\textwidth}
+\renewcommand{\arraystretch}{1.15}
+\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Ruta} & \textbf{Qué hace} & \textbf{El servidor\dots}\\
+\midrule
+\texttt{GET /} & Página principal & responde al instante\\
+\texttt{GET /productos} & Consulta la base de datos & \textbf{espera} 2 s\\
+\texttt{POST /comprar} & Cobra con el banco & \textbf{espera} 5 s\\
+\texttt{GET /reporte} & Calcula un reporte & \textbf{trabaja} 5 s con la CPU\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\par\vspace{3mm}
+\begin{exampleblock}{Cómo empezar (carpeta \texttt{Sesion25/practica\_balanceo/})}
+\footnotesize
+\begin{tabular}{@{}l>{\ttfamily}l@{}}
+1. Tres terminales, un servidor en cada una: & node server.js 3001 \quad\textsf{(y 3002, 3003)}\\
+2. Otra terminal, para encender Nginx: & nginx -p \string"\$PWD\string" -c nginx.conf\\
+3. Otra terminal, para simular clientes: & node prueba.js / 6 --en-fila\\
+\end{tabular}
+\end{exampleblock}
+\end{frame}
+
+% 28
+\begin{frame}{Práctica 1: seis pruebas}
+\renewcommand{\arraystretch}{1.12}
+\centering\small
+\begin{tabular}{@{}c>{\ttfamily\scriptsize\raggedright\arraybackslash}p{5.5cm}>{\raggedright\arraybackslash}p{6.6cm}@{}}
+\toprule
+\textbf{\#} & \textsf{\small\textbf{Comando}} & \textbf{Qué observar}\\
+\midrule
+1 & node prueba.js / 6 --en-fila & ¿En qué orden responden los servidores?\\
+2 & node prueba.js /productos 6 --directo 3001 & Un solo servidor: ¿cuánto tarda en total?\\
+3 & node prueba.js /reporte 6 --directo 3001 & Un solo servidor: ¿cuánto espera el sexto cliente?\\
+4 & node prueba.js /reporte 6 & Con Nginx: ¿cuánto tarda en total?\\
+5 & node prueba.js /reporte 1\newline \textsf{\footnotesize y, antes de 5 s, en otra terminal:}\newline node prueba.js / 6 & ¿Qué visitas tardan? ¿A qué servidor le tocaron?\\
+6 & \textsf{\footnotesize Apaga el 3002 (}Ctrl+C\textsf{\footnotesize ) y luego:}\newline node prueba.js / 6 --en-fila & ¿Algún cliente ve un error? ¿Qué servidores responden?\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\begin{alertblock}{La idea}
+\small Cuando el servidor \textbf{espera}, atiende a muchos a la vez. Cuando \textbf{trabaja} con la CPU, los clientes hacen cola: ahí ayuda repartir entre varios servidores.
+\end{alertblock}
+\end{frame}
+
+% 29
+\begin{frame}[c]{Práctica 2}
+\begin{block}{Realiza el laboratorio}
+\large \textit{Supervisa recursos con Google Cloud Observability}\par\vspace{1mm}
+\small\texttt{skills.google/catalog\_lab/1785}
+\end{block}
+\begin{exampleblock}{Al terminar}
+\small Tienes un panel con el uso de CPU de las VMs \texttt{nginxstack}, una política de alertas con dos condiciones, el grupo \texttt{Instancias de VM} y una verificación de tiempo de actividad.
+\end{exampleblock}
+\begin{alertblock}{No olvides}
+\small Desactivar la política de alertas antes de finalizar el lab (tarea 6).
+\end{alertblock}
+\end{frame}
+
+% 30
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Qué diferencia hay entre una métrica y un registro? Da un ejemplo de cada uno.\\\medskip
+2. La CPU de una VM está al 100\,\% a las 4 a.\,m., sin clientes. ¿Qué podría estar pasando y dónde lo revisas?\\\medskip
+3. ¿Qué es un punto único de falla? ¿Cómo lo quitas en los servidores web de Pedidos Express?\\\medskip
+4. ¿Qué hace el balanceador cuando una VM no pasa la verificación de estado?\\\medskip
+5. ¿Qué archivos de Pedidos Express conviene entregar con Cloud CDN y cuáles no? ¿Por qué?
+\end{block}
+\begin{alertblock}{Idea final}
+\small Supervisar te dice qué pasa. La alta disponibilidad y el balanceador hacen que una falla no deje a los clientes sin servicio.
+\end{alertblock}
+\end{frame}
+
+% 31
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Laboratorio: \textit{Supervisa recursos con Google Cloud Observability} (\textit{Monitor Resources with Google Cloud Observability}), curso \textit{Essential Google Cloud Infrastructure: Core Services}: \texttt{skills.google/catalog\_lab/1785}.
+  \item Revisión: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion25/practica/} (\texttt{practica\_bigquery\_python.ipynb} y \texttt{generar\_ventas.py}). DuckDB: \texttt{duckdb.org}.
+  \item Práctica 1: mismo repositorio, carpeta \texttt{Sesion25/practica\_balanceo/} (\texttt{README.md}, \texttt{server.js}, \texttt{nginx.conf} y \texttt{prueba.js}). Nginx: \texttt{nginx.org}. Node.js: \texttt{nodejs.org}.
+  \item Material previo del curso: Sesión 24, Big Data y BigQuery.
+  \item Google Cloud: Cloud Monitoring, Cloud Logging, Cloud Load Balancing, Cloud CDN, grupos de instancias administrados y Cloud SQL.
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}

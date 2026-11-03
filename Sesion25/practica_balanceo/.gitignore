@@ -1,0 +1,4 @@
+# Archivos que crea Nginx al ejecutarse
+nginx.pid
+error.log
+temp_*/
