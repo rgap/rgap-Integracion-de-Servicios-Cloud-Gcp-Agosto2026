@@ -1,0 +1,35 @@
+# La tienda de Pedidos Express con Docker Compose:
+# tres contenedores de la tienda y un contenedor de Nginx.
+#
+#   docker compose up --build     enciende los cuatro contenedores
+#   docker compose down           los apaga y los borra
+
+services:
+  tienda1:
+    build: .
+    command: node server.js 3001
+    ports:
+      - "3001:3001"
+
+  tienda2:
+    build: .
+    command: node server.js 3002
+    ports:
+      - "3002:3002"
+
+  tienda3:
+    build: .
+    command: node server.js 3003
+    ports:
+      - "3003:3003"
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx-docker.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - tienda1
+      - tienda2
+      - tienda3

@@ -30,4 +30,5 @@ Material de las sesiones en formato PDF.
 | 11 | 22 | IAM: quién puede hacer qué y sobre qué recurso | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion22/slides/build/slides.pdf) |
 | 12 | 23 | Bases de datos en Google Cloud: tipos, usos y Cloud SQL | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion23/slides/build/slides.pdf) |
 | 12 | 24 | Big Data y BigQuery: preguntas a millones de filas con SQL | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion24/slides/build/slides.pdf) |
-| 13 | 25 | Supervisión, alta disponibilidad y balanceo de carga | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion25/slides/build/slides.pdf) |
+| 13 | 25 | Supervisión y alta disponibilidad | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion25/slides/build/slides.pdf) |
+| 13 | 26 | Balanceo de carga, CDN y contenedores | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion26/slides/build/slides.pdf) |

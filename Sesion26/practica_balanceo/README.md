@@ -1,6 +1,6 @@
 # Práctica: balanceo de carga con Nginx
 
-**Sesión 25 · Caso de estudio: la tienda online de Pedidos Express**
+**Sesión 26 · Caso de estudio: la tienda online de Pedidos Express**
 
 ## El caso
 
@@ -35,6 +35,9 @@ Antes del Cyber Day, el equipo quiere responder seis preguntas. Cada pregunta es
 | [`nginx.conf`](nginx.conf) | La configuración de Nginx: el grupo `tienda` con los tres servidores. |
 | [`prueba.js`](prueba.js) | Simula clientes: envía varias solicitudes y muestra qué servidor respondió cada una y cuánto tardó. |
 | [`package.json`](package.json) | Solo indica `"type": "module"`, para poder usar `import` en los archivos `.js`. |
+| [`Dockerfile`](Dockerfile) | Receta para crear la imagen de la tienda (solo para la parte con Docker). |
+| [`compose.yaml`](compose.yaml) | Los cuatro contenedores: tres de la tienda y uno de Nginx (solo para la parte con Docker). |
+| [`nginx-docker.conf`](nginx-docker.conf) | El `nginx.conf` que usa el contenedor de Nginx (solo para la parte con Docker). |
 
 No hay nada que instalar con `npm`: solo se importan módulos que ya trae Node.js (`node:http`, `node:timers/promises` y `node:process`).
 
@@ -279,6 +282,69 @@ connect() failed (Connection refused) while connecting to upstream, ... upstream
 | 4 | ¿El balanceador ayuda con los reportes? | Sí: 6 reportes en 10 s con tres servidores |
 | 5 | ¿Round robin sabe si un servidor está ocupado? | No: le envía clientes igual, y esos esperan |
 | 6 | ¿Qué pasa si se cae un servidor? | Nginx reparte entre los que quedan; nadie ve un error |
+
+## La misma tienda con Docker Compose
+
+Hasta aquí instalaste Node.js y Nginx, abriste cinco terminales y escribiste un comando distinto en cada una. Con **Docker Compose** se enciende lo mismo con **un solo comando**, y solo hace falta tener **Docker Desktop** instalado (`docker.com/products/docker-desktop`).
+
+> Antes, apaga los tres servidores y Nginx de la primera parte (ver [Apagar todo](#apagar-todo)): los puertos 3001, 3002, 3003 y 8080 deben estar libres.
+
+### Los archivos
+
+**`Dockerfile`**: la receta de la **imagen** de la tienda.
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json server.js ./
+CMD ["node", "server.js", "3001"]
+```
+
+| Línea | Qué hace |
+| --- | --- |
+| `FROM node:22-alpine` | Parte de una imagen que ya trae Node.js 22. |
+| `WORKDIR /app` | Usa la carpeta `/app` dentro del contenedor. |
+| `COPY package.json server.js ./` | Copia el programa de la tienda a esa carpeta. |
+| `CMD ["node", "server.js", "3001"]` | Comando que se ejecuta al encender el contenedor. En `compose.yaml` se cambia por `3002` o `3003`. |
+
+**`compose.yaml`**: los cuatro **contenedores** y cómo se conectan.
+
+| Servicio | De dónde sale | Comando | Puerto |
+| --- | --- | --- | --- |
+| `tienda1` | La imagen del `Dockerfile` | `node server.js 3001` | 3001 |
+| `tienda2` | La misma imagen | `node server.js 3002` | 3002 |
+| `tienda3` | La misma imagen | `node server.js 3003` | 3003 |
+| `nginx` | La imagen oficial `nginx:1.27-alpine` | Nginx con `nginx-docker.conf` | 8080 |
+
+`nginx-docker.conf` es el mismo `nginx.conf` de antes, con un cambio: dentro de Docker Compose cada contenedor se llama por su **nombre de servicio**. Por eso el grupo `tienda` usa `tienda1:3001`, `tienda2:3002` y `tienda3:3003` en lugar de `127.0.0.1`.
+
+### Encender, probar y apagar
+
+```bash
+docker compose up --build -d     # crea la imagen y enciende los 4 contenedores
+docker compose ps                # lista los contenedores encendidos
+node prueba.js / 6 --en-fila     # las mismas pruebas de antes
+docker compose logs tienda1      # lo que imprimió el servidor 3001
+docker compose down              # apaga y borra los contenedores
+```
+
+`-d` deja los contenedores encendidos en segundo plano y te devuelve la terminal. Sin `-d`, los mensajes de los cuatro contenedores salen mezclados en esa terminal y se apagan con `Ctrl + C`.
+
+Las pruebas 1 a 5 dan los mismos resultados que con Nginx instalado. `prueba.js` sigue corriendo en tu computadora y habla con `localhost:8080` y con los puertos 3001–3003, que Docker abre hacia los contenedores.
+
+**Prueba 6 con Docker:** en lugar de `Ctrl + C`, apaga un contenedor:
+
+```bash
+docker compose stop tienda2
+node prueba.js / 6 --en-fila
+docker compose start tienda2
+```
+
+Ningún cliente ve un error, pero el que tenía el turno del 3002 tarda **2 s**. Al apagarse, el contenedor desaparece de la red de Docker y Nginx no recibe un rechazo inmediato: espera hasta el límite de 2 s que pone `proxy_connect_timeout` en `nginx-docker.conf` y recién pasa la solicitud al siguiente servidor.
+
+Resultados verificados con Docker 29 y Docker Compose en macOS.
+
+---
 
 ## Apagar todo
 
