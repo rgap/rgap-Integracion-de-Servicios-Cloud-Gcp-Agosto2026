@@ -4,14 +4,6 @@
 \input{../../Sesion09/slides/header.tex}
 \graphicspath{{assets/}{../../Sesion05/slides/assets/}}
 \usepackage{colortbl}
-\usepackage{listings}
-\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{utpGrisClaro},
-  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
-  columns=fullflexible,keepspaces=true,breaklines=true,
-  keywordstyle=\color{utpRojo}\bfseries,
-  morekeywords={FROM,WORKDIR,COPY,CMD},
-  commentstyle=\color{utpGris}\itshape,morecomment=[l]{\#},
-  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
 
 \title{Integración de Servicios Cloud GCP}
 \subtitle{Balanceo de carga, CDN y contenedores}
@@ -98,7 +90,7 @@
 % 4
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
-Al finalizar, podrás explicar con tus palabras qué es un \textbf{balanceador de carga}, qué es una \textbf{CDN} y para qué sirven \textbf{Docker}, \textbf{Docker Compose} y \textbf{Kubernetes}. Además, verás en tu computadora cómo Nginx reparte clientes entre tres servidores.
+Al finalizar, podrás explicar con tus palabras qué es un \textbf{balanceador de carga}, qué es una \textbf{CDN} y en qué se diferencian una \textbf{imagen} y un \textbf{contenedor}.
 \end{block}
 \end{frame}
 
@@ -115,7 +107,7 @@ Al finalizar, podrás explicar con tus palabras qué es un \textbf{balanceador d
 \begin{frame}[c]{Utilidad de esta sesión}
 \begin{center}
 \begin{minipage}{.84\textwidth}
-{\large Cuando una aplicación tiene muchos clientes, se ponen \textbf{varias copias} de ella. Hoy verás cómo se reparten los clientes entre esas copias, cómo se entregan las fotos desde cerca y cómo se encienden copias iguales con un solo comando.}
+{\large Cuando una aplicación tiene muchos clientes, se ponen \textbf{varias copias} de ella. Hoy verás cómo se reparten los clientes entre esas copias, cómo se entregan las fotos desde cerca y cómo lograr que todas las copias sean iguales.}
 \end{minipage}
 \end{center}
 \end{frame}
@@ -169,7 +161,7 @@ Al finalizar, podrás explicar con tus palabras qué es un \textbf{balanceador d
 \end{exampleblock}
 \column{.48\textwidth}
 \begin{exampleblock}{Dónde lo verás}
-\small En Google Cloud: \textbf{Cloud Load Balancing}. En la práctica de hoy: \textbf{Nginx}.
+\small En Google Cloud: \textbf{Cloud Load Balancing}. También lo hace \textbf{Nginx} (Sesión 11).
 \end{exampleblock}
 \end{columns}
 \end{frame}
@@ -295,21 +287,21 @@ Archivos CSS y JavaScript & El estado de un pago\\
 \end{frame}
 
 % 15
-\separador{Parte 3: contenedores}{Docker, Docker Compose y Kubernetes}
+\separador{Parte 3: contenedores}{El mismo programa en todos los servidores}
 
 % 16
 \begin{frame}{El problema: preparar cada servidor}
 \begin{columns}[T,onlytextwidth]
 \column{.48\textwidth}
-\begin{block}{Para la práctica de hoy necesitas}
+\begin{block}{Para encender la tienda en \texttt{web-1}}
 \small
-1. Instalar Node.js.\par\smallskip
-2. Instalar Nginx, que se instala distinto en Windows, macOS y Linux.\par\smallskip
-3. Abrir cinco terminales.
+1. Instalar Node.js, en la versión que usa la tienda.\par\smallskip
+2. Instalar las bibliotecas que usa la tienda.\par\smallskip
+3. Copiar los archivos y encender el programa.
 \end{block}
 \column{.48\textwidth}
 \begin{alertblock}{Ahora imagina}
-\small Hacerlo en 3 servidores. Si en uno instalas otra versión de Node.js, ese servidor podría fallar.
+\small Repetirlo en \texttt{web-2} y \texttt{web-3}. Si en uno instalas otra versión de Node.js, ese servidor podría fallar.
 \end{alertblock}
 \end{columns}
 \par\vspace{5mm}
@@ -348,218 +340,6 @@ Archivos CSS y JavaScript & El estado de un pago\\
 \end{frame}
 
 % 18
-\begin{frame}[fragile]{El Dockerfile de la tienda}
-\begin{columns}[c,onlytextwidth]
-\column{.44\textwidth}
-\begin{lstlisting}
-FROM node:22-alpine
-WORKDIR /app
-COPY package.json server.js ./
-CMD ["node", "server.js", "3001"]
-\end{lstlisting}
-\column{.52\textwidth}
-\renewcommand{\arraystretch}{1.3}
-\small
-\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{4.4cm}@{}}
-\toprule
-\textsf{\textbf{Línea}} & \textbf{En palabras}\\
-\midrule
-FROM & Empieza con Node.js ya instalado\\
-WORKDIR & Trabaja en la carpeta \texttt{/app}\\
-COPY & Copia los archivos de la tienda\\
-CMD & Al encender, ejecuta la tienda\\
-\bottomrule
-\end{tabular}
-\end{columns}
-\par\vspace{5mm}
-\begin{lstlisting}
-docker build -t tienda .          # crea la imagen "tienda"
-docker run -p 3001:3001 tienda    # enciende un contenedor
-\end{lstlisting}
-\par\vspace{2mm}
-\begin{exampleblock}{Lo importante}
-\small No instalaste Node.js en tu computadora: viene dentro de la imagen.
-\end{exampleblock}
-\end{frame}
-
-% 19
-\begin{frame}{Docker Compose: varios contenedores a la vez}
-\begin{center}
-\begin{tikzpicture}[font=\small]
-  \node[caja,fill=white,text width=2.4cm,minimum height=1.4cm] (f) at (0,0) {\textbf{compose.yaml}\\\footnotesize un archivo};
-  \draw[utpRojo,thick,rounded corners=4pt] (3.4,-1.3) rectangle (10.6,1.4);
-  \node[font=\scriptsize\bfseries,color=utpRojo,anchor=south west] at (3.4,1.4) {docker compose up};
-  \node[caja,fill=utpRojo!30,minimum width=1.6cm,minimum height=0.9cm] (n) at (4.7,0) {\textbf{nginx}};
-  \foreach \n/\y in {1/0.9,2/0,3/-0.9} {
-    \node[vm,minimum width=1.8cm,minimum height=0.6cm] (t\n) at (8.9,\y) {\texttt{tienda\n}};
-    \draw[flecha] (n.east) -- (t\n.west);
-  }
-  \draw[flecha] (f) -- (3.4,0);
-\end{tikzpicture}
-\end{center}
-\begin{block}{Docker Compose}
-\small Describe en \textbf{un archivo} todos los contenedores de tu aplicación y los enciende juntos con \textbf{un comando}.
-\end{block}
-\renewcommand{\arraystretch}{1.1}
-\centering\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
-\toprule
-\textbf{A mano (Práctica 1)} & \textbf{Con Docker Compose (Práctica 2)}\\
-\midrule
-Instalar Node.js y Nginx & Solo tener Docker\\
-5 terminales, 5 comandos & 1 comando: \texttt{docker compose up}\\
-\bottomrule
-\end{tabular}
-\end{frame}
-
-% 20
-\begin{frame}{Kubernetes: contenedores en muchas máquinas}
-\begin{columns}[c,onlytextwidth]
-\column{.50\textwidth}
-\centering
-\begin{tikzpicture}[font=\small]
-  \draw[utpRojo,thick,rounded corners=4pt] (-0.15,-1.15) rectangle (5.95,1.55);
-  \foreach \n/\x in {1/0.9,2/2.9,3/4.9} {
-    \draw[zona] (\x-0.85,-0.85) rectangle (\x+0.85,1.3);
-    \node[font=\scriptsize,color=utpGris,anchor=north] at (\x,1.3) {máquina \n};
-  }
-  \node[vm,minimum width=1.3cm,minimum height=0.5cm] (p1) at (0.9,0.35) {tienda};
-  \node[vmmal,minimum width=1.3cm,minimum height=0.5cm] (p2) at (2.9,0.35) {tienda};
-  \cruz{p2}
-  \node[vm,minimum width=1.3cm,minimum height=0.5cm] (p3) at (4.9,0.35) {tienda};
-  \node[vm,minimum width=1.3cm,minimum height=0.5cm,dashed] (p4) at (4.9,-0.45) {tienda nueva};
-  \draw[flecha,dashed] (p2.south) to[bend right=25] (p4.west);
-\end{tikzpicture}
-\column{.46\textwidth}
-\begin{block}{Kubernetes}
-\small Tú le dices: «quiero \textbf{3 copias} de la tienda». Kubernetes las reparte en varias máquinas y se encarga de que \textbf{siempre haya 3}.
-\end{block}
-\begin{exampleblock}{Si se cae una copia}
-\small Kubernetes lo nota y enciende otra, sin que tú hagas nada.
-\end{exampleblock}
-\end{columns}
-\par\vspace{5mm}
-\begin{columns}[T,onlytextwidth]
-\column{.48\textwidth}
-\begin{alertblock}{¿Por qué no basta Compose?}
-\small Compose usa \textbf{una sola máquina}. Si esa máquina se apaga, se apaga todo.
-\end{alertblock}
-\column{.48\textwidth}
-\begin{block}{En Google Cloud}
-\small Se llama \textbf{Google Kubernetes Engine} (GKE).
-\end{block}
-\end{columns}
-\end{frame}
-
-% 21
-\begin{frame}{Las tres herramientas}
-\renewcommand{\arraystretch}{1.5}
-\centering\small
-\begin{tabular}{@{}p{2.4cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
-\toprule
- & \textbf{Docker} & \textbf{Docker Compose} & \textbf{Kubernetes}\\
-\midrule
-\textbf{Qué hace} & Crea la imagen y enciende un contenedor & Enciende varios contenedores juntos & Mantiene muchas copias encendidas\\
-\textbf{Dónde} & Una máquina & Una máquina & Varias máquinas\\
-\textbf{Ejemplo} & La imagen de la tienda & Práctica 2: 3 tiendas + Nginx & La tienda en producción\\
-\bottomrule
-\end{tabular}
-\par\vspace{6mm}
-\begin{alertblock}{En una frase}
-\small Docker \textbf{empaqueta}, Docker Compose \textbf{junta} y Kubernetes \textbf{mantiene}.
-\end{alertblock}
-\end{frame}
-
-% 22
-\begin{frame}[fragile]{Práctica 1: balanceo con Nginx en tu computadora}
-\begin{block}{Caso de estudio}
-\small Pedidos Express prepara su tienda online para el Cyber Day: tres copias del servidor (Node.js) detrás de \textbf{Nginx}, que reparte por turnos: 3001, 3002, 3003, 3001\dots{} (\textit{round robin}).
-\end{block}
-\begin{columns}[c,onlytextwidth]
-\column{.38\textwidth}
-\begin{tikzpicture}[font=\small]
-  \node[caja,fill=utpRojo!12,minimum width=1.3cm,font=\footnotesize] (c) at (0,0) {clientes};
-  \node[caja,fill=utpRojo!30,minimum width=1.3cm,align=center] (n) at (2.0,0) {\textbf{Nginx}\\\footnotesize :8080};
-  \draw[flecha] (c) -- (n);
-  \foreach \p/\y in {3001/0.9,3002/0,3003/-0.9} {
-    \node[vm,minimum width=1.1cm,minimum height=0.6cm] (s\p) at (4.0,\y) {\texttt{\p}};
-    \draw[flecha] (n.east) -- (s\p.west);
-  }
-\end{tikzpicture}
-\column{.60\textwidth}
-\renewcommand{\arraystretch}{1.15}
-\scriptsize
-\begin{tabular}{@{}lll@{}}
-\toprule
-\textbf{Ruta} & \textbf{Qué hace} & \textbf{El servidor\dots}\\
-\midrule
-\texttt{GET /} & Página principal & responde al instante\\
-\texttt{GET /productos} & Consulta la base de datos & \textbf{espera} 2 s\\
-\texttt{POST /comprar} & Cobra con el banco & \textbf{espera} 5 s\\
-\texttt{GET /reporte} & Calcula un reporte & \textbf{trabaja} 5 s con la CPU\\
-\bottomrule
-\end{tabular}
-\end{columns}
-\par\vspace{3mm}
-\begin{exampleblock}{Cómo empezar (carpeta \texttt{Sesion26/practica\_balanceo/})}
-\footnotesize
-\begin{tabular}{@{}l>{\ttfamily}l@{}}
-1. Tres terminales, un servidor en cada una: & node server.js 3001 \quad\textsf{(y 3002, 3003)}\\
-2. Otra terminal, para encender Nginx: & nginx -p \string"\$PWD\string" -c nginx.conf\\
-3. Otra terminal, para simular clientes: & node prueba.js / 6 --en-fila\\
-\end{tabular}
-\end{exampleblock}
-\end{frame}
-
-% 23
-\begin{frame}{Práctica 1: seis pruebas}
-\renewcommand{\arraystretch}{1.12}
-\centering\small
-\begin{tabular}{@{}c>{\ttfamily\scriptsize\raggedright\arraybackslash}p{5.5cm}>{\raggedright\arraybackslash}p{6.6cm}@{}}
-\toprule
-\textbf{\#} & \textsf{\small\textbf{Comando}} & \textbf{Qué observar}\\
-\midrule
-1 & node prueba.js / 6 --en-fila & ¿En qué orden responden los servidores?\\
-2 & node prueba.js /productos 6 --directo 3001 & Un solo servidor: ¿cuánto tarda en total?\\
-3 & node prueba.js /reporte 6 --directo 3001 & Un solo servidor: ¿cuánto espera el sexto cliente?\\
-4 & node prueba.js /reporte 6 & Con Nginx: ¿cuánto tarda en total?\\
-5 & node prueba.js /reporte 1\newline \textsf{\footnotesize y, antes de 5 s, en otra terminal:}\newline node prueba.js / 6 & ¿Qué visitas tardan? ¿A qué servidor le tocaron?\\
-6 & \textsf{\footnotesize Apaga el 3002 (}Ctrl+C\textsf{\footnotesize ) y luego:}\newline node prueba.js / 6 --en-fila & ¿Algún cliente ve un error? ¿Qué servidores responden?\\
-\bottomrule
-\end{tabular}
-\par\vspace{3mm}
-\begin{alertblock}{La idea}
-\small Cuando el servidor \textbf{espera}, atiende a muchos a la vez. Cuando \textbf{trabaja} con la CPU, los clientes hacen cola: ahí ayuda repartir entre varios servidores.
-\end{alertblock}
-\end{frame}
-
-
-% 24
-\begin{frame}[fragile]{Práctica 2: la misma tienda con Docker Compose}
-\begin{columns}[T,onlytextwidth]
-\column{.50\textwidth}
-\begin{block}{Antes de empezar}
-\small Apaga los servidores y Nginx de la Práctica 1. Necesitas \textbf{Docker Desktop}. Si no lo tienes, sigue la demostración del docente.
-\end{block}
-\begin{lstlisting}
-docker compose up --build -d
-docker compose ps
-node prueba.js / 6 --en-fila
-docker compose down
-\end{lstlisting}
-\column{.46\textwidth}
-\begin{exampleblock}{Qué observar}
-\small
-1. ¿Cuántos contenedores muestra \texttt{docker compose ps}?\par\medskip
-2. ¿La prueba da lo mismo que en la Práctica 1?\par\medskip
-3. ¿Cuántos comandos usaste para encender todo? ¿Y en la Práctica 1?
-\end{exampleblock}
-\end{columns}
-\par\vspace{3mm}
-{\footnotesize\color{utpGris} Los archivos \texttt{Dockerfile} y \texttt{compose.yaml} están en la misma carpeta. La guía completa está en el \texttt{README.md}.}
-\end{frame}
-
-% 25
 \begin{frame}{Cierre: preguntas para comprobar}
 \begin{block}{Responde con tus palabras}
 \small
@@ -567,22 +347,20 @@ docker compose down
 2. Con 3 servidores y round robin, ¿a cuál va el cliente 4?\\\medskip
 3. Da un ejemplo de archivo que sí va en una CDN y uno que no.\\\medskip
 4. ¿Qué diferencia hay entre una imagen y un contenedor?\\\medskip
-5. ¿Qué hace Kubernetes que Docker Compose no hace?
+5. ¿Por qué conviene que \texttt{web-1}, \texttt{web-2} y \texttt{web-3} enciendan la misma imagen?
 \end{block}
 \begin{alertblock}{Idea final}
 \small Muchos clientes se atienden con varias copias iguales: el balanceador las reparte, la CDN entrega las fotos desde cerca y los contenedores hacen que todas las copias sean idénticas.
 \end{alertblock}
 \end{frame}
 
-% 26
+% 19
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{4pt}
-  \item Prácticas: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion26/practica\_balanceo/}.
-  \item Nginx: \texttt{nginx.org}. Node.js: \texttt{nodejs.org}.
-  \item Docker y Docker Compose: \texttt{docs.docker.com}. Kubernetes: \texttt{kubernetes.io}.
-  \item Google Cloud: Cloud Load Balancing, Cloud CDN y Google Kubernetes Engine (GKE): \texttt{cloud.google.com}.
-  \item Material previo del curso: Sesión 12 (contenedores) y Sesión 25 (supervisión y alta disponibilidad).
+  \item Google Cloud: Cloud Load Balancing y Cloud CDN: \texttt{cloud.google.com}.
+  \item Docker: \texttt{docs.docker.com}.
+  \item Material previo del curso: Sesión 11 (Nginx), Sesión 12 (contenedores) y Sesión 25 (supervisión y alta disponibilidad).
   \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
 \end{itemize}
 \end{frame}

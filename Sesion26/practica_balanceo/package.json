@@ -1,6 +1,0 @@
-{
-  "name": "practica-balanceo",
-  "private": true,
-  "description": "Tienda de Pedidos Express: Nginx reparte por turnos entre tres servidores Node.js",
-  "type": "module"
-}

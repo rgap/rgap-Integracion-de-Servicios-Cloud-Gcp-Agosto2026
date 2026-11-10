@@ -1,0 +1,420 @@
+% Motor: XeLaTeX. Sesión 27 - material docente UTP.
+% Estructura docente de la Sesión 26.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywordstyle=\color{utpRojo}\bfseries,
+  morekeywords={FROM,WORKDIR,COPY,CMD},
+  commentstyle=\color{utpGris}\itshape,morecomment=[l]{\#},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+% El código de Python de la práctica: solo comentarios y cadenas con color.
+\lstdefinestyle{python}{basicstyle=\ttfamily\scriptsize,keywords={},
+  stringstyle=\color{utpRojo},morestring=[b]",commentstyle=\color{utpGris}\itshape}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Contenedores: Docker, Docker Compose y Kubernetes}
+\date{Semana 14 - Sesión 27}
+\author{Rel Guzman}
+
+\newcommand{\separador}[2]{%
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\fontsize{29}{34}\selectfont\bfseries #1}\par
+\vspace{2mm}
+{\small #2}\par
+\vspace{4mm}
+{\color{utpRojo}\rule{8.5cm}{1.2pt}}
+\end{center}
+\vfill
+\end{frame}}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ vm/.style={draw=utpRojo,thick,rounded corners=3pt,fill=white,minimum width=1.6cm,minimum height=0.75cm,align=center,font=\scriptsize},
+ vmmal/.style={vm,draw=utpGrisMedio,fill=utpGrisClaro,text=utpGris},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+}
+\newcommand{\cruz}[1]{\draw[utpRojo,line width=2pt] ($(#1)+(-0.25,-0.25)$) -- ($(#1)+(0.25,0.25)$) ($(#1)+(-0.25,0.25)$) -- ($(#1)+(0.25,-0.25)$);}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: lo que vimos en la Sesión 26}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{Balanceador de carga}
+\small Recibe a todos los clientes en una sola dirección y los reparte entre varios servidores iguales.
+\end{block}
+\begin{block}{CDN}
+\small Guarda cerca del cliente una copia de los archivos que son iguales para todos.
+\end{block}
+\begin{block}{Contenedor}
+\small Un paquete con tu programa y todo lo que necesita para funcionar.
+\end{block}
+\column{.50\textwidth}
+\begin{alertblock}{Responde}
+\small
+1. Con 3 servidores y round robin, ¿a cuál va el cliente 5?\par\medskip
+2. Si \texttt{web-2} no responde, ¿qué hace el balanceador?\par\medskip
+3. ¿Por qué el carrito de Ana no va en la CDN?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: la pregunta de hoy}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=white,text width=3.0cm,minimum height=1.2cm] (t) at (0,0) {\textbf{La tienda}\\\footnotesize código y bibliotecas};
+  \node[caja,dashed,minimum width=1.6cm,minimum height=1.2cm,font=\Large\bfseries] (q) at (4.2,0) {?};
+  \draw[flecha] (t) -- (q);
+  \foreach \n/\y in {1/1.1,2/0,3/-1.1} {
+    \node[vm] (w\n) at (8.0,\y) {\texttt{web-\n}};
+    \draw[flecha,dashed] (q.east) -- (w\n.west);
+  }
+\end{tikzpicture}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{1. Docker}
+\small ¿Cómo se arma un paquete con la tienda y todo lo que necesita?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{2. Docker Compose}
+\small ¿Cómo se encienden varios contenedores juntos?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{3. Kubernetes}
+\small Si una copia de la tienda se cae, ¿quién enciende otra?
+\end{block}
+\end{columns}
+\end{frame}
+
+% 4
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar con tus palabras qué es un \textbf{Dockerfile} y para qué sirven \textbf{Docker}, \textbf{Docker Compose} y \textbf{Kubernetes}. Además, encenderás en tu computadora una \textbf{API} hecha con \textbf{Python} y \textbf{Flask}.
+\end{block}
+\end{frame}
+
+% 5
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{14pt}
+  \item En la Sesión 11, antes de encender el programa de Python, instalaste algo con \texttt{pip}. ¿Qué era y para qué servía?
+  \item Cuando escribes \texttt{localhost:8080} en el navegador, ¿qué indica el 8080?
+  \item Si se apaga uno de los tres servidores de la tienda, ¿quién debería encender otro?
+\end{itemize}
+\end{frame}
+
+% 6
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Para tener varias copias iguales de un programa, primero hay que \textbf{empaquetarlo} con todo lo que necesita. Hoy verás cómo se arma ese paquete, cómo se encienden varios juntos y cómo se mantienen encendidos. En la práctica encenderás una API y verás qué necesita para funcionar.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 7
+\separador{Contenedores}{Docker, Docker Compose y Kubernetes}
+
+% 8
+\begin{frame}{Docker: imagen y contenedor}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=white,text width=2.3cm,minimum height=1.4cm] (df) at (0,0) {\textbf{Dockerfile}\\\footnotesize la receta};
+  \node[caja,fill=utpRojo!30,text width=2.3cm,minimum height=1.4cm] (img) at (4.6,0) {\textbf{Imagen}\\\footnotesize el paquete};
+  \draw[flecha] (df) -- node[above,font=\scriptsize]{crear} (img);
+  \foreach \n/\y in {1/1.1,2/0,3/-1.1} {
+    \node[vm,minimum width=2.2cm] (k\n) at (9.6,\y) {contenedor \n};
+    \draw[flecha] (img.east) -- (k\n.west);
+  }
+  \node[font=\scriptsize] at (6.9,1.0) {encender};
+\end{tikzpicture}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Imagen}
+\small El paquete guardado: el programa y todo lo que necesita. Está apagado.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Contenedor}
+\small Una imagen \textbf{encendida}. De una imagen puedes encender muchos contenedores iguales.
+\end{block}
+\end{columns}
+\par\vspace{3mm}
+\raggedright\small \textbf{Docker} es el programa que crea las imágenes y enciende los contenedores.
+\end{frame}
+
+% 9
+\begin{frame}[fragile]{El Dockerfile de la tienda}
+\begin{columns}[c,onlytextwidth]
+\column{.44\textwidth}
+\begin{lstlisting}
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json server.js ./
+CMD ["node", "server.js", "3001"]
+\end{lstlisting}
+\column{.52\textwidth}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+\textsf{\textbf{Línea}} & \textbf{En palabras}\\
+\midrule
+FROM & Empieza con Node.js ya instalado\\
+WORKDIR & Trabaja en la carpeta \texttt{/app}\\
+COPY & Copia los archivos de la tienda\\
+CMD & Al encender, ejecuta la tienda\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\par\vspace{5mm}
+\begin{lstlisting}
+docker build -t tienda .          # crea la imagen "tienda"
+docker run -p 3001:3001 tienda    # enciende un contenedor
+\end{lstlisting}
+\par\vspace{2mm}
+\begin{exampleblock}{Lo importante}
+\small No instalaste Node.js en tu computadora: viene dentro de la imagen.
+\end{exampleblock}
+\end{frame}
+
+% 10
+\begin{frame}{Docker Compose: varios contenedores a la vez}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=white,text width=2.4cm,minimum height=1.4cm] (f) at (0,0) {\textbf{compose.yaml}\\\footnotesize un archivo};
+  \draw[utpRojo,thick,rounded corners=4pt] (3.4,-1.3) rectangle (10.6,1.4);
+  \node[font=\scriptsize\bfseries,color=utpRojo,anchor=south west] at (3.4,1.4) {docker compose up};
+  \node[caja,fill=utpRojo!30,minimum width=1.6cm,minimum height=0.9cm] (n) at (4.7,0) {\textbf{nginx}};
+  \foreach \n/\y in {1/0.9,2/0,3/-0.9} {
+    \node[vm,minimum width=1.8cm,minimum height=0.6cm] (t\n) at (8.9,\y) {\texttt{tienda\n}};
+    \draw[flecha] (n.east) -- (t\n.west);
+  }
+  \draw[flecha] (f) -- (3.4,0);
+\end{tikzpicture}
+\end{center}
+\begin{block}{Docker Compose}
+\small Describe en \textbf{un archivo} todos los contenedores de tu aplicación y los enciende juntos con \textbf{un comando}.
+\end{block}
+\renewcommand{\arraystretch}{1.1}
+\centering\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
+\toprule
+\textbf{A mano} & \textbf{Con Docker Compose}\\
+\midrule
+Instalar Node.js y Nginx & Solo tener Docker\\
+4 terminales, 4 comandos & 1 comando: \texttt{docker compose up}\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 11
+\begin{frame}{Kubernetes: contenedores en muchas máquinas}
+\begin{columns}[c,onlytextwidth]
+\column{.50\textwidth}
+\centering
+\begin{tikzpicture}[font=\small]
+  \draw[utpRojo,thick,rounded corners=4pt] (-0.15,-1.15) rectangle (5.95,1.55);
+  \foreach \n/\x in {1/0.9,2/2.9,3/4.9} {
+    \draw[zona] (\x-0.85,-0.85) rectangle (\x+0.85,1.3);
+    \node[font=\scriptsize,color=utpGris,anchor=north] at (\x,1.3) {máquina \n};
+  }
+  \node[vm,minimum width=1.3cm,minimum height=0.5cm] (p1) at (0.9,0.35) {tienda};
+  \node[vmmal,minimum width=1.3cm,minimum height=0.5cm] (p2) at (2.9,0.35) {tienda};
+  \cruz{p2}
+  \node[vm,minimum width=1.3cm,minimum height=0.5cm] (p3) at (4.9,0.35) {tienda};
+  \node[vm,minimum width=1.3cm,minimum height=0.5cm,dashed] (p4) at (4.9,-0.45) {tienda nueva};
+  \draw[flecha,dashed] (p2.south) to[bend right=25] (p4.west);
+\end{tikzpicture}
+\column{.46\textwidth}
+\begin{block}{Kubernetes}
+\small Tú le dices: «quiero \textbf{3 copias} de la tienda». Kubernetes las reparte en varias máquinas y se encarga de que \textbf{siempre haya 3}.
+\end{block}
+\begin{exampleblock}{Si se cae una copia}
+\small Kubernetes lo nota y enciende otra, sin que tú hagas nada.
+\end{exampleblock}
+\end{columns}
+\par\vspace{5mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{alertblock}{¿Por qué no basta Compose?}
+\small Compose usa \textbf{una sola máquina}. Si esa máquina se apaga, se apaga todo.
+\end{alertblock}
+\column{.48\textwidth}
+\begin{block}{En Google Cloud}
+\small Se llama \textbf{Google Kubernetes Engine} (GKE).
+\end{block}
+\end{columns}
+\end{frame}
+
+% 12
+\begin{frame}{Las tres herramientas}
+\renewcommand{\arraystretch}{1.5}
+\centering\small
+\begin{tabular}{@{}p{2.4cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\toprule
+ & \textbf{Docker} & \textbf{Docker Compose} & \textbf{Kubernetes}\\
+\midrule
+\textbf{Qué hace} & Crea la imagen y enciende un contenedor & Enciende varios contenedores juntos & Mantiene muchas copias encendidas\\
+\textbf{Dónde} & Una máquina & Una máquina & Varias máquinas\\
+\textbf{Ejemplo} & La imagen de la tienda & 3 tiendas + Nginx en una máquina & La tienda en producción\\
+\bottomrule
+\end{tabular}
+\par\vspace{6mm}
+\begin{alertblock}{En una frase}
+\small Docker \textbf{empaqueta}, Docker Compose \textbf{junta} y Kubernetes \textbf{mantiene}.
+\end{alertblock}
+\end{frame}
+
+% 13
+\separador{Práctica}{La API de Café Nube, con Python y Flask en tu computadora}
+
+% 14
+\begin{frame}[fragile]{Práctica: la API de Café Nube}
+\begin{block}{Caso de estudio}
+\small \textbf{Café Nube}, una cafetería de barrio, quiere mostrar su carta en internet. Primero necesita una \textbf{API}: un programa que no muestra páginas, sino que \textbf{entrega datos} a otros programas.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.45\textwidth}
+\begin{lstlisting}[style=python]
+import os
+from flask import Flask, jsonify
+app = Flask(__name__)
+
+MENU = [
+    {"nombre": "Americano", "precio": 8},
+    {"nombre": "Capuchino", "precio": 10},
+    {"nombre": "Mocaccino", "precio": 12},
+]
+
+@app.get("/menu")
+def menu():
+    return jsonify(MENU)
+
+puerto = int(os.environ.get("PUERTO", 8080))
+app.run(port=puerto)
+\end{lstlisting}
+\column{.52\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\scriptsize
+\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{3.7cm}@{}}
+\toprule
+\textsf{\textbf{Línea}} & \textbf{En palabras}\\
+\midrule
+from flask import ... & Usa Flask, una biblioteca para hacer APIs\\
+MENU = [...] & La carta: nombre y precio en soles\\
+@app.get(\string"/menu\string") & Si alguien pide \texttt{/menu}\dots\\
+return jsonify(MENU) & \dots le responde la carta en JSON\\
+os.environ.get(...) & Lee la variable \texttt{PUERTO}; si no existe, usa 8080\\
+app.run(port=puerto) & Enciende la API y espera pedidos\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+{\scriptsize\textbf{JSON:} texto con datos que otro programa puede leer:\par \texttt{\{\string"nombre\string":\string"Americano\string",\string"precio\string":8\}}}
+\end{columns}
+\end{frame}
+
+% 15
+\begin{frame}[fragile]{Práctica: preparar y encender}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+{\small\bfseries macOS / Linux}
+\begin{lstlisting}
+# 1. Crea el entorno virtual
+python3 -m venv .venv
+# 2. Enciende la API (prueba 1)
+.venv/bin/python api.py
+# 3. Instala lo de requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
+# 4. Enciéndela otra vez
+.venv/bin/python api.py
+\end{lstlisting}
+\column{.48\textwidth}
+{\small\bfseries Windows (PowerShell)}
+\begin{lstlisting}
+# 1. Crea el entorno virtual
+python -m venv .venv
+# 2. Enciende la API (prueba 1)
+.venv\Scripts\python api.py
+# 3. Instala lo de requirements.txt
+.venv\Scripts\python -m pip install -r requirements.txt
+# 4. Enciéndela otra vez
+.venv\Scripts\python api.py
+\end{lstlisting}
+\end{columns}
+\par\vspace{3mm}
+\begin{exampleblock}{Comprueba en el navegador: \texttt{http://localhost:8080/menu}}
+\scriptsize\ttfamily [\{\string"nombre\string":\string"Americano\string",\string"precio\string":8\},\{\string"nombre\string":\string"Capuchino\string",\string"precio\string":10\},\par\ \{\string"nombre\string":\string"Mocaccino\string",\string"precio\string":12\}]
+\end{exampleblock}
+\par\vspace{2mm}
+{\footnotesize\color{utpGris} Carpeta \texttt{Sesion27/practica\_cafe\_nube/}. Necesitas Python 3.10 o más nuevo. La guía completa está en el \texttt{README.md}.}
+\end{frame}
+
+% 16
+\begin{frame}{Práctica: seis pruebas}
+\renewcommand{\arraystretch}{1.12}
+\centering\small
+\begin{tabular}{@{}c>{\raggedright\arraybackslash}p{5.9cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Qué hacer} & \textbf{Qué observar}\\
+\midrule
+1 & Paso 2: enciende la API \textbf{antes} de instalar \texttt{requirements.txt} & ¿Qué error sale? ¿Qué le falta a la API?\\
+2 & Abre \texttt{localhost:8080/menu} o, en otra terminal, \texttt{curl localhost:8080/menu} & ¿Qué responde? ¿Qué anota la terminal de la API?\\
+3 & Abre \texttt{localhost:8080/postres} & ¿Qué código anota la terminal?\\
+4 & En otra terminal, enciende la API otra vez & ¿Qué mensaje sale? ¿Por qué?\\
+5 & {\scriptsize\ttfamily PUERTO=9090 .venv/bin/python api.py} & ¿Ahora sí enciende? Abre \texttt{localhost:9090/menu}\\
+6 & Agrega un café a \texttt{MENU} y recarga \texttt{/menu} & ¿Aparece? ¿Y después de reiniciar la API?\\
+\bottomrule
+\end{tabular}
+\par\vspace{1mm}
+\raggedright{\scriptsize\color{utpGris} En Windows: \texttt{curl.exe} en la prueba 2; en la prueba 5, primero \texttt{\$env:PUERTO = \string"9090\string"} y luego \texttt{.venv\textbackslash Scripts\textbackslash python api.py}.}
+\par\vspace{3mm}
+\begin{alertblock}{La idea}
+\small Además de su código, la API necesita \textbf{Python}, \textbf{Flask} (lo que dice \texttt{requirements.txt}) y \textbf{un puerto libre}. Reto en el \texttt{README.md}: la ruta \texttt{/menu/<nombre>}.
+\end{alertblock}
+\end{frame}
+
+% 17
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Qué es un Dockerfile y qué se obtiene con \texttt{docker build}?\\\medskip
+2. En el Dockerfile de la tienda, ¿por qué no tuviste que instalar Node.js en tu computadora?\\\medskip
+3. ¿Qué hace Kubernetes que Docker Compose no hace?\\\medskip
+4. En la práctica, ¿por qué falló la API antes de instalar \texttt{requirements.txt}?\\\medskip
+5. ¿Por qué no pudiste encender dos veces la API en el puerto 8080? ¿Cómo lo resolviste sin cambiar el código?
+\end{block}
+\begin{alertblock}{Idea final}
+\small Docker \textbf{empaqueta}, Docker Compose \textbf{junta} y Kubernetes \textbf{mantiene}. Antes de empaquetar un programa hay que saber qué necesita para funcionar: tu API necesita Python, Flask y un puerto libre.
+\end{alertblock}
+\end{frame}
+
+% 18
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Práctica: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion27/practica\_cafe\_nube/}.
+  \item Flask: \texttt{flask.palletsprojects.com}. Python y entornos virtuales: \texttt{docs.python.org/3/library/venv.html}.
+  \item Docker y Docker Compose: \texttt{docs.docker.com}. Kubernetes: \texttt{kubernetes.io}.
+  \item Google Cloud: Google Kubernetes Engine (GKE): \texttt{cloud.google.com}.
+  \item Material previo del curso: Sesión 11 (Python, entorno virtual y variables de entorno) y Sesión 26 (balanceo de carga, imagen y contenedor).
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}

@@ -9,7 +9,7 @@ La revisión retoma BigQuery con la práctica **BigQuery sin BigQuery**: los est
 
 La práctica es el laboratorio **[Supervisa recursos con Google Cloud Observability](https://www.skills.google/catalog_lab/1785)**.
 
-El balanceo de carga, Cloud CDN y la práctica con Nginx pasaron a la [Sesión 26](../Sesion26/).
+El balanceo de carga y Cloud CDN pasaron a la [Sesión 26](../Sesion26/).
 
 - [Diapositivas PDF](slides/build/S25.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
