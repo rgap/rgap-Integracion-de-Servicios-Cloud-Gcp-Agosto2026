@@ -17,7 +17,7 @@ navegador o curl  ──  GET /menu  ──>  API de Café Nube (puerto 8080)
 | --- | --- |
 | `GET /menu` | La carta: cada café con su nombre y su precio en soles |
 
-En esta práctica vas a encender la API, pedirle la carta y ver qué necesita para funcionar: **Python**, **Flask** y **un puerto libre**.
+En esta práctica vas a instalar Python, encender la API, pedirle la carta y ver qué necesita para funcionar: **Python**, **Flask** y **un puerto libre**.
 
 ---
 
@@ -67,28 +67,35 @@ app.run(port=puerto)
 
 ## Preparación
 
-Necesitas **Python 3.10 o más nuevo**:
+La práctica se hace en **Windows**, con **PowerShell**. Si usas macOS o Linux, mira [al final](#si-usas-macos-o-linux).
 
-- macOS / Linux: `python3 --version`
-- Windows: `python --version` (si no responde, prueba con `py --version`)
+### 1. Instalar Python
 
-Abre una terminal **en esta carpeta** (`Sesion27/practica_cafe_nube/`) y crea un **entorno virtual**, como en la Sesión 11: una carpeta `.venv` con su propio Python, donde se instalan las bibliotecas de este proyecto.
-
-**macOS / Linux:**
-
-```bash
-python3 -m venv .venv
-```
-
-**Windows (PowerShell):**
+Abre PowerShell e instala Python 3.12 con **winget**, el instalador de programas que trae Windows:
 
 ```powershell
-python -m venv .venv
+winget install --id Python.Python.3.12 -e
 ```
 
-Todavía **no** instales nada: la prueba 1 empieza así.
+`--id Python.Python.3.12` elige el paquete y `-e` pide que el nombre coincida exacto, para que no instale otro parecido.
 
-En el resto de la guía, los comandos van primero para macOS / Linux y después para Windows. Solo cambia la ruta al Python del entorno virtual: `.venv/bin/python` o `.venv\Scripts\python`.
+### 2. Comprobar que `python` responde
+
+**Cierra PowerShell y ábrelo otra vez**: una ventana que ya estaba abierta no ve los programas que se instalan después. Luego:
+
+```powershell
+python --version
+```
+
+Debe responder `Python 3.12.x`.
+
+> Si abre la Microsoft Store o dice `Python was not found`, cierra y abre PowerShell una vez más. Si sigue igual, en **Configuración → Aplicaciones → Configuración avanzada de aplicaciones → Alias de ejecución de aplicaciones**, apaga los dos alias de `python.exe` y `python3.exe`.
+
+### 3. Abrir la carpeta de la práctica
+
+En PowerShell, entra a esta carpeta (`Sesion27/practica_cafe_nube/`) con `cd`. Todos los comandos que siguen se escriben ahí.
+
+Todavía **no** instales nada: la prueba 1 empieza así.
 
 ---
 
@@ -96,36 +103,30 @@ En el resto de la guía, los comandos van primero para macOS / Linux y después 
 
 Enciende la API **sin haber instalado** `requirements.txt`:
 
-```bash
-.venv/bin/python api.py
-```
-
 ```powershell
-.venv\Scripts\python api.py
+python api.py
 ```
 
 **Qué deberías ver:**
 
 ```text
 Traceback (most recent call last):
-  File ".../api.py", line 3, in <module>
+  File "...\api.py", line 3, in <module>
     from flask import Flask, jsonify
 ModuleNotFoundError: No module named 'flask'
 ```
 
-**Por qué:** el código está completo, pero el entorno virtual está vacío: no tiene Flask. A esto se le llama **dependencia**: algo que el programa necesita para funcionar y que no es su propio código. Es el típico «en mi computadora sí funciona»: en la computadora de quien lo programó, Flask ya estaba instalado.
+**Por qué:** el código está completo, pero el Python que acabas de instalar no trae Flask. A esto se le llama **dependencia**: algo que el programa necesita para funcionar y que no es su propio código. Es el típico «en mi computadora sí funciona»: en la computadora de quien lo programó, Flask ya estaba instalado.
+
+> Si ya habías instalado Flask antes, la API va a encender. No pasa nada: lee el porqué y sigue.
 
 Ahora instala lo que pide `requirements.txt`:
 
-```bash
-.venv/bin/python -m pip install -r requirements.txt
-```
-
 ```powershell
-.venv\Scripts\python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-Al final debe decir `Successfully installed ... flask-3.1.0 ...`.
+`pip` es el instalador de bibliotecas de Python, como en la Sesión 11. Al final debe decir `Successfully installed ... flask-3.1.0 ...`.
 
 ---
 
@@ -133,12 +134,8 @@ Al final debe decir `Successfully installed ... flask-3.1.0 ...`.
 
 Enciende la API:
 
-```bash
-.venv/bin/python api.py
-```
-
 ```powershell
-.venv\Scripts\python api.py
+python api.py
 ```
 
 **Qué deberías ver** en la terminal:
@@ -153,15 +150,13 @@ Press CTRL+C to quit
 
 La API quedó encendida en el puerto **8080** de tu computadora (`127.0.0.1`). La terminal se queda ocupada: déjala abierta. El `WARNING` es un aviso de Flask: este modo es para probar en tu computadora.
 
-Abre en el navegador **http://localhost:8080/menu**. También puedes pedirla desde **otra terminal**:
-
-```bash
-curl localhost:8080/menu
-```
+Abre en el navegador **http://localhost:8080/menu**. También puedes pedirla desde **otra ventana de PowerShell**:
 
 ```powershell
 curl.exe localhost:8080/menu
 ```
+
+Se escribe `curl.exe`, con `.exe`: en PowerShell, `curl` a secas es otro comando.
 
 **Qué deberías ver:**
 
@@ -193,14 +188,10 @@ Abre **http://localhost:8080/postres**.
 
 ## Prueba 4. ¿Puedo encender la API dos veces?
 
-Deja la primera API encendida. En **otra terminal**, en esta misma carpeta, enciéndela otra vez:
-
-```bash
-.venv/bin/python api.py
-```
+Deja la primera API encendida. En **otra ventana de PowerShell**, en esta misma carpeta, enciéndela otra vez:
 
 ```powershell
-.venv\Scripts\python api.py
+python api.py
 ```
 
 **Qué deberías ver:**
@@ -218,22 +209,18 @@ Port 8080 is in use by another program. Either identify and stop that program, o
 
 ## Prueba 5. Otro puerto, sin cambiar el código
 
-En esa segunda terminal, enciende la API con la variable de entorno `PUERTO`:
-
-```bash
-PUERTO=9090 .venv/bin/python api.py
-```
+En esa segunda ventana, pon la variable de entorno `PUERTO` y enciende la API:
 
 ```powershell
 $env:PUERTO = "9090"
-.venv\Scripts\python api.py
+python api.py
 ```
 
 **Qué deberías ver:** `* Running on http://127.0.0.1:9090`. Abre **http://localhost:9090/menu**: la misma carta.
 
 **Por qué:** `api.py` lee `PUERTO` al encender. Ahora tienes **dos copias** de la misma API, una en el 8080 y otra en el 9090. Cambiaste su configuración sin tocar el código.
 
-> En Windows, `$env:PUERTO` queda puesta mientras esa terminal siga abierta. Para volver al 8080, cierra la terminal o escribe `Remove-Item Env:PUERTO`.
+> `$env:PUERTO` queda puesta mientras esa ventana siga abierta. Para volver al 8080, ciérrala o escribe `Remove-Item Env:PUERTO`.
 
 Apaga esta segunda copia con `Ctrl + C`.
 
@@ -302,5 +289,19 @@ No olvides reiniciar la API para probarla.
 
 ## Apagar todo
 
-- `Ctrl + C` en cada terminal donde esté encendida la API.
-- La carpeta `.venv` puedes borrarla cuando termines: se vuelve a crear con los comandos de la preparación.
+- `Ctrl + C` en cada ventana donde esté encendida la API.
+
+---
+
+## Si usas macOS o Linux
+
+Ahí el Python del sistema no deja instalar bibliotecas con `pip` (responde `error: externally-managed-environment`). Por eso, en macOS y Linux se usa un **entorno virtual**, como en la Sesión 11: una carpeta `.venv` con su propio Python.
+
+```bash
+python3 -m venv .venv                                  # crea el entorno virtual
+.venv/bin/python api.py                                # prueba 1: falta Flask
+.venv/bin/python -m pip install -r requirements.txt    # instala lo de requirements.txt
+.venv/bin/python api.py                                # enciende la API
+```
+
+En las pruebas, cambia `python` por `.venv/bin/python` y `curl.exe` por `curl`. En la prueba 5, la variable va en la misma línea: `PUERTO=9090 .venv/bin/python api.py`.

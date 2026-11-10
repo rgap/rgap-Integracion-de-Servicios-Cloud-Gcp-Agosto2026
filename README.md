@@ -32,4 +32,4 @@ Material de las sesiones en formato PDF.
 | 12 | 24 | Big Data y BigQuery: preguntas a millones de filas con SQL | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion24/slides/build/slides.pdf) |
 | 13 | 25 | Supervisión y alta disponibilidad | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion25/slides/build/slides.pdf) |
 | 13 | 26 | Balanceo de carga, CDN y contenedores | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion26/slides/build/slides.pdf) |
-| 14 | 27 | Contenedores: Docker, Docker Compose y Kubernetes | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion27/slides/build/slides.pdf) |
+| 14 | 27 | Docker desde cero: desplegar, imagen y contenedor | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion27/slides/build/slides.pdf) |

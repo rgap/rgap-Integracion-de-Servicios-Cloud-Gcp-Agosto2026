@@ -8,7 +8,7 @@ La revisión retoma la Sesión 25 (supervisión y alta disponibilidad) y termina
 2. **CDN:** copias de los archivos cerca del cliente (primera vez y siguientes veces) y qué va en la CDN y qué no. Cloud CDN en una línea.
 3. **Contenedores:** el problema de preparar cada servidor (`web-1`, `web-2` y `web-3` con la misma versión de todo) e imagen y contenedor.
 
-El `Dockerfile`, Docker Compose y Kubernetes siguen en la [Sesión 27](../Sesion27/), que empieza otra vez por imagen y contenedor.
+La [Sesión 27](../Sesion27/) sigue con Docker desde cero: desplegar, dependencias, imagen y contenedor, y el ciclo de vida de un contenedor.
 
 - [Diapositivas PDF](slides/build/S26.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
