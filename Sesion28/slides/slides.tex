@@ -116,7 +116,7 @@
 % 4
 \begin{frame}[c]
 \begin{block}{Logro de la sesión}
-Al finalizar, habrás construido la \textbf{imagen} de la API de Café Nube con un \textbf{Dockerfile}, la habrás corrido con su \textbf{puerto publicado} y con una \textbf{variable de entorno}, y la habrás levantado junto a otro servicio con \textbf{Docker Compose}. Podrás explicar qué hace cada línea del Dockerfile y con qué comandos se maneja una app de varias piezas.
+Al finalizar, podrás explicar con tus palabras qué hace cada línea del \textbf{Dockerfile} de la API de Café Nube, cómo se \textbf{publica un puerto} y se pasa una \textbf{variable de entorno} a un contenedor, por qué importa el orden de las \textbf{capas}, y cómo \textbf{Docker Compose} levanta y baja una app de varias piezas con un comando.
 \end{block}
 \end{frame}
 
@@ -133,125 +133,15 @@ Al finalizar, habrás construido la \textbf{imagen} de la API de Café Nube con 
 \begin{frame}[c]{Utilidad de esta sesión}
 \begin{center}
 \begin{minipage}{.84\textwidth}
-{\large Hasta ahora usaste imágenes que hizo otro: \texttt{hello-world} y \texttt{nginx}. Hoy armarás una \textbf{propia}, con la API de Café Nube: así corre igual en tu laptop, en la de Diego o en un servidor, \textbf{sin instalar Python ni Flask}. Y cuando una app tiene varias piezas, \textbf{Compose} las levanta todas con un comando.}
+{\large Hasta ahora usaste imágenes que hizo otro: \texttt{hello-world} y \texttt{nginx}. Hoy verás cómo se arma una \textbf{propia}, con la API de Café Nube: así corre igual en tu laptop, en la de Diego o en un servidor, \textbf{sin instalar Python ni Flask}. Y cuando una app tiene varias piezas, \textbf{Compose} las levanta todas con un comando.}
 \end{minipage}
 \end{center}
 \end{frame}
 
 % 7
-\separador{Práctica}{La API de Café Nube en una imagen, con Docker en tu computadora}
-
-% 8
-\begin{frame}[fragile]{Práctica: los archivos}
-\begin{block}{Caso de estudio}
-\small La API de \textbf{Café Nube} de la Sesión 27 necesitaba Python, Flask y un puerto libre. Hoy va dentro de una \textbf{imagen}: quien la quiera correr solo necesita \textbf{Docker}.
-\end{block}
-\begin{columns}[T,onlytextwidth]
-\column{.38\textwidth}
-{\scriptsize\bfseries Dockerfile}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8080
-CMD ["python", "api.py"]
-\end{lstlisting}
-\column{.25\textwidth}
-{\scriptsize\bfseries compose.yaml}
-\begin{lstlisting}[style=yaml]
-services:
-  api:
-    build: .
-    ports:
-      - "8080:8080"
-  web:
-    image: nginx:1.29
-    ports:
-      - "8081:80"
-\end{lstlisting}
-\column{.33\textwidth}
-\renewcommand{\arraystretch}{1.2}
-\scriptsize
-\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{2.6cm}@{}}
-\toprule
-\textsf{\textbf{Archivo}} & \textbf{Qué es}\\
-\midrule
-api.py & La API de la Sesión 27\\
-requirements.txt & \texttt{flask==3.1.0}\\
-Dockerfile & Los pasos para armar la imagen\\
-compose.yaml & La API y un Nginx, juntos\\
-\bottomrule
-\end{tabular}
-\end{columns}
-\par\vspace{2mm}
-{\footnotesize Un cambio en \texttt{api.py}: \texttt{app.run(host=\string"0.0.0.0\string", ...)}, para aceptar pedidos que llegan \textbf{de afuera} del contenedor.}
-\end{frame}
-
-% 9
-\begin{frame}[fragile]{Práctica: construir y correr}
-\begin{columns}[T,onlytextwidth]
-\column{.56\textwidth}
-{\small\bfseries Windows (PowerShell), con Docker Desktop abierto}
-\begin{lstlisting}
-# 1. Construye la imagen
-docker build -t cafe-api .
-# 2. Córrela con su puerto publicado
-docker run -d --name api -p 8080:8080 cafe-api
-# 3. Pídele la carta
-curl.exe localhost:8080/menu
-# 4. Lee sus mensajes
-docker logs api
-\end{lstlisting}
-\column{.40\textwidth}
-\renewcommand{\arraystretch}{1.25}
-\scriptsize
-\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{2.5cm}@{}}
-\toprule
-\textsf{\textbf{Parte}} & \textbf{Qué hace}\\
-\midrule
-docker build & Arma la imagen con el \texttt{Dockerfile}\\
--t cafe-api & Le pone nombre a la imagen\\
-. & La carpeta actual, donde está el \texttt{Dockerfile}\\
--p 8080:8080 & Tu 8080 lleva al 8080 del contenedor\\
-\bottomrule
-\end{tabular}
-\end{columns}
-\par\vspace{3mm}
-\begin{exampleblock}{Comprueba en el navegador: \texttt{http://localhost:8080/menu}}
-\scriptsize\ttfamily [\{\string"nombre\string":\string"Americano\string",\string"precio\string":8\},\{\string"nombre\string":\string"Capuchino\string",\string"precio\string":10\},\par\ \{\string"nombre\string":\string"Mocaccino\string",\string"precio\string":12\}]
-\end{exampleblock}
-\par\vspace{2mm}
-{\footnotesize\color{utpGris} Carpeta \texttt{Sesion28/practica\_cafe\_nube/}. La guía completa está en el \texttt{README.md}.}
-\end{frame}
-
-% 10
-\begin{frame}{Práctica: seis pruebas}
-\renewcommand{\arraystretch}{1.05}
-\centering\small
-\begin{tabular}{@{}c>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{5.7cm}@{}}
-\toprule
-\textbf{\#} & \textbf{Qué hacer} & \textbf{Qué observar}\\
-\midrule
-1 & \texttt{docker build -t cafe-api .} y \texttt{docker images cafe-api} & ¿Cuántos pasos muestra? ¿Encendió la API?\\
-2 & Córrela con \texttt{-p 8080:8080} y pide \texttt{/menu} & ¿Qué responde? ¿Qué anota \texttt{docker logs api}?\\
-3 & Otra copia, \texttt{api2}, con \texttt{-p 8080:8080}; después, con \texttt{-p 8081:8080} & ¿Qué error sale? ¿Por qué con el 8081 sí?\\
-4 & \texttt{api3} con \texttt{-e PUERTO=9090 -p 8082:9090} & ¿En qué puerto escucha adentro? Mira \texttt{docker ps}\\
-5 & Agrega un café a \texttt{MENU} y corre otra vez \texttt{api}; después, construye otra vez & ¿Aparece? ¿Qué pasos dicen \texttt{CACHED}?\\
-6 & \texttt{docker compose up -d}, \texttt{ps}, \texttt{logs api} y \texttt{down} & ¿Cuántos contenedores levanta? Abre \texttt{localhost:8081}\\
-\bottomrule
-\end{tabular}
-\par\vspace{2mm}
-\begin{alertblock}{La idea}
-\small La imagen trae Python, Flask y el código: basta Docker. El puerto se abre con \texttt{-p} y la configuración va con \texttt{-e}. Reto en el \texttt{README.md}: \texttt{/menu/<nombre>} con Compose.
-\end{alertblock}
-\end{frame}
-
-% 11
 \separador{Docker desde cero y Compose}{Dockerfile, puertos, variables de entorno y varias piezas}
 
-% 12
+% 8
 \begin{frame}[fragile]{Dockerfile: tu propia imagen}
 \begin{block}{Dockerfile}
 \small Un archivo de texto, llamado exactamente \texttt{Dockerfile}, con \textbf{los pasos para armar una imagen}. Cada línea empieza con una \textbf{instrucción} en mayúsculas.
@@ -287,7 +177,7 @@ CMD & El comando que corre \textbf{cuando arranca} un contenedor: \texttt{python
 \end{columns}
 \end{frame}
 
-% 13
+% 9
 \begin{frame}[fragile]{Construir y correr}
 \begin{center}
 \begin{tikzpicture}[font=\small]
@@ -324,7 +214,7 @@ Este programa corre en: Linux
 \end{columns}
 \end{frame}
 
-% 14
+% 10
 \begin{frame}[fragile]{Puertos: publicar un puerto}
 \begin{center}
 \begin{tikzpicture}[font=\small]
@@ -360,13 +250,13 @@ docker rm -f web   # detiene y borra
 \end{columns}
 \end{frame}
 
-% 15
+% 11
 \begin{frame}[fragile]{Variables de entorno}
 \begin{center}
 \begin{tikzpicture}[font=\small]
   \node[caja,fill=utpRojo!30,text width=2.4cm,minimum height=1.4cm] (img) at (0,0) {\textbf{Imagen}\\\footnotesize\texttt{cafe-api}\\\footnotesize una sola};
   \node[caja,draw=okVerde,fill=okVerde!12,text width=4.2cm,minimum height=0.8cm,align=left,font=\scriptsize] (a) at (7.2,0.75) {\textbf{api}: sin variable\\API en el \textbf{8080} · \texttt{-p 8080:8080}};
-  \node[caja,draw=okVerde,fill=okVerde!12,text width=4.2cm,minimum height=0.8cm,align=left,font=\scriptsize] (b) at (7.2,-0.75) {\textbf{api3}: \texttt{-e PUERTO=9090}\\API en el \textbf{9090} · \texttt{-p 8082:9090}};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=4.2cm,minimum height=0.8cm,align=left,font=\scriptsize] (b) at (7.2,-0.75) {\textbf{api-2}: \texttt{-e PUERTO=9090}\\API en el \textbf{9090} · \texttt{-p 8081:9090}};
   \draw[flecha] (img.east) -- (a.west);
   \draw[flecha] (img.east) -- (b.west);
 \end{tikzpicture}
@@ -388,7 +278,7 @@ docker rm -f web   # detiene y borra
 \end{exampleblock}
 \end{frame}
 
-% 16
+% 12
 \begin{frame}[fragile]{Una base de datos que pide contraseña}
 \small Café Nube va a guardar los pedidos en una \textbf{base de datos}: un programa que guarda información ordenada y la entrega cuando se la piden. \textbf{PostgreSQL} tiene su imagen oficial, \texttt{postgres}, y \textbf{no arranca sin contraseña}.
 \par\vspace{3mm}
@@ -422,7 +312,7 @@ $ docker rm -f db
 \end{alertblock}
 \end{frame}
 
-% 17
+% 13
 \begin{frame}[fragile]{Café Nube: la API en una imagen}
 \begin{block}{Enunciado}
 \small La API de la carta solo corre en la laptop de Lucía. Hay que empaquetarla para que corra igual en cualquier computadora: debe \textbf{partir de Python 3.12}, \textbf{instalar las librerías de \texttt{requirements.txt}}, \textbf{responder en el puerto 8080} y quedar funcionando \textbf{sin pasos extra}.
@@ -462,7 +352,7 @@ sin pasos extra & \texttt{CMD [\string"python\string", \string"api.py\string"]}\
 \end{columns}
 \end{frame}
 
-% 18
+% 14
 \begin{frame}{Capas: por qué importa el orden}
 \begin{center}
 \begin{tikzpicture}[font=\small]
@@ -486,11 +376,11 @@ sin pasos extra & \texttt{CMD [\string"python\string", \string"api.py\string"]}\
 \small Lo que deja cada línea del Dockerfile, guardado aparte. Si una línea y las de arriba no cambiaron, Docker \textbf{reutiliza su capa} (\texttt{CACHED}) en vez de rehacerla.
 \end{block}
 \begin{exampleblock}{Por eso, este orden}
-\small Primero \texttt{requirements.txt} y \texttt{pip install}; \textbf{después} \texttt{COPY . .}. Un cambio en \texttt{api.py} no vuelve a instalar Flask: lo viste en la prueba 5.
+\small Primero \texttt{requirements.txt} y \texttt{pip install}; \textbf{después} \texttt{COPY . .}. Así, un cambio en \texttt{api.py} no vuelve a instalar Flask.
 \end{exampleblock}
 \end{frame}
 
-% 19
+% 15
 \begin{frame}{Café Nube: errores frecuentes}
 \renewcommand{\arraystretch}{1.45}
 \centering\small
@@ -511,7 +401,7 @@ El cambio en \texttt{api.py} no aparece & La imagen tiene la copia vieja: \textt
 \end{alertblock}
 \end{frame}
 
-% 20
+% 16
 \begin{frame}{Una aplicación, varias piezas}
 \begin{columns}[c,onlytextwidth]
 \column{.42\textwidth}
@@ -539,7 +429,7 @@ El cambio en \texttt{api.py} no aparece & La imagen tiene la copia vieja: \textt
 \end{columns}
 \end{frame}
 
-% 21
+% 17
 \begin{frame}[fragile]{Docker Compose: un archivo, un comando}
 \begin{columns}[T,onlytextwidth]
 \column{.52\textwidth}
@@ -573,7 +463,7 @@ services:
 {\footnotesize Viene con Docker Desktop: \texttt{docker compose version}. Se escribe \texttt{docker compose}, \textbf{con espacio}; \texttt{docker-compose}, con guion, es la versión antigua.}
 \end{frame}
 
-% 22
+% 18
 \begin{frame}[fragile]{El archivo \texttt{compose.yaml}}
 \begin{block}{YAML}
 \small Un formato de texto para configuración: \texttt{nombre: valor} en cada línea. \textbf{La sangría dice qué va dentro de qué}, y una lista se escribe con guion: \texttt{- elemento}.
@@ -607,7 +497,7 @@ ports: & Los puertos publicados, uno por línea & \texttt{-p 8081:80}\\
 \end{columns}
 \end{frame}
 
-% 23
+% 19
 \begin{frame}{Compose: up, ps, logs y down}
 \begin{center}
 \begin{tikzpicture}[font=\small]
@@ -636,14 +526,14 @@ docker rm -f, uno por uno & docker compose down & Detiene y borra todos los cont
 \end{alertblock}
 \end{frame}
 
-% 24
+% 20
 \begin{frame}{Cierre: preguntas para comprobar}
 \begin{block}{Responde con tus palabras}
 \small
-1. En la prueba 1, \texttt{docker build} no encendió la API. ¿Qué línea del Dockerfile la enciende y cuándo corre?\\\medskip
-2. ¿Por qué pudiste correr \texttt{api} y \texttt{api2} a la vez, si los dos escuchan en el 8080?\\\medskip
-3. En \texttt{-e PUERTO=9090 -p 8082:9090}, ¿qué número es de tu computadora y cuál del contenedor?\\\medskip
-4. Agregaste un café a \texttt{api.py}. ¿Qué hiciste para verlo en el contenedor? ¿Por qué no se volvió a instalar Flask?\\\medskip
+1. \texttt{docker build -t cafe-api .} terminó, pero la API no está encendida. ¿Qué línea del Dockerfile la enciende y cuándo corre?\\\medskip
+2. Dos contenedores de Nginx escuchan en su puerto 80. ¿Pueden correr a la vez? ¿Con qué \texttt{-p}?\\\medskip
+3. En \texttt{-e PUERTO=9090 -p 8081:9090}, ¿qué número es de tu computadora y cuál del contenedor?\\\medskip
+4. Agregas un café a \texttt{api.py}. ¿Qué haces para verlo en el contenedor? ¿Por qué no se vuelve a instalar Flask?\\\medskip
 5. Después de \texttt{docker compose down}, ¿qué queda en tu computadora: los contenedores o las imágenes?
 \end{block}
 \begin{alertblock}{Idea final}
@@ -651,11 +541,10 @@ docker rm -f, uno por uno & docker compose down & Detiene y borra todos los cont
 \end{alertblock}
 \end{frame}
 
-% 25
+% 21
 \begin{frame}{Referencias}
 \scriptsize
 \begin{itemize}\setlength\itemsep{4pt}
-  \item Práctica: \texttt{github.com/rgap/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026}, carpeta \texttt{Sesion28/practica\_cafe\_nube/}.
   \item Ruta \textit{Despliegue con Docker}: curso 1, \textit{Docker desde cero} (Dockerfile, puertos, variables de entorno y el escenario Café Nube), y curso 2, \textit{Varios contenedores con Compose} (lecciones 1 y 2).
   \item Docker, Dockerfile y Docker Compose: \texttt{docs.docker.com}. Imágenes \texttt{python}, \texttt{nginx} y \texttt{postgres}: \texttt{hub.docker.com}.
   \item Material previo del curso: Sesión 27 (desplegar, imagen, contenedor y su ciclo de vida, y la API de Café Nube).

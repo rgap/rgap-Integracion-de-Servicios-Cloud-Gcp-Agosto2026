@@ -1,6 +1,6 @@
 # Sesión 28 — Docker: tu propia imagen, puertos, variables y Compose
 
-Presentación de **25 diapositivas** para una clase de 80 minutos: revisión, logro, saberes previos, utilidad, práctica, teoría, cierre y referencias. Como en la Sesión 27, la práctica va **antes** de la teoría: primero se construye y se corre la imagen de la API de Café Nube; después se explica cada paso. Es una **introducción**: una idea por diapositiva.
+Presentación de **21 diapositivas** para una clase de 80 minutos: revisión, logro, saberes previos, utilidad, teoría, cierre y referencias. Las diapositivas **no tienen práctica**; la guía de la carpeta `practica_cafe_nube/` queda aparte. Es una **introducción**: una idea por diapositiva.
 
 La revisión retoma la Sesión 27 (lecciones 1 a 3 del curso **Docker desde cero**: desplegar, dependencias, imagen y contenedor, y el ciclo de vida) y termina con la API de Café Nube que hay que llevar a una imagen y abrir desde el navegador: de ahí salen las tres preguntas del día (Dockerfile, puertos y variables, Compose).
 
@@ -23,9 +23,9 @@ La teoría resume, con diagramas, las lecciones 4 a 7 de **Docker desde cero** y
 - [Fuente editable LaTeX](slides/slides.tex)
 - [Respuestas para el docente](respuestas.md)
 
-## Práctica: la API de Café Nube en una imagen
+## Guía aparte: la API de Café Nube en una imagen
 
-La guía completa está en [`practica_cafe_nube/README.md`](practica_cafe_nube/README.md). Es la API de la Sesión 27, ahora con su `Dockerfile` y un `compose.yaml`. Los estudiantes construyen la imagen, la corren con su puerto publicado y con una variable de entorno, y la levantan junto con un Nginx usando Compose.
+No se presenta en las diapositivas. La guía completa está en [`practica_cafe_nube/README.md`](practica_cafe_nube/README.md). Es la API de la Sesión 27, ahora con su `Dockerfile` y un `compose.yaml`. Los estudiantes construyen la imagen, la corren con su puerto publicado y con una variable de entorno, y la levantan junto con un Nginx usando Compose.
 
 Se hace en **Windows con PowerShell** y **Docker Desktop**. No hace falta instalar Python ni Flask: los trae la imagen.
 
@@ -61,11 +61,11 @@ Las salidas de la guía son las reales, con Docker 29.8, Docker Compose 5.5, Pyt
 
 | Bloque | Diapositivas | Minutos |
 | --- | --- | ---: |
-| Revisión | 1–3 | 6 |
-| Logro, saberes previos y utilidad | 4–6 | 4 |
-| Práctica: la API de Café Nube en una imagen | 7–10 | 36 |
-| Teoría: Dockerfile, puertos, variables y Compose | 11–23 | 28 |
-| Cierre | 24–25 | 6 |
+| Revisión | 1–3 | 10 |
+| Logro, saberes previos y utilidad | 4–6 | 6 |
+| Teoría: Docker desde cero (Dockerfile, puertos, variables y Café Nube) | 7–15 | 34 |
+| Teoría: Compose (varias piezas, `compose.yaml`, up, ps, logs y down) | 16–19 | 20 |
+| Cierre | 20–21 | 10 |
 
 ## Compilar
 
