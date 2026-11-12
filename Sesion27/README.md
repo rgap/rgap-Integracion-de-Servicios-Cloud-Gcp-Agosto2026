@@ -15,6 +15,8 @@ La teoría resume, con diagramas, las lecciones 1 a 3 del curso **Docker desde c
 
 Los comandos de Docker se muestran en las diapositivas; la práctica no los usa.
 
+La [Sesión 28](../Sesion28/) sigue con la misma API: su Dockerfile, puertos, variables de entorno y Docker Compose.
+
 - [Diapositivas PDF](slides/build/S27.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
 - [Respuestas para el docente](respuestas.md)

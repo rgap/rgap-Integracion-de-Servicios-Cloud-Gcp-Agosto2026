@@ -33,3 +33,4 @@ Material de las sesiones en formato PDF.
 | 13 | 25 | Supervisión y alta disponibilidad | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion25/slides/build/slides.pdf) |
 | 13 | 26 | Balanceo de carga, CDN y contenedores | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion26/slides/build/slides.pdf) |
 | 14 | 27 | Docker desde cero: desplegar, imagen y contenedor | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion27/slides/build/slides.pdf) |
+| 14 | 28 | Docker: tu propia imagen, puertos, variables y Compose | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion28/slides/build/slides.pdf) |
