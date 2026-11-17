@@ -1,23 +1,14 @@
 # Sesión 28 — Docker: tu propia imagen, puertos, variables y Compose
 
-Presentación de **21 diapositivas** para una clase de 80 minutos: revisión, logro, saberes previos, utilidad, teoría, cierre y referencias. Las diapositivas **no tienen práctica**; la guía de la carpeta `practica_cafe_nube/` queda aparte. Es una **introducción**: una idea por diapositiva.
+Presentación de **11 diapositivas** para una clase de 80 minutos: revisión, logro, saberes previos, utilidad, teoría, cierre y referencias. Las diapositivas **no tienen práctica**; la guía de la carpeta `practica_cafe_nube/` queda aparte. Es una **introducción**: una idea por diapositiva.
 
 La revisión retoma la Sesión 27 (lecciones 1 a 3 del curso **Docker desde cero**: desplegar, dependencias, imagen y contenedor, y el ciclo de vida) y termina con la API de Café Nube que hay que llevar a una imagen y abrir desde el navegador: de ahí salen las tres preguntas del día (Dockerfile, puertos y variables, Compose).
 
-La teoría resume, con diagramas, las lecciones 4 a 7 de **Docker desde cero** y las dos primeras de **Varios contenedores con Compose** (ruta *Despliegue con Docker*), con su mismo caso, Café Nube:
+La teoría es un **resumen en tres diapositivas** de las lecciones 4 a 7 de **Docker desde cero** y las dos primeras de **Varios contenedores con Compose** (ruta *Despliegue con Docker*); el detalle se ve en la plataforma:
 
-1. **Dockerfile: tu propia imagen.** `FROM`, `WORKDIR`, `COPY` y `CMD`, con el proyecto `hola-docker`.
-2. **Construir y correr.** `docker build -t hola .` y `docker run hola`: se construye una vez y se corre muchas; `CMD` corre al arrancar; si cambias el código, construyes otra vez.
-3. **Puertos.** Puerto y publicar un puerto: `-p 8080:80` con Nginx; `port is already allocated`.
-4. **Variables de entorno.** `-e NOMBRE=valor`: la misma imagen `cafe-api` con `PUERTO=9090`; producción.
-5. **Una base de datos que pide contraseña.** `postgres:17` sin y con `POSTGRES_PASSWORD`; los logs dicen por qué se detuvo.
-6. **Café Nube: la API en una imagen.** Cada frase del enunciado se vuelve una línea del Dockerfile; `RUN` y `EXPOSE`.
-7. **Capas.** Por qué se copia `requirements.txt` e instala Flask antes de `COPY . .` (`CACHED`).
-8. **Errores frecuentes** de Café Nube y `docker logs`.
-9. **Una aplicación, varias piezas.** Frontend, backend y servicio: `web`, `api` y `db`, un programa por contenedor.
-10. **Docker Compose.** Los `docker run` de cada pieza frente a un `compose.yaml`; `docker compose`, con espacio.
-11. **El archivo `compose.yaml`.** YAML y las claves `services`, `build`, `image` y `ports`.
-12. **Compose: up, ps, logs y down.** Su equivalente con `docker`, y `up -d --build` cuando cambia el código.
+1. **Dockerfile: tu propia imagen.** El Dockerfile de Café Nube (`FROM`, `WORKDIR`, `COPY`, `RUN`, `EXPOSE` y `CMD`), `docker build` y `docker run`.
+2. **Puertos y variables de entorno.** `-p 8080:8080` y `-e PUERTO=9090` con la misma imagen `cafe-api`.
+3. **Docker Compose.** El `compose.yaml` con `api` y `web`, y `up`, `ps`, `logs`, `down` y `up -d --build`.
 
 - [Diapositivas PDF](slides/build/S28.pdf)
 - [Fuente editable LaTeX](slides/slides.tex)
@@ -63,9 +54,8 @@ Las salidas de la guía son las reales, con Docker 29.8, Docker Compose 5.5, Pyt
 | --- | --- | ---: |
 | Revisión | 1–3 | 10 |
 | Logro, saberes previos y utilidad | 4–6 | 6 |
-| Teoría: Docker desde cero (Dockerfile, puertos, variables y Café Nube) | 7–15 | 34 |
-| Teoría: Compose (varias piezas, `compose.yaml`, up, ps, logs y down) | 16–19 | 20 |
-| Cierre | 20–21 | 10 |
+| Teoría: Dockerfile, puertos y variables, Compose | 7–9 | 20 |
+| Cierre | 10–11 | 5 |
 
 ## Compilar
 
