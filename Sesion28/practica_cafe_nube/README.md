@@ -1,6 +1,6 @@
 # Práctica: la API de Café Nube en una imagen
 
-**Sesión 28 · Dockerfile, puertos, variables de entorno y Compose**
+**Sesión 28 · Dockerfile, puertos y variables de entorno**
 
 ## El caso
 
@@ -13,7 +13,7 @@ curl.exe o navegador  ──  localhost:8080/menu  ──>  -p 8080:8080  ──
                                                                         (Python + Flask + api.py)
 ```
 
-En esta práctica vas a construir la imagen, correr varias copias, cambiarles el puerto con una variable de entorno y, al final, levantar la API junto con un Nginx usando **Docker Compose**.
+En esta práctica vas a construir la imagen, correr varias copias y cambiarles el puerto con una variable de entorno.
 
 ---
 
@@ -24,7 +24,6 @@ En esta práctica vas a construir la imagen, correr varias copias, cambiarles el
 | [`api.py`](api.py) | La API de la Sesión 27: `GET /menu` responde la carta en JSON. |
 | [`requirements.txt`](requirements.txt) | Las bibliotecas que usa la API: `flask==3.1.0`. |
 | [`Dockerfile`](Dockerfile) | Los pasos para armar la imagen de la API. |
-| [`compose.yaml`](compose.yaml) | Dos servicios, la API y un Nginx, para levantarlos juntos. |
 
 ### `api.py`: un solo cambio
 
@@ -57,22 +56,6 @@ CMD ["python", "api.py"]
 | `COPY . .` | Copia el resto del proyecto, con `api.py`. |
 | `EXPOSE 8080` | Anota que la API escucha en el 8080. Solo lo documenta: el puerto se abre con `-p`. |
 | `CMD ["python", "api.py"]` | El comando que corre **cada vez que arranca** un contenedor. |
-
-### `compose.yaml`
-
-```yaml
-services:
-  api:
-    build: .
-    ports:
-      - "8080:8080"
-  web:
-    image: nginx:1.29
-    ports:
-      - "8081:80"
-```
-
-Dos servicios: `api` se construye con el `Dockerfile` de esta carpeta (`build: .`) y `web` usa la imagen de Nginx, ya hecha (`image:`). Cada uno publica su puerto.
 
 ---
 
@@ -289,60 +272,6 @@ docker rm -f api api2 api3
 
 ---
 
-## Prueba 6. Dos servicios con Compose
-
-Levanta la API y un Nginx con un solo comando:
-
-```powershell
-docker compose version
-docker compose up -d
-```
-
-Se escribe `docker compose`, con espacio.
-
-**Qué deberías ver:**
-
-```text
-[+] up 4/4
- ✔ Image practica_cafe_nube-api       Built
- ✔ Network practica_cafe_nube_default Created
- ✔ Container practica_cafe_nube-web-1 Started
- ✔ Container practica_cafe_nube-api-1 Started
-```
-
-Míralos, pídele la carta a la API y abre **http://localhost:8081** en el navegador (verás **Welcome to nginx!**):
-
-```powershell
-docker compose ps
-curl.exe localhost:8080/menu
-docker compose logs api
-```
-
-Lo que responde `docker compose ps`, con las columnas resumidas:
-
-```text
-NAME                       IMAGE                    SERVICE   STATUS         PORTS
-practica_cafe_nube-api-1   practica_cafe_nube-api   api       Up 3 seconds   0.0.0.0:8080->8080/tcp
-practica_cafe_nube-web-1   nginx:1.29               web       Up 3 seconds   0.0.0.0:8081->80/tcp
-```
-
-Cuando termines, bájalo todo:
-
-```powershell
-docker compose down
-```
-
-```text
-[+] down 3/3
- ✔ Container practica_cafe_nube-web-1 Removed
- ✔ Container practica_cafe_nube-api-1 Removed
- ✔ Network practica_cafe_nube_default Removed
-```
-
-**Por qué:** `compose.yaml` describe los dos servicios, y cada comando actúa sobre **todos a la vez**. Compose nombra los contenedores con la carpeta, el servicio y un número: `practica_cafe_nube-api-1`. `down` borra los contenedores, pero las imágenes quedan para el próximo `up`.
-
----
-
 ## Resumen
 
 | Prueba | Pregunta | Resultado |
@@ -352,34 +281,32 @@ docker compose down
 | 3 | ¿Dos copias en el 8080 de tu computadora? | No: `port is already allocated`. Con `-p 8081:8080`, sí |
 | 4 | ¿Otra configuración sin otra imagen? | Sí: `-e PUERTO=9090` |
 | 5 | ¿Un cambio en `api.py` se ve al correrla? | No: hay que construir otra vez. Flask queda `CACHED` |
-| 6 | ¿Cómo se levantan varios servicios? | `docker compose up -d`, y se bajan con `docker compose down` |
 
 ---
 
 ## Reto
 
-Agrega a `api.py` la ruta `GET /menu/<nombre>` del reto de la Sesión 27 y haz que funcione **en el contenedor de Compose**:
+Agrega a `api.py` la ruta `GET /menu/<nombre>` del reto de la Sesión 27 y haz que funcione **en el contenedor** `api`:
 
 | Pedido | Respuesta | Código |
 | --- | --- | --- |
 | `localhost:8080/menu/capuchino` | `{"nombre":"Capuchino","precio":10}` | 200 |
 | `localhost:8080/menu/te` | `{"error":"No lo tenemos en la carta"}` | 404 |
 
-Pista: si después de `docker compose up -d` la ruta responde `Not Found`, recuerda la prueba 5. ¿Con qué opción le pides a Compose que construya otra vez?
+Pista: si después de correr el contenedor la ruta responde `Not Found`, recuerda la prueba 5.
 
 ---
 
 ## Apagar todo
 
 ```powershell
-docker compose down
 docker rm -f api api2 api3
 ```
 
-El segundo comando solo hace falta si dejaste contenedores de las pruebas 2 a 5. Las imágenes quedan guardadas; se listan con `docker images`.
+Las imágenes quedan guardadas; se listan con `docker images`.
 
 ---
 
 ## Si usas macOS o Linux
 
-Instala Docker Desktop desde `docs.docker.com` (en Linux, Docker Engine con el complemento de Compose) y ábrelo. Los comandos son los mismos; solo cambia `curl.exe` por `curl`.
+Instala Docker Desktop desde `docs.docker.com` (en Linux, Docker Engine) y ábrelo. Los comandos son los mismos; solo cambia `curl.exe` por `curl`.

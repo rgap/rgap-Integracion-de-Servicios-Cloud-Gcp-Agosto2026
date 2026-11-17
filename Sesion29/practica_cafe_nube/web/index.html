@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Café Nube</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <h1>Café Nube</h1>
+  <p>El menú de hoy:</p>
+  <ul id="menu"><li>Cargando…</li></ul>
+  <script>
+    // Le pide el menú a la API y lo escribe en la lista.
+    fetch("/api/menu")
+      .then((respuesta) => respuesta.json())
+      .then((menu) => {
+        document.getElementById("menu").innerHTML = menu
+          .map((cafe) => "<li>" + cafe.nombre + " · S/ " + cafe.precio + "</li>")
+          .join("");
+      });
+  </script>
+</body>
+</html>

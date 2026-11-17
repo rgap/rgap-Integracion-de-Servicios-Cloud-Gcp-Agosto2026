@@ -1,0 +1,233 @@
+% Motor: XeLaTeX. Sesión 29 - material docente UTP.
+% Estructura docente de la Sesión 28.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+% Un compose.yaml: las claves en rojo.
+\lstset{basicstyle=\ttfamily\scriptsize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywords={services,build,image,ports,environment,volumes},
+  keywordstyle=\color{utpRojo}\bfseries,
+  commentstyle=\color{utpGris}\itshape,morecomment=[l]{\#},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+% Una terminal: fondo oscuro, sin colorear palabras.
+\lstdefinestyle{terminal}{basicstyle=\ttfamily\scriptsize\color{white},backgroundcolor=\color{utpNegro},
+  keywords={},morecomment=[l]{\#},commentstyle=\color{utpGrisMedio},upquote=true}
+\usepackage{upquote}
+\usepackage{pifont}
+\definecolor{okVerde}{HTML}{2E7D32}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Varios contenedores con Docker Compose}
+\date{Semana 15 - Sesión 29}
+\author{Rel Guzman}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: lo que vimos en la Sesión 28}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{Dockerfile}
+\small Los pasos para armar una imagen. \texttt{docker build -t cafe-api .} la construye.
+\end{block}
+\begin{block}{Puertos}
+\small \texttt{-p 8080:8080} lleva el 8080 de tu computadora al 8080 del contenedor.
+\end{block}
+\begin{block}{Variables de entorno}
+\small \texttt{-e PUERTO=9090} cambia la configuración sin cambiar la imagen.
+\end{block}
+\column{.50\textwidth}
+\begin{alertblock}{Responde}
+\small
+1. ¿Qué instrucción del Dockerfile corre \textbf{al arrancar} el contenedor?\par\medskip
+2. Ya tienes un contenedor en el 8080 de tu computadora. ¿Cómo corres otra copia de \texttt{cafe-api}?\par\medskip
+3. Cambiaste \texttt{api.py}. ¿Qué hay que hacer para que el contenedor use el código nuevo?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: la pregunta de hoy}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.2cm,minimum height=1.2cm] (nav) at (0,0) {\textbf{Navegador}\\\footnotesize\texttt{localhost:8080}};
+  \node[caja,fill=utpGrisClaro,text width=2.2cm,minimum height=1.2cm] (web) at (3.8,0) {\textbf{web}\\\footnotesize la página};
+  \node[caja,fill=utpRojo!30,text width=2.2cm,minimum height=1.2cm] (api) at (7.6,0) {\textbf{api}\\\footnotesize el menú y los pedidos};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=2.2cm,minimum height=1.2cm] (db) at (11.4,0) {\textbf{db}\\\footnotesize la base de datos};
+  \draw[flecha] (nav) -- (web);
+  \draw[flecha,dashed] (web) -- node[above,font=\bfseries]{?} (api);
+  \draw[flecha,dashed] (api) -- node[above,font=\bfseries]{?} (db);
+\end{tikzpicture}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{1. Compose}
+\small Son tres contenedores. ¿Cómo se levantan todos con un comando?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{2. Redes}
+\small ¿Cómo encuentra la API a la base de datos?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{3. Volúmenes}
+\small Si se borra el contenedor de la base, ¿se pierden los pedidos?
+\end{block}
+\end{columns}
+\end{frame}
+
+% 4
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar con tus palabras cómo \textbf{Docker Compose} levanta la página, la API y la base de Café Nube con un comando, cómo un contenedor encuentra a otro \textbf{por su nombre} y cómo un \textbf{volumen} guarda los pedidos aunque se borre el contenedor.
+\end{block}
+\end{frame}
+
+% 5
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{14pt}
+  \item En la Sesión 28, ¿qué comando escribiste para correr la API con su puerto publicado?
+  \item Si la API de Café Nube necesita una base de datos, ¿cuántos \texttt{docker run} tendrías que escribir?
+  \item ¿Qué pasa con un contenedor cuando corres \texttt{docker rm}?
+\end{itemize}
+\end{frame}
+
+% 6
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Una app real tiene varias piezas: Café Nube tiene una \textbf{página}, una \textbf{API} y una \textbf{base de datos}, cada una en su contenedor. Con un archivo, \texttt{compose.yaml}, las levantas todas con \textbf{un comando}, y los pedidos quedan guardados aunque apagues todo.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 7
+\begin{frame}[fragile]{Docker Compose: varias piezas, un comando}
+\begin{columns}[T,onlytextwidth]
+\column{.36\textwidth}
+\begin{lstlisting}
+services:
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+  api:
+    build: ./api
+  db:
+    image: postgres:17
+\end{lstlisting}
+{\scriptsize Resumido: el archivo completo está en la guía.}
+\column{.60\textwidth}
+\begin{block}{Servicio}
+\small Cada pieza de la app: \texttt{web}, \texttt{api} y \texttt{db}. \texttt{build:} la construye con su Dockerfile; \texttt{image:} usa una imagen ya hecha.
+\end{block}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\ttfamily\footnotesize}l>{\raggedright\arraybackslash}p{4.0cm}@{}}
+\toprule
+\textsf{\textbf{Comando}} & \textbf{Qué hace}\\
+\midrule
+docker compose up -d & Levanta los tres servicios\\
+docker compose ps & Lista sus contenedores\\
+docker compose logs api & Los mensajes de \texttt{api}\\
+docker compose down & Detiene y borra los contenedores\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 8
+\begin{frame}[fragile]{Redes: cada servicio, por su nombre}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.1cm,minimum height=1.0cm] (nav) at (0,0) {\textbf{Navegador}\\\footnotesize\texttt{localhost:8080}};
+  \node[caja,fill=utpGrisClaro,text width=1.8cm,minimum height=1.0cm] (web) at (4.2,0) {\textbf{web}};
+  \node[caja,fill=utpRojo!30,text width=1.8cm,minimum height=1.0cm] (api) at (7.9,0) {\textbf{api}};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=1.8cm,minimum height=1.0cm] (db) at (11.6,0) {\textbf{db}};
+  \node[zona,fit=(web)(db),inner sep=10pt,label={[font=\scriptsize,text=utpGris]below:red de Docker que crea Compose}] {};
+  \draw[flecha] (nav) -- node[above,font=\scriptsize\ttfamily]{8080:80} (web);
+  \draw[flecha] (web) -- node[above,font=\scriptsize\ttfamily]{api:8080} (api);
+  \draw[flecha] (api) -- node[above,font=\scriptsize\ttfamily]{db:5432} (db);
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{El nombre del servicio es su dirección}
+\small Compose pone los tres contenedores en una \textbf{red}. Ahí, la API está en \texttt{api} y la base en \texttt{db}. Solo \texttt{web} publica un puerto, para el navegador.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{Ojo}
+\small Dentro de un contenedor, \texttt{localhost} es \textbf{ese mismo} contenedor. Por eso la API no busca la base en \texttt{localhost}, sino en \texttt{db}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 9
+\begin{frame}[fragile]{Volúmenes: los pedidos sobreviven}
+\begin{block}{Volumen}
+\small Un espacio de guardado aparte del contenedor. Lo que la base escribe ahí \textbf{queda aunque se borre el contenedor}.
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{lstlisting}
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: cafe
+    volumes:
+      - datos:/var/lib/postgresql/data
+
+volumes:
+  datos:
+\end{lstlisting}
+{\scriptsize\texttt{environment:} son las variables, lo que antes era \texttt{-e}.}
+\column{.48\textwidth}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{@{}>{\ttfamily\footnotesize}l>{\raggedright\arraybackslash}p{3.0cm}@{}}
+\toprule
+\textsf{\textbf{Comando}} & \textbf{Los pedidos}\\
+\midrule
+docker compose down & \textcolor{okVerde}{\textbf{Siguen}}: el volumen queda\\
+docker compose down -v & \textcolor{utpRojo}{\textbf{Se borran}}: borra el volumen\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 10
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. ¿Qué comando levanta todos los servicios de \texttt{compose.yaml}?\\\medskip
+2. Desde el contenedor \texttt{api}, ¿qué dirección usas para llegar a la base: \texttt{localhost:5432} o \texttt{db:5432}?\\\medskip
+3. Corres \texttt{docker compose down} y luego \texttt{up -d}. ¿Siguen los pedidos? ¿Por qué?
+\end{block}
+\end{frame}
+
+% 11
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Ruta \textit{Despliegue con Docker}, curso 2, \textit{Varios contenedores con Compose}: varias piezas, \texttt{compose.yaml}, redes entre contenedores, volúmenes y el escenario Café Nube.
+  \item Docker Compose: \texttt{docs.docker.com}. Imágenes \texttt{nginx} y \texttt{postgres}: \texttt{hub.docker.com}.
+  \item Material previo del curso: Sesión 28 (Dockerfile, puertos y variables de entorno).
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
