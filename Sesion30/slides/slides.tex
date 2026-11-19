@@ -1,0 +1,461 @@
+% Motor: XeLaTeX. Sesión 30 - material docente UTP.
+% Estructura docente de la Sesión 29.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+% Un manifiesto: las claves en rojo.
+\lstset{basicstyle=\ttfamily\scriptsize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywords={kind,metadata,name,spec,replicas,selector,matchLabels,template,labels,containers,image},
+  keywordstyle=\color{utpRojo}\bfseries,
+  commentstyle=\color{utpGris}\itshape,morecomment=[l]{\#},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+% Una terminal: fondo oscuro, sin colorear palabras.
+\lstdefinestyle{terminal}{basicstyle=\ttfamily\scriptsize\color{white},backgroundcolor=\color{utpNegro},
+  keywords={},morecomment=[l]{\#},commentstyle=\color{utpGrisMedio},upquote=true}
+\usepackage{upquote}
+\usepackage{pifont}
+\definecolor{okVerde}{HTML}{2E7D32}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Redes, volúmenes y una introducción a Kubernetes}
+\date{Semana 15 - Sesión 30}
+\author{Rel Guzman}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+ pod/.style={draw=utpRojo,thick,rounded corners=3pt,fill=utpRojo!30,align=center,font=\scriptsize\ttfamily,minimum width=1.5cm,minimum height=.6cm},
+}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: lo que vimos en la Sesión 29}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{Docker Compose}
+\small Un archivo, \texttt{compose.yaml}, con los servicios \texttt{web}, \texttt{api} y \texttt{db}. \texttt{docker compose up -d} los levanta.
+\end{block}
+\begin{block}{Redes}
+\small Cada servicio se alcanza por su nombre: \texttt{api:8080}, \texttt{db:5432}.
+\end{block}
+\begin{block}{Volúmenes}
+\small Los pedidos quedan en el volumen \texttt{datos}, aparte del contenedor.
+\end{block}
+\column{.50\textwidth}
+\begin{alertblock}{Responde}
+\small
+1. ¿Por qué la API busca la base en \texttt{db:5432} y no en \texttt{localhost:5432}?\par\medskip
+2. ¿Qué servicio de Café Nube publica un puerto a tu computadora?\par\medskip
+3. ¿Qué diferencia hay entre \texttt{docker compose down} y \texttt{docker compose down -v}?
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: la pregunta de hoy}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=1.6cm,minimum height=.9cm] (web) at (0,0) {\textbf{web}};
+  \node[caja,fill=utpRojo!30,text width=1.6cm,minimum height=.9cm] (api) at (2.8,0) {\textbf{api}};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=1.6cm,minimum height=.9cm] (db) at (5.6,0) {\textbf{db}};
+  \node[zona,fit=(web)(db),inner sep=8pt,label={[font=\scriptsize,text=utpGris]below:una sola computadora}] (pc) {};
+  \draw[flecha] (web) -- (api);
+  \draw[flecha] (api) -- (db);
+  \node[align=left,font=\small,text width=4.6cm,anchor=west] at (7.4,0) {¿Y si esa computadora se apaga?\\[2pt] ¿Y si un lunes llegan diez veces más pedidos?};
+\end{tikzpicture}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{1. Redes y volúmenes}
+\small ¿Qué IP tiene cada contenedor? ¿Dónde quedan los archivos que copias?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{2. Clúster}
+\small ¿Cómo se usan varias máquinas como si fueran una?
+\end{block}
+\column{.32\textwidth}
+\begin{block}{3. Kubernetes}
+\small ¿Quién vuelve a arrancar la API si se cae, sin esperar a una persona?
+\end{block}
+\end{columns}
+\end{frame}
+
+% 4
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás explicar con tus palabras cómo se encuentran los contenedores en una \textbf{red}, dónde quedan sus \textbf{archivos} y en qué se diferencian de un \textbf{volumen}, qué son un \textbf{clúster} y un \textbf{nodo}, y cómo \textbf{Kubernetes} corre la API de Café Nube en varias copias que se reparan solas: con \textbf{kind} en tu computadora y con \textbf{GKE} en Google Cloud.
+\end{block}
+\end{frame}
+
+% 5
+\begin{frame}{Saberes previos}
+\begin{itemize}\setlength\itemsep{14pt}
+  \item En el Dockerfile de la API, ¿qué instrucción mete \texttt{api.py} en la imagen?
+  \item ¿Cuántas copias de la API corre \texttt{docker compose up -d}?
+  \item Si la computadora donde corre Café Nube se apaga, ¿quién la vuelve a levantar?
+\end{itemize}
+\end{frame}
+
+% 6
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Con Compose, Café Nube corre en \textbf{una computadora} y en \textbf{una copia}. Las apps reales corren en \textbf{varias máquinas} y en \textbf{varias copias}, para que no se caigan cuando una falla. Eso hace \textbf{Kubernetes}, y en Google Cloud se usa con \textbf{GKE}.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 7
+\begin{frame}[fragile]{Redes: cada contenedor tiene su IP}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=2.1cm,minimum height=1.0cm] (web) at (0,0) {\textbf{web}\\\footnotesize\texttt{172.24.0.4}};
+  \node[caja,fill=utpRojo!30,text width=2.1cm,minimum height=1.0cm] (api) at (4.2,0) {\textbf{api}\\\footnotesize\texttt{172.24.0.3}};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=2.1cm,minimum height=1.0cm] (db) at (8.4,0) {\textbf{db}\\\footnotesize\texttt{172.24.0.2}};
+  \node[zona,fit=(web)(db),inner sep=10pt,label={[font=\scriptsize,text=utpGris]below:red de Docker que crea Compose}] {};
+  \draw[flecha] (web) -- node[above,font=\scriptsize\ttfamily]{api:8080} (api);
+  \draw[flecha] (api) -- node[above,font=\scriptsize\ttfamily]{db:5432} (db);
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\begin{block}{Dirección IP}
+\small El número que identifica a un contenedor en la red. Docker \textbf{traduce el nombre} \texttt{db} a la IP de su contenedor.
+\end{block}
+\begin{alertblock}{Ojo}
+\small La IP \textbf{cambia} si el contenedor se recrea. Por eso se usa el nombre, no la IP.
+\end{alertblock}
+\column{.52\textwidth}
+\textbf{\small ¿Cómo veo la IP de un contenedor?}
+\begin{lstlisting}[style=terminal]
+docker inspect practica_cafe_nube-api-1
+...
+  "Networks": {
+    "practica_cafe_nube_default": {
+      ...
+      "IPAddress": "172.24.0.3",
+\end{lstlisting}
+{\scriptsize Busca \texttt{IPAddress} en lo que responde. En la Sesión 29, los logs de la API decían \texttt{172.24.0.4}: era \texttt{web} pidiendo el menú.}
+\end{columns}
+\end{frame}
+
+% 8
+\begin{frame}{Volúmenes: ¿dónde quedan los archivos que copias?}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\vspace{6mm}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,capa/.style={draw=utpGrisMedio,fill=utpGrisClaro,minimum width=4.0cm,minimum height=.55cm,align=center}]
+  \node[capa] (c1) at (0,0) {\texttt{FROM python:3.12-slim}};
+  \node[capa,above=0pt of c1] (c2) {\texttt{RUN pip install ...}};
+  \node[capa,above=0pt of c2] (c3) {\texttt{COPY . .}\quad (\texttt{api.py})};
+  \node[capa,draw=utpRojo,fill=utpRojo!30,above=4pt of c3] (c4) {\textbf{capa del contenedor}\\lo que escribe al correr};
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror},thick] ([xshift=-3pt]c3.north west) -- node[left=6pt,align=right]{imagen\\solo lectura} ([xshift=-3pt]c1.south west);
+\end{tikzpicture}
+\end{center}
+\column{.50\textwidth}
+\begin{block}{\texttt{COPY} en el Dockerfile}
+\small Copia al \textbf{construir}: \texttt{api.py} queda \textbf{dentro de la imagen}, en una capa. Todo contenedor de esa imagen lo tiene.
+\end{block}
+\begin{block}{\texttt{docker cp} a un contenedor que corre}
+\small El archivo va a la \textbf{capa del contenedor}, encima de la imagen. \texttt{docker rm} la borra, con el archivo.
+\end{block}
+{\scriptsize Docker guarda todo en su carpeta, \texttt{/var/lib/docker}. En Windows y Mac está dentro de la máquina Linux que arranca Docker Desktop: no la ves en el Explorador.}
+\end{columns}
+\end{frame}
+
+% 9
+\begin{frame}[fragile]{Volúmenes: ¿\texttt{COPY} es lo mismo que un volumen? No}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.6cm}@{}}
+\toprule
+ & \textbf{\texttt{COPY} en el Dockerfile} & \textbf{Volumen}\\
+\midrule
+¿Cuándo se llena? & Al construir la imagen & Mientras corre el contenedor\\
+¿Dónde queda? & Dentro de la imagen & Aparte, en su propia carpeta\\
+¿Si borras el contenedor? & Sigue en la imagen; lo que cambió adentro se pierde & \textcolor{okVerde}{\textbf{Sigue}}\\
+¿Para qué? & El código: \texttt{api.py}, \texttt{index.html} & Los datos: los pedidos de la base\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{1mm}
+\textbf{\small ¿Dónde está el volumen?}
+\begin{lstlisting}[style=terminal]
+docker volume inspect practica_cafe_nube_datos
+    "Mountpoint": "/var/lib/docker/volumes/practica_cafe_nube_datos/_data",
+\end{lstlisting}
+\end{frame}
+
+% 10
+\begin{frame}{Clúster y nodo: ¿de dónde vienen?}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{block}{Clúster}
+\small Del inglés \textit{cluster}, «grupo» o «racimo». En informática, desde los años 80: \textbf{varias computadoras conectadas que trabajan como una sola}.
+\end{block}
+\begin{block}{Nodo}
+\small Del latín \textit{nodus}, «nudo»: en el dibujo de una red, el punto donde llegan las líneas. En un clúster, \textbf{cada máquina}, física o virtual.
+\end{block}
+\begin{block}{Kubernetes (K8s)}
+\small Del griego \textit{kybernētēs}, «timonel»: por eso su logo es un timón. Lo creó \textbf{Google} y lo liberó en 2014. K8s: la K, ocho letras y la s.
+\end{block}
+\column{.44\textwidth}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize]
+  \node[caja,fill=utpGrisClaro,text width=3.6cm,minimum height=.8cm] (cp) at (0,1.9) {\textbf{plano de control}\\decide dónde va cada cosa};
+  \foreach \i/\x in {1/-1.6,2/0,3/1.6} {
+    \node[caja,text width=1.2cm,minimum height=1.3cm] (n\i) at (\x,0) {};
+    \node[font=\scriptsize\bfseries,anchor=north] at (n\i.north) {nodo \i};
+    \draw[flecha,utpGrisMedio] (cp.south) -- (n\i.north);
+  }
+  \node[pod,minimum width=.9cm,minimum height=.35cm] at (-1.6,-.2) {api};
+  \node[pod,minimum width=.9cm,minimum height=.35cm] at (0,-.2) {api};
+  \node[pod,minimum width=.9cm,minimum height=.35cm,fill=utpGrisClaro] at (1.6,-.2) {web};
+  \node[zona,fit=(cp)(n1)(n3),inner sep=6pt,label={[font=\scriptsize,text=utpGris]below:clúster}] {};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% 11
+\begin{frame}{Kubernetes: ¿por qué?}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Con Compose, en una computadora}
+\small
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Se apaga la máquina: la app se cae y alguien la levanta a mano.
+  \item Llegan diez veces más pedidos: una copia de la API no alcanza.
+\end{itemize}
+\end{block}
+\column{.48\textwidth}
+\begin{exampleblock}{Orquestador}
+\small Un programa que \textbf{reparte contenedores entre varias máquinas y los vigila}: si uno se cae, lo vuelve a arrancar; si hacen falta más, crea más. El más usado es \textbf{Kubernetes}.
+\end{exampleblock}
+\end{columns}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,text width=1.6cm,minimum height=1.2cm] (n1) at (0,0) {};
+  \node[font=\scriptsize\bfseries,anchor=north] at (n1.north) {nodo 1};
+  \node[pod,minimum width=1cm,minimum height=.35cm] at (0,-.2) {api};
+  \draw[utpRojo,very thick] (n1.north west) -- (n1.south east);
+  \draw[utpRojo,very thick] (n1.north east) -- (n1.south west);
+  \node[caja,text width=1.6cm,minimum height=1.2cm] (n2) at (7,0) {};
+  \node[font=\scriptsize\bfseries,anchor=north] at (n2.north) {nodo 2};
+  \node[pod,minimum width=1cm,minimum height=.35cm] at (7,-.2) {api};
+  \draw[flecha,dashed] (n1.east) -- node[above=2pt,font=\scriptsize]{Kubernetes la arranca en otro nodo} (n2.west);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% 12
+\begin{frame}{Pods y manifiestos: describes lo que quieres}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.6cm,minimum height=1.0cm] (yo) at (0,0) {\textbf{Tú}\\\footnotesize\texttt{deployment.yaml}};
+  \node[caja,fill=utpGrisClaro,text width=2.2cm,minimum height=1.0cm] (cp) at (5,0) {\textbf{plano de control}};
+  \node[caja,text width=2.4cm,minimum height=1.3cm] (nodo) at (9.6,0) {};
+  \node[font=\scriptsize\bfseries,anchor=north] at (nodo.north) {nodo};
+  \node[pod] at (9.6,-.2) {pod: api};
+  \draw[flecha] (yo) -- node[above,font=\scriptsize\ttfamily]{kubectl apply -f} (cp);
+  \draw[flecha] (cp) -- node[above,font=\scriptsize]{crea} (nodo);
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Manifiesto}
+\small Un archivo YAML que \textbf{describe} lo que quieres en el clúster. Con Docker dabas órdenes una por una; aquí describes cómo debe quedar todo, y Kubernetes se encarga.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Pod}
+\small La unidad más pequeña de Kubernetes: \textbf{uno o más contenedores que viven juntos}, en el mismo nodo y con la misma IP. Casi siempre, uno solo.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 13
+\begin{frame}[fragile]{Deployment: copias que se reparan solas}
+\begin{columns}[T,onlytextwidth]
+\column{.38\textwidth}
+\begin{lstlisting}
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:       # cada pod
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: cafe-api:1
+\end{lstlisting}
+{\scriptsize Resumido: el archivo completo está en la guía.}
+\column{.58\textwidth}
+\begin{block}{Deployment}
+\small Mantiene corriendo un número de \textbf{réplicas}, copias iguales de un pod. Si falta una, crea otra; si sobra, la borra.
+\end{block}
+\begin{block}{Label y selector}
+\small \texttt{app: api} es una \textbf{label}, una marca en cada pod. El \texttt{selector} cuenta los pods que la llevan.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize]
+  \node[pod,minimum width=1.1cm] (a) at (0,0) {api};
+  \node[pod,minimum width=1.1cm] (b) at (1.4,0) {api};
+  \node[pod,minimum width=1.1cm,fill=white,dashed] (c) at (2.8,0) {api};
+  \draw[utpRojo,very thick] (c.north west) -- (c.south east);
+  \draw[flecha] (3.5,0) -- (4.3,0);
+  \node[pod,minimum width=1.1cm,draw=okVerde,fill=okVerde!12] at (5.0,0) {api};
+  \node[font=\scriptsize,text=utpGris] at (2.5,-.6) {se borra uno: el Deployment ve 2 de 3 y crea otro};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% 14
+\begin{frame}{Service: un nombre fijo para pods que cambian}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=1.6cm,minimum height=.9cm] (web) at (0,0) {\textbf{pod web}};
+  \node[caja,fill=white,text width=2.0cm,minimum height=.9cm] (svc) at (4.2,0) {\textbf{Service}\\\footnotesize\texttt{api}};
+  \node[pod] (p1) at (8.4,.9) {10.244.0.5};
+  \node[pod] (p2) at (8.4,0) {10.244.0.6};
+  \node[pod] (p3) at (8.4,-.9) {10.244.0.7};
+  \node[font=\scriptsize,text=utpGris,anchor=west] at (9.3,0) {pods con \texttt{app: api}};
+  \draw[flecha] (web) -- node[above,font=\scriptsize\ttfamily]{api:8080} (svc);
+  \draw[flecha] (svc) -- (p1);
+  \draw[flecha] (svc) -- (p2);
+  \draw[flecha] (svc) -- (p3);
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Service}
+\small Cada pod nuevo trae \textbf{otra IP}. El Service tiene un \textbf{nombre fijo}, \texttt{api}, y reparte los pedidos entre los pods con su label. Los pods cambian; el Service queda.
+\end{block}
+\column{.48\textwidth}
+\begin{alertblock}{De Compose a Kubernetes}
+\small El servicio \texttt{api} de Compose se reparte en dos objetos: el \textbf{Deployment} corre las copias y el \textbf{Service} les da el nombre. Nginx sigue pidiendo a \texttt{api:8080}.
+\end{alertblock}
+\end{columns}
+\end{frame}
+
+% 15
+\begin{frame}{kind y kubectl: Kubernetes en tu computadora}
+\begin{columns}[T,onlytextwidth]
+\column{.36\textwidth}
+\begin{block}{kind}
+\small \textit{Kubernetes IN Docker}: arma un clúster de práctica \textbf{dentro de Docker}. Cada nodo es un contenedor.
+\end{block}
+\begin{block}{kubectl}
+\small El programa de terminal para hablarle a Kubernetes, como \texttt{docker} para Docker.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize]
+  \node[caja,text width=3.2cm,minimum height=1.3cm] (nodo) at (0,0) {};
+  \node[font=\scriptsize\ttfamily,anchor=north] at (nodo.north) {cafe-nube-control-plane};
+  \node[pod,minimum width=.9cm,minimum height=.35cm] at (-.9,-.2) {api};
+  \node[pod,minimum width=.9cm,minimum height=.35cm,fill=utpGrisClaro] at (.9,-.2) {web};
+  \node[zona,fit=(nodo),inner sep=6pt,label={[font=\scriptsize,text=utpGris]below:Docker Desktop}] {};
+\end{tikzpicture}
+\end{center}
+\column{.60\textwidth}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\ttfamily\scriptsize}l>{\raggedright\arraybackslash\scriptsize}p{2.3cm}@{}}
+\toprule
+\textsf{\textbf{\small Comando}} & \textbf{\small Qué hace}\\
+\midrule
+kind create cluster --name cafe-nube & Crea el clúster\\
+kubectl get nodes & Lista los nodos\\
+kubectl apply -f deployment.yaml & Entrega un manifiesto\\
+kubectl get pods -o wide & Los pods, con su IP\\
+kubectl logs NOMBRE-DEL-POD & Sus mensajes\\
+kubectl delete pod NOMBRE-DEL-POD & Borra un pod\\
+kubectl scale deployment api --replicas=5 & Pide cinco copias\\
+kubectl port-forward service/web 8080:80 & Túnel, como \texttt{-p}\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 16
+\begin{frame}[fragile]{En Google Cloud: Cloud Build, Artifact Registry y GKE}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.0cm,minimum height=1.1cm] (cod) at (0,0) {\textbf{Tu código}\\\footnotesize\texttt{api.py}, Dockerfile};
+  \node[caja,fill=utpGrisClaro,text width=2.3cm,minimum height=1.1cm] (cb) at (3.6,0) {\textbf{Cloud Build}\\\footnotesize construye la imagen};
+  \node[caja,fill=utpRojo!30,text width=2.3cm,minimum height=1.1cm] (ar) at (7.4,0) {\textbf{Artifact Registry}\\\footnotesize guarda la imagen};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=2.3cm,minimum height=1.1cm] (gke) at (11.2,0) {\textbf{GKE}\\\footnotesize la corre en pods};
+  \draw[flecha] (cod) -- (cb);
+  \draw[flecha] (cb) -- (ar);
+  \draw[flecha] (ar) -- (gke);
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\toprule
+\textbf{En tu computadora} & \textbf{En Google Cloud}\\
+\midrule
+\texttt{docker build} & \textbf{Cloud Build}: construye en la nube\\
+\texttt{kind load docker-image} & \textbf{Artifact Registry}: el registro de tus imágenes\\
+El clúster de kind & \textbf{GKE}: Kubernetes administrado por Google\\
+\bottomrule
+\end{tabular}
+\column{.46\textwidth}
+\begin{block}{GKE}
+\small Google maneja el plano de control; los nodos son máquinas virtuales de Compute Engine. Los \textbf{mismos manifiestos} sirven: solo cambia de dónde sale la imagen.
+\end{block}
+{\scriptsize Una imagen en Artifact Registry:\\\texttt{us-central1-docker.pkg.dev/}\\\texttt{\ \ mi-proyecto/cafe/cafe-api:1}}
+\end{columns}
+\end{frame}
+
+% 17
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. Borras el contenedor de la API y creas otro con la misma imagen. ¿Sigue \texttt{api.py}? ¿Y un archivo que le pasaste con \texttt{docker cp}?\\\medskip
+2. Un Deployment pide \texttt{replicas: 3} y borras uno de sus pods. ¿Qué pasa?\\\medskip
+3. ¿Por qué Nginx le pide a la API en \texttt{api:8080} y no en la IP de un pod?
+\end{block}
+\end{frame}
+
+% 18
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Ruta \textit{Despliegue con Docker}, curso 2, \textit{Varios contenedores con Compose}: redes entre contenedores y volúmenes.
+  \item Ruta \textit{Despliegue con Docker}, curso 3, \textit{Kubernetes desde cero}: clúster y nodos, pods, Deployments, Services y el escenario Café Nube en Kubernetes.
+  \item Docker: \texttt{docs.docker.com}. Kubernetes: \texttt{kubernetes.io}. kind: \texttt{kind.sigs.k8s.io}.
+  \item Google Cloud: \texttt{cloud.google.com/kubernetes-engine}, \texttt{cloud.google.com/artifact-registry} y \texttt{cloud.google.com/build}.
+  \item Material previo del curso: Sesión 29 (Docker Compose, redes y volúmenes).
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}

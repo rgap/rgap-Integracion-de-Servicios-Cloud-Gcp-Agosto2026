@@ -1,0 +1,20 @@
+# La API de Café Nube: tres copias de su pod. Si una se cae, el Deployment crea otra.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: cafe-api:1
+          ports:
+            - containerPort: 8080

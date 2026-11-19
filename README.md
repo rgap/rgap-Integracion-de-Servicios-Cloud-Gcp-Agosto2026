@@ -35,3 +35,4 @@ Material de las sesiones en formato PDF.
 | 14 | 27 | Docker desde cero: desplegar, imagen y contenedor | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion27/slides/build/slides.pdf) |
 | 14 | 28 | Docker: tu propia imagen, puertos y variables | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion28/slides/build/slides.pdf) |
 | 15 | 29 | Varios contenedores con Docker Compose | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion29/slides/build/slides.pdf) |
+| 15 | 30 | Redes, volúmenes y una introducción a Kubernetes | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion30/slides/build/slides.pdf) |
