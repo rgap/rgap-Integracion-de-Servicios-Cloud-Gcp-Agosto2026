@@ -1,0 +1,528 @@
+% Motor: XeLaTeX. Sesión 31 - material docente UTP.
+% Estructura docente de la Sesión 30.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+% Un archivo: las palabras clave en rojo.
+\lstset{basicstyle=\ttfamily\scriptsize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywords={FROM,WORKDIR,COPY,RUN,CMD,runtime},
+  keywordstyle=\color{utpRojo}\bfseries,
+  commentstyle=\color{utpGris}\itshape,morecomment=[l]{\#},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+% Una terminal: fondo oscuro, sin colorear palabras. Lo que va entre | | se resalta.
+\lstdefinestyle{terminal}{basicstyle=\ttfamily\scriptsize\color{white},backgroundcolor=\color{utpNegro},
+  keywords={},morecomment=[l]{\#},commentstyle=\color{utpGrisMedio},upquote=true,
+  moredelim=[is][\color{yellow}\bfseries]{|}{|}}
+\usepackage{upquote}
+\usepackage{pifont}
+\definecolor{okVerde}{HTML}{2E7D32}
+% Un número en un círculo rojo, para unir lo que se necesita con su pieza.
+\newcommand{\num}[1]{\textcolor{utpRojo}{\ding{#1}}}
+\usetikzlibrary{decorations.pathreplacing,positioning,shadows}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{App Engine, Cloud Run y pruebas de carga}
+\date{Semana 16 - Sesión 31}
+\author{Rel Guzman}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+ pod/.style={draw=utpRojo,thick,rounded corners=3pt,fill=utpGrisClaro,align=center,font=\scriptsize\ttfamily,minimum width=1.2cm,minimum height=.5cm},
+ version/.style={draw=utpRojo,thick,rounded corners=3pt,fill=utpRojo!30,align=center,font=\scriptsize\ttfamily,minimum width=1.9cm,minimum height=.6cm},
+}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: un sistema que necesita Kubernetes}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.0cm,minimum height=1.0cm] (us) at (0,0) {\textbf{Clientes}\\\footnotesize lunes, 8 a.\,m.};
+  \node[caja,fill=utpGrisClaro,text width=1.5cm,minimum height=.9cm] (web) at (4.3,0) {\textbf{web}};
+  \node[caja,fill=utpRojo!30,text width=1.5cm,minimum height=.9cm] (api) at (6.6,0) {\textbf{api}};
+  \node[zona,fit=(web)(api),inner sep=8pt,label={[font=\scriptsize,text=utpGris]below:una sola computadora}] (pc) {};
+  \draw[flecha] (us) -- node[above,font=\scriptsize,align=center]{cientos\\de pedidos} (pc.west);
+  \draw[flecha] (web) -- (api);
+  \node[align=left,font=\footnotesize,anchor=west,text width=4.1cm] at (8.4,0) {\textcolor{utpRojo}{\ding{55}} Si la computadora se apaga, se cae todo.\\[3pt] \textcolor{utpRojo}{\ding{55}} Una sola copia de la API no alcanza.\\[3pt] \textcolor{utpRojo}{\ding{55}} Si la API se cae, alguien la levanta a mano.};
+\end{tikzpicture}
+\end{center}
+\vspace{3mm}
+\textbf{\small Lo que necesita Café Nube}\par\smallskip
+\begin{columns}[T,onlytextwidth]
+\column{.235\textwidth}
+\begin{block}{\ding{202}}
+\small Varias máquinas que trabajen como una
+\end{block}
+\column{.235\textwidth}
+\begin{block}{\ding{203}}
+\small Varias copias de la API
+\end{block}
+\column{.235\textwidth}
+\begin{block}{\ding{204}}
+\small Que las copias se reparen solas
+\end{block}
+\column{.235\textwidth}
+\begin{block}{\ding{205}}
+\small Un nombre fijo para encontrar las copias
+\end{block}
+\end{columns}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: qué pieza de Kubernetes resuelve cada cosa}
+\begin{center}
+\begin{tikzpicture}[font=\small,yscale=.85]
+  % lo que tú escribes y quien lo recibe
+  \node[caja,dashed,text width=2.1cm,minimum height=.9cm] (man) at (0.6,2.1) {\textbf{Manifiesto}\\\scriptsize\texttt{deployment.yaml}};
+  \node[caja,fill=utpGrisClaro,text width=3.6cm,minimum height=.8cm] (mae) at (5.7,2.1) {\textbf{Nodo maestro}\\\scriptsize decide dónde va cada pod};
+  \draw[flecha] (man) -- node[above,font=\scriptsize\ttfamily,align=center]{kubectl\\apply} (mae);
+  % las máquinas, con un pod de la API en cada una
+  \foreach \i/\x in {1/3.6,2/5.7,3/7.8} {
+    \node[caja,text width=1.6cm,minimum height=1.1cm] (n\i) at (\x,0) {};
+    \node[font=\scriptsize\bfseries,anchor=north] at (n\i.north) {nodo \i};
+    \node[pod,fill=utpRojo!30] (p\i) at (\x,-.18) {api};
+  }
+  % las copias que cuida el Deployment
+  \draw[decorate,decoration={brace,amplitude=5pt},thick] (2.75,.75) -- node[above=5pt,font=\scriptsize,fill=white,inner sep=1pt]{\textbf{Deployment} \texttt{api}: 3 réplicas} (8.65,.75);
+  \draw[flecha,utpGrisMedio] (mae.south) -- (5.7,1.25);
+  % el nombre fijo que reparte los pedidos
+  \node[caja,text width=1.8cm,minimum height=.9cm] (svc) at (0.6,0) {\textbf{Service}\\\scriptsize\texttt{api}};
+  \draw[flecha] (svc) -- (p1);
+  \draw[flecha] (svc.south east) to[out=-10,in=-90,looseness=.5] (p2.south);
+  \draw[flecha] (svc.south) to[out=-10,in=-90,looseness=.5] (p3.south);
+  \node[zona,fit=(mae)(n1)(n3),inner ysep=9pt,inner xsep=6pt,label={[font=\scriptsize,text=utpGris]above:clúster}] {};
+\end{tikzpicture}
+\end{center}
+\vspace{-7mm}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.35cm}>{\raggedright\arraybackslash}p{4.35cm}>{\raggedright\arraybackslash}p{4.35cm}@{}}
+\num{202} \textbf{Clúster}: varias máquinas que trabajan como una & \textbf{Nodo}: cada máquina. El \textbf{maestro} reparte los pods & \textbf{Pod}: una copia de tu app corriendo, con su contenedor y su IP. Vive dentro de un nodo; un nodo puede tener varios\\
+\num{203}\,\num{204} \textbf{Deployment}: mantiene las copias; si falta una, crea otra & \num{205} \textbf{Service}: el nombre fijo que reparte los pedidos & \textbf{Manifiesto}: un YAML que describe lo que quieres\\
+\end{tabular}
+\end{frame}
+
+% 4
+\begin{frame}{Revisión: Café Nube en Kubernetes}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+    paso/.style={caja,fill=white,text width=1.45cm,minimum height=1.1cm},
+    nota/.style={font=\scriptsize,text=utpGris,anchor=north,text width=2.2cm,align=center}]
+  % un pedido de izquierda a derecha; las cartas apiladas son las copias
+  \node[paso,dashed] (us) at (0,0) {\textbf{Cliente}\\\scriptsize\texttt{/api/menu}};
+  \node[paso] (sw) at (2.85,0) {\textbf{Service}\\\scriptsize\texttt{web}};
+  \node[paso,fill=utpGrisClaro,copy shadow] (web) at (5.7,0) {\textbf{pod web}\\\scriptsize ×2};
+  \node[paso] (sa) at (8.55,0) {\textbf{Service}\\\scriptsize\texttt{api:8080}};
+  \node[paso,fill=utpRojo!30,double copy shadow] (api) at (11.4,0) {\textbf{pod api}\\\scriptsize ×3};
+  \draw[flecha] (us) -- (sw);
+  \draw[flecha] (sw) -- node[above,font=\scriptsize,align=center]{a una\\de las 2} (web);
+  \draw[flecha] (web) -- (sa);
+  \draw[flecha] (sa) -- node[above,font=\scriptsize,align=center]{a una\\de las 3} (api);
+  \node[nota] (c1) at (2.85,-.75) {nombre fijo\\de la página};
+  \node[nota] (c2) at (5.7,-.75) {2 copias de la página\\(Deployment \texttt{web})};
+  \node[nota] (c3) at (8.55,-.75) {nombre fijo\\de la API};
+  \node[nota] (c4) at (11.4,-.75) {3 copias de la API\\(Deployment \texttt{api})};
+  \node[zona,fit=(sw)(api)(c1)(c4),inner sep=6pt,label={[font=\scriptsize,text=utpGris]above:clúster}] {};
+\end{tikzpicture}
+\end{center}
+{\small \textbf{Los nodos:} el \textbf{nodo maestro} decide dónde va cada pod. \textbf{Nodo 1}: \texttt{api} y \texttt{web}. \textbf{Nodo 2}: \texttt{api} y \texttt{web}. \textbf{Nodo 3}: \texttt{api}.}
+\vspace{2mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Si se borra un pod \texttt{api}}
+\small El Deployment ve 2 de 3 y \textbf{crea otro}, con otra IP. El Service lo suma solo: \texttt{web} sigue pidiendo a \texttt{api}.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Si se apaga un nodo}
+\small Kubernetes vuelve a arrancar sus pods \textbf{en otro nodo}. Café Nube sigue respondiendo.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 5
+\begin{frame}{Revisión: Kubernetes en Google Cloud, GKE}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=2.3cm,minimum height=1.0cm] (cb) at (0,0) {\textbf{Cloud Build}\\\footnotesize construye la imagen};
+  \node[caja,fill=utpRojo!30,text width=2.3cm,minimum height=1.0cm] (ar) at (3.8,0) {\textbf{Artifact Registry}\\\footnotesize guarda la imagen};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=2.3cm,minimum height=1.0cm] (gke) at (7.6,0) {\textbf{GKE}\\\footnotesize la corre en pods};
+  \draw[flecha] (cb) -- (ar);
+  \draw[flecha] (ar) -- (gke);
+\end{tikzpicture}
+\end{center}
+\vspace{2mm}
+\begin{center}
+\begin{minipage}{.72\textwidth}
+\begin{block}{GKE}
+\small Kubernetes administrado por Google. Google maneja el nodo maestro; los nodos son VMs de Compute Engine. Tiene los mismos pods, Deployments y Services, y usa los \textbf{mismos manifiestos}.
+\end{block}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 6
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás implementar la API de Flask de Café Nube en \textbf{App Engine} y en \textbf{Cloud Run}, publicar una \textbf{versión nueva sin tráfico} y repartir el tráfico entre versiones, y medir con \textbf{Apache Bench} cuántos pedidos por segundo responde y si falla alguno.
+\end{block}
+\end{frame}
+
+% 7
+\begin{frame}{Saberes previos}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{¿Qué es…?}
+\begin{itemize}\setlength\itemsep{8pt}
+  \item ¿Qué es \textbf{Flask}?
+  \item ¿Qué es una \textbf{imagen} de contenedor?
+  \item ¿Qué es un \textbf{Dockerfile}?
+  \item ¿Qué es un \textbf{puerto}?
+  \item ¿Qué es una \textbf{variable de entorno}?
+\end{itemize}
+\end{block}
+\column{.50\textwidth}
+\begin{block}{¿Qué hace…?}
+\begin{itemize}\setlength\itemsep{8pt}
+  \item En la API de Café Nube, ¿qué hace \texttt{@app.get("/menu")}?
+  \item ¿Qué archivo dice qué bibliotecas instala \texttt{pip}, como \texttt{flask}?
+  \item Si la API corre en una VM y nadie la visita en toda la noche, ¿la VM sigue encendida? ¿Sigue cobrando?
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+% 8
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Con Kubernetes administras un \textbf{clúster}. Muchas apps no lo necesitan: en \textbf{App Engine} y \textbf{Cloud Run} subes tu código o tu imagen, y Google pone las máquinas y te da una URL. Antes de abrirla al público, una \textbf{prueba de carga} te dice cuántos pedidos aguanta.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 9
+\begin{frame}{Sin servidores: ¿qué haces tú y qué hace Google?}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+ & \textbf{En una VM} & \textbf{Sin servidores}\\
+\midrule
+Crear y actualizar la máquina & Tú & Google\\
+Instalar Python y Flask & Tú, con \texttt{pip} & Google, con tu \texttt{requirements.txt}\\
+Más copias si llegan más pedidos & Tú, a mano & \textcolor{okVerde}{\textbf{Google las crea y las quita solo}}\\
+Toda la noche sin visitas & Sigue encendida y cobra & \textcolor{okVerde}{\textbf{Apaga todas las copias y no cobra por ellas}}\\
+Una URL con HTTPS & Tú & Google te la da\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{2mm}
+\begin{block}{Sin servidores (\textit{serverless})}
+\small Sí hay servidores, pero \textbf{no los administras tú}. Subes tu código o tu imagen; Google crea las copias, llamadas \textbf{instancias}, según los pedidos que lleguen. Hoy vemos dos: \textbf{App Engine} y \textbf{Cloud Run}.
+\end{block}
+\end{frame}
+
+% 10
+\begin{frame}[fragile]{App Engine: subes tu código}
+\begin{columns}[T,onlytextwidth]
+\column{.40\textwidth}
+\textbf{\scriptsize\texttt{main.py}}
+\begin{lstlisting}
+from flask import Flask, jsonify
+app = Flask(__name__)
+MENU = [...]
+
+@app.get("/menu")
+def menu():
+    return jsonify(MENU)
+\end{lstlisting}
+\textbf{\scriptsize\texttt{requirements.txt}}
+\begin{lstlisting}
+flask==3.1.0
+\end{lstlisting}
+\textbf{\scriptsize\texttt{app.yaml}}
+\begin{lstlisting}
+runtime: python312
+\end{lstlisting}
+\column{.56\textwidth}
+\begin{block}{Tres archivos}
+\small \texttt{main.py}: tu API.\\ \texttt{requirements.txt}: las bibliotecas.\\ \texttt{app.yaml}: qué Python usar.
+\end{block}
+\begin{lstlisting}[style=terminal]
+gcloud app create --region=us-central
+gcloud app deploy
+...
+Deployed service [default] to
+  [https://PROYECTO.uc.r.appspot.com]
+\end{lstlisting}
+\begin{exampleblock}{Y App Engine hace el resto}
+\small Instala las bibliotecas, arranca tu API y te da una URL con HTTPS.
+\end{exampleblock}
+\end{columns}
+\end{frame}
+
+% 11
+\begin{frame}[fragile]{Cloud Run: subes un contenedor}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,dashed,text width=2.0cm,minimum height=1.1cm] (cod) at (0,0) {\textbf{Tu código}\\\footnotesize\texttt{main.py}, Dockerfile};
+  \node[caja,fill=utpGrisClaro,text width=2.3cm,minimum height=1.1cm] (cb) at (3.6,0) {\textbf{Cloud Build}\\\footnotesize construye la imagen};
+  \node[caja,fill=utpRojo!30,text width=2.3cm,minimum height=1.1cm] (ar) at (7.4,0) {\textbf{Artifact Registry}\\\footnotesize guarda la imagen};
+  \node[caja,draw=okVerde,fill=okVerde!12,text width=2.3cm,minimum height=1.1cm] (run) at (11.2,0) {\textbf{Cloud Run}\\\footnotesize la corre y da una URL};
+  \draw[flecha] (cod) -- (cb);
+  \draw[flecha] (cb) -- (ar);
+  \draw[flecha] (ar) -- (run);
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.53\textwidth}
+\textbf{\scriptsize\texttt{Dockerfile}}
+\begin{lstlisting}
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD exec gunicorn --bind :$PORT --threads 8 main:app
+\end{lstlisting}
+{\scriptsize \texttt{requirements.txt} suma \texttt{gunicorn}: aquí lo instalas tú. \mbox{\texttt{--threads 8}}: atiende hasta 8 pedidos a la vez.}
+\column{.43\textwidth}
+\begin{block}{El puerto}
+\small Cloud Run le dice al contenedor en qué puerto escuchar con la variable \texttt{PORT}: \textbf{8080}. Por eso \texttt{--bind :\$PORT}.
+\end{block}
+\begin{block}{Igual que en la Sesión 30}
+\small Cloud Build y Artifact Registry. Lo nuevo: \textbf{no hay clúster}. Le das la imagen y te devuelve una URL que termina en \texttt{run.app}.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 12
+\begin{frame}[fragile]{Cloud Run: crear el servicio}
+\begin{lstlisting}[style=terminal,basicstyle=\ttfamily\footnotesize\color{white}]
+IMAGEN=us-central1-docker.pkg.dev/PROYECTO/cafe/cafe-api
+gcloud builds submit --tag $IMAGEN:v1 .
+gcloud run deploy cafe-api --image $IMAGEN:v1 --region us-central1 \
+    --allow-unauthenticated --max-instances 3
+...
+Service URL: https://cafe-api-123456789.us-central1.run.app
+\end{lstlisting}
+\vspace{1mm}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{8.7cm}@{}}
+\toprule
+\textbf{Opción} & \textbf{Qué decide}\\
+\midrule
+\texttt{--region} & Dónde corre. La imagen va en la misma región.\\
+\texttt{--allow-unauthenticated} & \textbf{Acceso público}: cualquiera con la URL puede llamar a la API. Si pides autenticación, el navegador recibe \textbf{403 Forbidden}.\\
+\texttt{--max-instances 3} & Cuántas copias puede crear como máximo: limita cuánto crece y cuánto cuesta.\\
+\texttt{--set-env-vars} & Variables de entorno, como \texttt{-e} en Docker.\\
+\bottomrule
+\end{tabular}
+\vspace{1mm}
+
+{\scriptsize Lo mismo se hace en la consola: \textbf{Cloud Run > Implementar contenedor}.}
+\end{frame}
+
+% 13
+\begin{frame}{Cloud Run: revisiones y tráfico}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=2.4cm,minimum height=1.0cm] (svc) at (0,0) {\textbf{Servicio}\\\footnotesize\texttt{cafe-api}};
+  \node[version,minimum width=3.2cm] (r1) at (6,.7) {cafe-api-00001 (v1)};
+  \node[version,minimum width=3.2cm,fill=okVerde!12,draw=okVerde] (r2) at (6,-.7) {cafe-api-00002 (v2)};
+  \draw[flecha] (svc) -- node[above,sloped,font=\scriptsize]{90\%} (r1);
+  \draw[flecha] (svc) -- node[below,sloped,font=\scriptsize]{10\%} (r2);
+  \node[font=\scriptsize,text=utpGris,anchor=west,text width=3.4cm] at (8.0,-.7) {la nueva recibe un poco: si falla, pocos lo notan};
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{Revisión}
+\small Cada cambio de imagen o de configuración crea una \textbf{revisión} nueva. Las anteriores no cambian.
+\end{block}
+\column{.32\textwidth}
+\begin{block}{Sin tráfico}
+\small La revisión nueva arranca y se comprueba que responde, pero recibe \textbf{0\%}: \texttt{--no-traffic}.
+\end{block}
+\column{.32\textwidth}
+\begin{block}{Canary}
+\small Le das un poco de tráfico, como 10\%, para ver si falla con usuarios reales. Si va bien, 100\%.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 14
+\begin{frame}{App Engine y Cloud Run, lado a lado}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{4.3cm}@{}}
+\toprule
+ & \textbf{App Engine} & \textbf{Cloud Run}\\
+\midrule
+¿Qué subes? & Tu código & Una imagen de contenedor\\
+¿Qué archivo dice cómo correrlo? & \texttt{app.yaml} & \texttt{Dockerfile}\\
+¿Cuántas por proyecto? & Una aplicación & Muchos servicios\\
+La URL termina en & \texttt{appspot.com} & \texttt{run.app}\\
+Sin visitas & \multicolumn{2}{c}{\textcolor{okVerde}{\textbf{Las dos bajan a cero instancias}}}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{2mm}
+\begin{block}{¿Cuál uso?}
+\small Si tu app es Python y no quieres escribir un Dockerfile, \textbf{App Engine}. Si ya tienes la imagen, como Café Nube desde la Sesión 28, \textbf{Cloud Run}.
+\end{block}
+\end{frame}
+
+% 15
+\begin{frame}[c]
+\begin{center}
+{\Huge\bfseries\color{utpRojo} Pruebas de carga}
+\end{center}
+\end{frame}
+
+% 16
+\begin{frame}{Prueba de carga: ¿cuánto aguanta mi API?}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\begin{block}{Prueba de carga}
+\small Mandar \textbf{muchos pedidos a la vez} a tu servicio, a propósito, para medir cómo responde \textbf{antes} de que lleguen los usuarios.
+\end{block}
+\begin{exampleblock}{Tres preguntas}
+\small
+1. ¿Cuántos pedidos por segundo responde?\\
+2. ¿Cuánto espera cada usuario?\\
+3. ¿Falla alguno?
+\end{exampleblock}
+\begin{alertblock}{Ojo}
+\small Solo a \textbf{tus} servicios: a uno ajeno es un ataque. Y más pedidos son más instancias: más costo.
+\end{alertblock}
+\column{.52\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\textbf{\small Algunas herramientas}\par\smallskip
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{4.6cm}@{}}
+\toprule
+\textbf{Herramienta} & \textbf{Cómo se usa}\\
+\midrule
+\textbf{Apache Bench} (\texttt{ab}) & Un comando y una URL. \textbf{La de hoy.}\\
+\texttt{hey} & Un comando, como \texttt{ab}\\
+k6 & Un guion en JavaScript con varios pasos\\
+Locust & Un guion en Python que simula usuarios\\
+JMeter & Con ventanas, para pruebas grandes\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 17
+\begin{frame}[fragile]{Apache Bench: el comando}
+\begin{lstlisting}[style=terminal,basicstyle=\ttfamily\small\color{white}]
+ab -n 200 -c 20 https://cafe-api-123456789.us-central1.run.app/menu
+\end{lstlisting}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabular}{@{}>{\ttfamily}l>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+\textsf{\textbf{Parte}} & \textbf{Qué es}\\
+\midrule
+ab & Apache Bench, la herramienta\\
+-n 200 & Pedidos \textbf{en total}\\
+-c 20 & Pedidos \textbf{a la vez}: la concurrencia\\
+…/menu & La URL, \textbf{con la ruta}\\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+
+{\scriptsize Viene en el paquete \texttt{apache2-utils}. En Cloud Shell, si \texttt{ab} no aparece:\\\texttt{sudo apt-get install -y apache2-utils}}
+\column{.48\textwidth}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize]
+  \node[caja,fill=utpGrisClaro,minimum width=1.2cm,minimum height=2.4cm] (ab) at (0,0) {\textbf{ab}};
+  \node[caja,draw=okVerde,fill=okVerde!12,minimum width=1.4cm,minimum height=2.4cm] (api) at (4.2,0) {\textbf{API}};
+  \foreach \y in {.9,.45,0,-.45,-.9} \draw[flecha] (ab.east |- 0,\y) -- (api.west |- 0,\y);
+  \node[above=1pt of ab.north east,anchor=south west,font=\scriptsize] {20 a la vez};
+  \node[text width=5.2cm,align=center,text=utpGris] at (2.1,-1.8) {cuando uno termina, sale otro,\\hasta completar 200};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% 18
+\begin{frame}[fragile]{Apache Bench: cómo leer el resultado}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{lstlisting}[style=terminal]
+Concurrency Level:      20
+Time taken for tests:   1.079 seconds
+|Complete requests:      200|
+|Failed requests:        0|
+...
+|Requests per second:    185.36 [#/sec]|
+|Time per request:       107.90 [ms]|
+...
+Percentage of the requests served
+within a certain time (ms)
+  |50%    101|
+  |95%    139|
+ |100%    312 (longest request)|
+\end{lstlisting}
+{\scriptsize Un ejemplo: tus números serán otros.}
+\column{.46\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{3.7cm}@{}}
+\toprule
+\textbf{Línea} & \textbf{Qué te dice}\\
+\midrule
+\texttt{Complete} & 200 terminaron\\
+\texttt{Failed} & \textcolor{okVerde}{\textbf{Ninguno falló}}\\
+\texttt{Requests per second} & \textbf{185 pedidos por segundo}: el número principal\\
+\texttt{Time per request} & Cada usuario esperó unos 108 ms\\
+\texttt{95\%} & 95 de cada 100 tardaron 139 ms o menos\\
+\texttt{100\%} & El más lento: 312 ms\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 19
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. Para App Engine subes \texttt{main.py}, \texttt{requirements.txt} y \texttt{app.yaml}. Para Cloud Run, ¿qué archivo cambia y qué tienes que construir antes?\\\medskip
+2. En App Engine, ¿qué archivo dice qué Python usar? ¿Qué comando sube tu código?\\\medskip
+3. Corres \texttt{ab -n 500 -c 50} y dice \texttt{Failed requests: 0} y \texttt{Requests per second: 210}. ¿Qué significan \texttt{-n}, \texttt{-c} y esos dos números?
+\end{block}
+\end{frame}
+
+% 20
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item App Engine: \texttt{cloud.google.com/appengine/docs/standard/python3}.
+  \item Cloud Run: \texttt{cloud.google.com/run/docs}. Cloud Build y Artifact Registry: \texttt{cloud.google.com/build} y \texttt{cloud.google.com/artifact-registry}.
+  \item Apache Bench: \texttt{httpd.apache.org/docs/2.4/programs/ab.html}.
+  \item Otras herramientas de carga: \texttt{github.com/rakyll/hey}, \texttt{k6.io}, \texttt{locust.io} y \texttt{jmeter.apache.org}.
+  \item Material previo del curso: Sesión 28 (la API de Café Nube y su Dockerfile) y Sesión 30 (Cloud Build, Artifact Registry y GKE).
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
