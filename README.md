@@ -37,3 +37,4 @@ Material de las sesiones en formato PDF.
 | 15 | 29 | Varios contenedores con Docker Compose | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion29/slides/build/slides.pdf) |
 | 15 | 30 | Redes, volúmenes y una introducción a Kubernetes | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion30/slides/build/slides.pdf) |
 | 16 | 31 | App Engine, Cloud Run y pruebas de carga | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion31/slides/build/slides.pdf) |
+| 16 | 32 | Pruebas de rendimiento: carga, estrés y red | [Ver slides](http://rgap.github.io/rgap-Integracion-de-Servicios-Cloud-Gcp-Agosto2026/Sesion32/slides/build/slides.pdf) |

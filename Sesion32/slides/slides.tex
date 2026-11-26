@@ -1,0 +1,688 @@
+% Motor: XeLaTeX. Sesión 32 - material docente UTP.
+% Estructura docente de la Sesión 31.
+\documentclass[aspectratio=169,10pt,c]{beamer}
+\input{../../Sesion09/slides/header.tex}
+\graphicspath{{assets/}{../../Sesion05/slides/assets/}}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{pifont}
+\definecolor{okVerde}{HTML}{2E7D32}
+% Un guion de k6: las palabras clave en rojo.
+\lstset{basicstyle=\ttfamily\scriptsize,backgroundcolor=\color{utpGrisClaro},
+  frame=none,aboveskip=4pt,belowskip=4pt,showstringspaces=false,
+  columns=fullflexible,keepspaces=true,breaklines=true,
+  keywords={import,from,export,const,function,default},
+  keywordstyle=\color{utpRojo}\bfseries,
+  commentstyle=\color{utpGris}\itshape,morecomment=[l]{//},
+  xleftmargin=5pt,xrightmargin=5pt,framesep=5pt}
+% Una terminal: fondo oscuro, sin colorear palabras. Lo que va entre | | se resalta.
+\lstdefinestyle{terminal}{basicstyle=\ttfamily\scriptsize\color{white},backgroundcolor=\color{utpNegro},
+  keywords={},morecomment=[l]{\#},commentstyle=\color{utpGrisMedio},upquote=true,
+  moredelim=[is][\color{yellow}\bfseries]{|}{|},escapeinside={(*}{*)}}
+\usepackage{upquote}
+% Marcas de k6 dentro de una terminal.
+\newcommand{\si}{\textcolor{green!70!black}{\ding{51}}}
+\newcommand{\no}{\textcolor{red!80!white}{\ding{55}}}
+\newcommand{\num}[1]{\textcolor{utpRojo}{\ding{#1}}}
+\usetikzlibrary{decorations.pathreplacing,positioning,shadows}
+
+\title{Integración de Servicios Cloud GCP}
+\subtitle{Pruebas de rendimiento: carga, estrés y red}
+\date{Semana 16 - Sesión 32}
+\author{Rel Guzman}
+
+% Íconos simples para los diagramas.
+\tikzset{
+ caja/.style={draw=utpRojo,thick,rounded corners=4pt,align=center},
+ zona/.style={draw=utpGrisMedio,dashed,rounded corners=4pt},
+ flecha/.style={-latex,thick},
+ vm/.style={draw=utpRojo,thick,rounded corners=3pt,fill=utpGrisClaro,align=center,font=\scriptsize,minimum width=2.0cm,minimum height=.8cm},
+ version/.style={draw=utpRojo,thick,rounded corners=3pt,fill=utpRojo!30,align=center,font=\scriptsize\ttfamily,minimum width=3.2cm,minimum height=.6cm},
+ eje/.style={-latex,thick,utpGris},
+}
+
+\begin{document}
+
+{\setbeamertemplate{footline}{}\maketitle}
+
+% 2
+\begin{frame}{Revisión: App Engine y Cloud Run}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{App Engine: subes tu código}
+\small \texttt{main.py}, \texttt{requirements.txt} y \texttt{app.yaml}.\par\smallskip
+\texttt{gcloud app deploy}\par\smallskip
+URL: \texttt{https://PROYECTO.uc.r.appspot.com}
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Cloud Run: subes un contenedor}
+\small \texttt{Dockerfile} $\rightarrow$ Cloud Build $\rightarrow$ Artifact Registry.\par\smallskip
+\texttt{gcloud run deploy cafe-api --image ...}\par\smallskip
+URL: \texttt{https://cafe-api-....run.app}
+\end{block}
+\end{columns}
+\vspace{4mm}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+\begin{exampleblock}{Lo que tienen en común: sin servidores}
+\small No administras máquinas. Google crea \textbf{instancias} según los pedidos y, sin visitas, baja a cero. En Cloud Run, \texttt{--max-instances 3} pone un tope: nunca más de 3.
+\end{exampleblock}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 3
+\begin{frame}{Revisión: revisiones y tráfico en Cloud Run}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[caja,fill=utpGrisClaro,text width=2.4cm,minimum height=1.0cm] (svc) at (0,0) {\textbf{Servicio}\\\footnotesize\texttt{cafe-api}};
+  \node[version] (r1) at (6,.7) {cafe-api-00001 (v1)};
+  \node[version,fill=okVerde!12,draw=okVerde] (r2) at (6,-.7) {cafe-api-00002 (v2)};
+  \draw[flecha] (svc) -- node[above,sloped,font=\scriptsize]{90\%} (r1);
+  \draw[flecha] (svc) -- node[below,sloped,font=\scriptsize]{10\%} (r2);
+  \node[font=\scriptsize,text=utpGris,anchor=west,text width=3.4cm] at (8.0,-.7) {la nueva recibe un poco: si falla, pocos lo notan};
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.32\textwidth}
+\begin{block}{Revisión}
+\small Cada cambio de imagen o de configuración crea una \textbf{revisión} nueva.
+\end{block}
+\column{.32\textwidth}
+\begin{block}{Sin tráfico}
+\small \texttt{--no-traffic}: la revisión nueva arranca, pero recibe \textbf{0\%}.
+\end{block}
+\column{.32\textwidth}
+\begin{block}{Canary}
+\small Le das un poco, como 10\%. Si va bien, 100\%.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 4
+\begin{frame}[fragile]{Revisión: Apache Bench}
+\begin{lstlisting}[style=terminal,basicstyle=\ttfamily\small\color{white}]
+ab -n 200 -c 20 https://cafe-api-123456789.us-central1.run.app/menu
+\end{lstlisting}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{lstlisting}[style=terminal]
+Complete requests:      200
+|Failed requests:        0|
+|Requests per second:    185.36 [#/sec]|
+Time per request:       107.90 [ms]
+...
+  |95%    139|
+ 100%    312 (longest request)
+\end{lstlisting}
+\column{.50\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\toprule
+\texttt{-n 200} & Pedidos \textbf{en total}\\
+\texttt{-c 20} & Pedidos \textbf{a la vez}\\
+\texttt{Failed} & Ninguno falló\\
+\texttt{Requests per second} & 185 pedidos por segundo\\
+\texttt{95\%} & 95 de cada 100 tardaron 139 ms o menos\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\vspace{3mm}
+{\small \textbf{Hoy:} ¿Qué meta debe cumplir la API? ¿Dónde se rompe? ¿Qué tan rápida es la red?}
+\end{frame}
+
+% 5
+\begin{frame}[c]
+\begin{block}{Logro de la sesión}
+Al finalizar, podrás distinguir una prueba \textbf{funcional} de una \textbf{no funcional}, explicar qué responden una prueba de \textbf{carga} y una de \textbf{estrés}, medir la API de Café Nube con \textbf{Apache Bench} y \textbf{k6} contra una meta, medir con \textbf{ping} e \textbf{iperf3} la red entre máquinas virtuales de Google Cloud, y leer los resultados en \textbf{Cloud Run} y en \textbf{Performance Dashboard}.
+\end{block}
+\end{frame}
+
+% 6
+\begin{frame}{Saberes previos}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{¿Qué es…?}
+\begin{itemize}\setlength\itemsep{8pt}
+  \item ¿Qué es una \textbf{prueba de carga}?
+  \item ¿Qué es una \textbf{instancia} en Cloud Run?
+  \item ¿Qué es una \textbf{IP interna}?
+  \item ¿Qué es una \textbf{zona} y qué es una \textbf{región}?
+  \item ¿Qué es \textbf{Cloud Monitoring}?
+\end{itemize}
+\end{block}
+\column{.50\textwidth}
+\begin{block}{¿Qué hace…?}
+\begin{itemize}\setlength\itemsep{8pt}
+  \item En \texttt{ab -n 200 -c 20 URL}, ¿qué hacen \texttt{-n} y \texttt{-c}?
+  \item ¿Qué hace el comando \texttt{ping}? ¿Qué protocolo usa?
+  \item En Cloud Run, ¿qué hace \texttt{--max-instances 1}?
+  \item ¿Qué decide una \textbf{regla de firewall}?
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+% 7
+\begin{frame}[c]{Utilidad de esta sesión}
+\begin{center}
+\begin{minipage}{.84\textwidth}
+{\large Que tu API responda bien a \textbf{un} usuario no dice cómo responde a \textbf{cien}. Antes de abrirla al público, una \textbf{prueba de carga} te dice si cumple tu meta; una \textbf{prueba de estrés}, dónde se rompe; y una \textbf{prueba de red}, qué tan rápido viajan los datos entre tus máquinas.}
+\end{minipage}
+\end{center}
+\end{frame}
+
+% 8
+\begin{frame}[fragile]{Pruebas funcionales y no funcionales}
+\begin{columns}[T,onlytextwidth]
+\column{.46\textwidth}
+\begin{block}{Funcional: ¿hace lo que debe?}
+\small Pides el menú y revisas que llegue.
+\end{block}
+\begin{lstlisting}[style=terminal]
+curl $CR/menu
+[{"nombre":"Americano","precio":8}, ...]
+\end{lstlisting}
+\small El resultado es \textbf{sí o no}: llegó el menú, con sus tres cafés y sus precios.
+\column{.50\textwidth}
+\begin{block}{No funcional: ¿qué tan bien lo hace?}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.0cm}>{\raggedright\arraybackslash}p{1.9cm}@{}}
+¿Responde rápido con 50 usuarios a la vez? & \textbf{Rendimiento}\\
+¿Sigue respondiendo si se cae una instancia? & Disponibilidad\\
+¿Solo entra quien debe? & Seguridad\\
+\end{tabular}
+\end{block}
+\small El resultado es \textbf{un número}, que comparas con una \textbf{meta}: «95 de cada 100 pedidos en menos de 300 ms».
+\end{columns}
+\vspace{4mm}
+\begin{center}
+\colorbox{utpGrisClaro}{\parbox{.8\textwidth}{\centering\small Hoy: \textbf{pruebas de rendimiento}, de la aplicación y de la red.}}
+\end{center}
+\end{frame}
+
+% 9
+\begin{frame}{Pruebas de rendimiento: carga y estrés}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,xscale=.9]
+  \draw[eje] (0,0) -- (5,0) node[below left]{tiempo};
+  \draw[eje] (0,0) -- (0,2.6) node[above right]{usuarios a la vez};
+  \draw[dashed,utpGrisMedio] (0,1.2) -- (4.9,1.2) node[above left,text=utpGris]{lo que esperas: 20};
+  \draw[utpRojo,ultra thick] (0,0) -- (.6,1.2) -- (4.4,1.2) -- (4.7,0);
+\end{tikzpicture}
+\end{center}
+\begin{block}{Prueba de carga}
+\small Mandas la carga que \textbf{esperas} y revisas si cumple la meta.\\
+\textbf{¿Aguanta lo normal?} \textcolor{okVerde}{\ding{51}} o \textcolor{utpRojo}{\ding{55}}
+\end{block}
+\column{.48\textwidth}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,xscale=.9]
+  \draw[eje] (0,0) -- (5,0) node[below left]{tiempo};
+  \draw[eje] (0,0) -- (0,2.6) node[above right]{usuarios a la vez};
+  \draw[dashed,utpGrisMedio] (0,.5) -- (4.9,.5) node[above left,text=utpGris]{lo que esperas};
+  \draw[utpRojo,ultra thick] (0,0) -- (1,.5) -- (2,1) -- (3,1.6) -- (3.8,2.2);
+  \node[text=utpRojo,font=\Large] at (3.8,2.2) {\ding{55}};
+  \node[anchor=west,text=utpRojo] at (3.95,2.2) {se rompe};
+\end{tikzpicture}
+\end{center}
+\begin{block}{Prueba de estrés}
+\small Subes la carga \textbf{más allá} de lo normal, hasta que falle.\\
+\textbf{¿Hasta dónde aguanta? ¿Cómo falla?}
+\end{block}
+\end{columns}
+\vspace{3mm}
+{\small \textbf{Prueba de rendimiento:} mide qué tan rápido responde tu aplicación y cuánta carga aguanta. La de carga y la de estrés son dos tipos.}
+\end{frame}
+
+% 10
+\begin{frame}{Los tres números de una prueba de rendimiento}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{block}{\num{202} Pedidos por segundo}
+\small Cuántos atiende la API. Mientras más, mejor.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{\num{203} Tiempo de respuesta}
+\small Cuánto espera cada usuario, en milisegundos (ms).
+\end{block}
+\column{.31\textwidth}
+\begin{block}{\num{204} Errores}
+\small Qué porcentaje de pedidos falla. Lo ideal: 0\%.
+\end{block}
+\end{columns}
+\vspace{3mm}
+\textbf{\small ¿Por qué el p95 y no el promedio?}\par\smallskip
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{tikzpicture}[font=\scriptsize]
+  % 20 barras ordenadas: cada una son 5 pedidos
+  \foreach \i in {1,...,18} \fill[utpGrisMedio] (\i*.3-.3,0) rectangle ++(.22,.16);
+  \foreach \i in {19,20} \fill[utpRojo] (\i*.3-.3,0) rectangle ++(.22,1.6);
+  \draw[dashed,okVerde,thick] (-.1,.30) -- (6.1,.30) node[right,align=left]{promedio\\190 ms};
+  \draw[-latex,thick] (5.51,2.0) node[above]{p95: 1000 ms} -- (5.51,1.65);
+  \node[anchor=north west,text=utpGris] at (-.1,-.05) {100 pedidos ordenados de menor a mayor tiempo};
+\end{tikzpicture}
+\column{.46\textwidth}
+\small 90 pedidos tardan 100 ms y 10 tardan 1000 ms.\par\medskip
+El \textbf{promedio} da 190 ms: parece bien.\par\medskip
+El \textbf{p95} es el pedido número 95: \textbf{1000 ms}. Te dice que 1 de cada 10 usuarios esperó un segundo.
+\end{columns}
+\end{frame}
+
+% 11
+\begin{frame}{Prueba de carga: primero, la meta}
+\begin{columns}[T,onlytextwidth]
+\column{.44\textwidth}
+\begin{block}{Café Nube, lunes a las 8 a.\,m.}
+\small Esperan unos \textbf{20 usuarios a la vez} pidiendo el menú.
+\end{block}
+\begin{exampleblock}{La meta, escrita antes de probar}
+\small 95 de cada 100 pedidos en menos de \textbf{300 ms}.\\
+Menos del \textbf{1\%} con error.
+\end{exampleblock}
+\column{.52\textwidth}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Medida} & \textbf{Meta} & \textbf{Resultado} & \\
+\midrule
+p95 & $<$ 300 ms & 143 ms & \textcolor{okVerde}{\ding{51}}\\
+Errores & $<$ 1\% & 0\% & \textcolor{okVerde}{\ding{51}}\\
+Pedidos por segundo & -- & 18 & \\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+
+{\scriptsize Un ejemplo: tus números serán otros.}
+\vspace{3mm}
+
+\colorbox{okVerde!12}{\parbox{.95\linewidth}{\small \textbf{Pasa:} la API aguanta la carga que esperas.}}
+\end{columns}
+\vspace{4mm}
+{\small Sin meta, un número no dice nada: ¿143 ms es bueno? Depende de lo que esperan tus usuarios.}
+\end{frame}
+
+% 12
+\begin{frame}{Prueba de estrés: el punto de quiebre}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{Usuarios a la vez} & \textbf{Pedidos/s} & \textbf{p95} & \textbf{Errores}\\
+\midrule
+20 & 310 & 95 ms & 0\%\\
+50 & 760 & 110 ms & 0\%\\
+100 & 1150 & 240 ms & 0\%\\
+\rowcolor{utpRojo!15} 200 & 1260 & 1.2 s & 7\%\\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+
+{\scriptsize Un ejemplo con una sola instancia de Cloud Run: tus números serán otros.}
+\column{.42\textwidth}
+\begin{block}{Qué pasó entre 100 y 200}
+\small Los \textbf{pedidos por segundo} casi no suben: la instancia llegó a su límite.\par\smallskip
+El \textbf{p95} se dispara: los pedidos esperan su turno.\par\smallskip
+Aparecen \textbf{errores 429}: Cloud Run ya tiene su máximo de instancias y no tiene dónde atender.
+\end{block}
+\end{columns}
+\vspace{4mm}
+\begin{center}
+\colorbox{utpGrisClaro}{\parbox{.85\textwidth}{\centering\small \textbf{Punto de quiebre:} la carga donde el tiempo se dispara o aparecen errores. Aquí, entre 100 y 200 usuarios.}}
+\end{center}
+\end{frame}
+
+% 13
+\begin{frame}{Cuatro herramientas, cuatro preguntas}
+\renewcommand{\arraystretch}{1.35}
+\small
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.6cm}@{}}
+\toprule
+\textbf{Herramienta} & \textbf{Qué responde} & \textbf{Cómo se usa}\\
+\midrule
+\textbf{Apache Bench} (\texttt{ab}) & ¿Cuánto aguanta \textbf{una URL} con N pedidos a la vez? & Un comando\\
+\textbf{k6} & ¿Cumple la API \textbf{mi meta}, con usuarios que suben y bajan? & Un guion en JavaScript\\
+\texttt{ping} & ¿Cuánto tarda un paquete en ir y volver? & Un comando y una IP\\
+\textbf{iperf3} & ¿Cuántos datos por segundo pasan \textbf{entre dos máquinas}? & Un servidor y un cliente\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{La aplicación}
+\small \texttt{ab} y k6 hablan con tu API por HTTP, como un navegador.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{La red}
+\small \texttt{ping} e iperf3 no usan tu API: miden el camino entre dos máquinas.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 14
+\begin{frame}[fragile]{k6: el guion de una prueba de carga}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\textbf{\scriptsize\texttt{carga.js}}
+\begin{lstlisting}
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 20,
+  duration: '30s',
+  thresholds: {
+    http_req_duration: ['p(95)<300'],
+    http_req_failed: ['rate<0.01'],
+  },
+};
+
+export default function () {
+  const res = http.get(`${__ENV.URL}/menu`);
+  check(res, { 'responde 200': (r) => r.status === 200 });
+  sleep(1);
+}
+\end{lstlisting}
+\column{.44\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{3.9cm}@{}}
+\toprule
+\texttt{vus: 20} & 20 usuarios virtuales a la vez, como \texttt{-c 20}\\
+\texttt{duration} & Dura 30 segundos\\
+\texttt{thresholds} & \textbf{La meta}: p95 menor que 300 ms y menos de 1\% de errores\\
+\texttt{default} & Lo que hace \textbf{cada usuario}, una y otra vez\\
+\texttt{check} & Revisa que la respuesta sea \texttt{200}\\
+\texttt{sleep(1)} & Espera 1 segundo antes de volver a pedir\\
+\bottomrule
+\end{tabular}
+\end{columns}
+\end{frame}
+
+% 15
+\begin{frame}[fragile]{k6: correr la prueba y leer el resultado}
+\begin{lstlisting}[style=terminal,basicstyle=\ttfamily\footnotesize\color{white}]
+docker run --rm -i grafana/k6 run -e URL=$CR - < carga.js
+\end{lstlisting}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.52\textwidth}
+\begin{lstlisting}[style=terminal]
+  THRESHOLDS
+    http_req_duration
+    (*\si*) |'p(95)<300' p(95)=142.6ms|
+    http_req_failed
+    (*\si*) |'rate<0.01' rate=0.00%|
+
+  TOTAL RESULTS
+    (*\si*) responde 200
+    http_req_duration...: avg=121.3ms
+                          |p(95)=142.6ms|
+    http_req_failed.....: |0.00%|
+    http_reqs...........: 540  |17.9/s|
+\end{lstlisting}
+{\scriptsize Un ejemplo: tus números serán otros.}
+\column{.44\textwidth}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.7cm}>{\raggedright\arraybackslash}p{3.1cm}@{}}
+\toprule
+\textcolor{okVerde}{\ding{51}} y \textcolor{utpRojo}{\ding{55}} & Si se cumplió cada meta\\
+\texttt{http\_req\_duration} & Tiempo de respuesta: promedio y p95\\
+\texttt{http\_req\_failed} & Porcentaje de errores\\
+\texttt{http\_reqs} & Pedidos en total y \textbf{por segundo}\\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+
+{\scriptsize Cloud Shell trae Docker: k6 corre con su imagen, \texttt{grafana/k6}, sin instalar nada.}
+\end{columns}
+\end{frame}
+
+% 16
+\begin{frame}[fragile]{k6: el guion de una prueba de estrés}
+\begin{columns}[T,onlytextwidth]
+\column{.42\textwidth}
+\textbf{\scriptsize\texttt{estres.js}} {\scriptsize (lo que cambia)}
+\begin{lstlisting}
+stages: [
+  { duration: '30s', target: 20 },
+  { duration: '30s', target: 50 },
+  { duration: '30s', target: 100 },
+  { duration: '30s', target: 200 },
+  { duration: '10s', target: 0 },
+],
+\end{lstlisting}
+\small \texttt{stages}: sube los usuarios \textbf{poco a poco}.\par\smallskip
+Sin \texttt{sleep(1)}: cada usuario vuelve a pedir apenas recibe la respuesta.
+\column{.54\textwidth}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,xscale=1.0,yscale=.9]
+  \draw[eje] (0,0) -- (5.6,0) node[right]{s};
+  \draw[eje] (0,0) -- (0,2.4) node[above right]{usuarios a la vez};
+  \draw[utpRojo,ultra thick] (0,0) -- (1.2,.2) -- (2.4,.5) -- (3.6,1) -- (4.8,2) -- (5.2,0);
+  \foreach \x/\l in {1.2/30,2.4/60,3.6/90,4.8/120} \draw (\x,0) -- (\x,-.08) node[below]{\l};
+  \foreach \y/\l in {.5/50,1/100,2/200} \draw[dashed,utpGrisMedio] (0,\y) node[left,text=black]{\l} -- (4.8,\y);
+\end{tikzpicture}
+\end{center}
+\begin{lstlisting}[style=terminal]
+(*\no*) |'p(95)<300' p(95)=1.21s|
+(*\no*) |'rate<0.01' rate=6.84%|
+... thresholds ... have been crossed
+\end{lstlisting}
+{\scriptsize Un ejemplo con una sola instancia: con \textcolor{utpRojo}{\ding{55}}, encontraste el punto de quiebre.}
+\end{columns}
+\end{frame}
+
+% 17
+\begin{frame}{Los mismos tres números en \texttt{ab}, k6 y Cloud Run}
+\renewcommand{\arraystretch}{1.35}
+\small
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
+\toprule
+\textbf{Medida} & \textbf{\texttt{ab}} & \textbf{k6} & \textbf{Cloud Run > Métricas}\\
+\midrule
+\num{202} Pedidos por segundo & \texttt{Requests per second} & \texttt{http\_reqs} (…/s) & Cantidad de solicitudes\\
+\num{203} Tiempo de respuesta & \texttt{95\%} & \texttt{http\_req\_duration} \texttt{p(95)} & Latencias de solicitudes\\
+\num{204} Errores & \texttt{Failed requests} & \texttt{http\_req\_failed} & Cantidad de solicitudes: la línea \texttt{4xx}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\column{.48\textwidth}
+\begin{block}{Desde afuera: \texttt{ab} y k6}
+\small Miden lo que vive el usuario, desde Cloud Shell.
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Desde adentro: Cloud Run > Métricas}
+\small Gráficos de \textbf{Cloud Monitoring}. Suma lo que el usuario no ve: la \textbf{cantidad de instancias} y el \textbf{uso de CPU}.
+\end{block}
+\end{columns}
+\end{frame}
+
+% 18
+\begin{frame}[c]
+\begin{center}
+{\Huge\bfseries\color{utpRojo} Rendimiento de red}
+\end{center}
+\end{frame}
+
+% 19
+\begin{frame}{Rendimiento de red: tres medidas}
+\begin{columns}[T,onlytextwidth]
+\column{.31\textwidth}
+\begin{block}{Ancho de banda}
+\small Cuántos datos pasan \textbf{por segundo}.\\
+En \textbf{Mbits/s} o \textbf{Gbits/s}.\\
+Se mide con \textbf{iperf3}.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Latencia}
+\small Cuánto tarda un paquete en \textbf{ir y volver}.\\
+En \textbf{ms}.\\
+Se mide con \texttt{ping}.
+\end{block}
+\column{.31\textwidth}
+\begin{block}{Pérdida de paquetes}
+\small Qué porcentaje \textbf{no llega} y hay que reenviar.\\
+En \textbf{\%}.\\
+\texttt{ping} y la columna \texttt{Retr} de iperf3.
+\end{block}
+\end{columns}
+\vspace{4mm}
+\textbf{\small Bits y bytes: 1 byte son 8 bits}\par\smallskip
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Copiar un archivo de 1 GB} (8 Gbits) & \textbf{a 1 Gbit/s} & \textbf{a 100 Mbits/s}\\
+\midrule
+Tiempo & 8 segundos & 80 segundos\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+% 20
+\begin{frame}[fragile]{iperf3: un servidor y un cliente}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[vm,minimum width=3.4cm,minimum height=1.1cm] (cli) at (0,0) {\textbf{cliente-cerca}\\\ttfamily iperf3 -c 10.128.0.2};
+  \node[vm,minimum width=3.4cm,minimum height=1.1cm,fill=okVerde!12,draw=okVerde] (srv) at (8,0) {\textbf{servidor} \footnotesize 10.128.0.2\\\ttfamily iperf3 -s};
+  \draw[flecha,ultra thick] (cli) -- node[above,font=\scriptsize]{manda datos durante 10 s} node[below,font=\scriptsize]{al puerto 5201} (srv);
+\end{tikzpicture}
+\end{center}
+\begin{lstlisting}[style=terminal,basicstyle=\ttfamily\footnotesize\color{white}]
+[ ID] Interval           Transfer     |Bitrate|         Retr
+[  5]   0.00-10.00  sec  2.25 GBytes  |1.93 Gbits/sec|    |0|             sender
+[  5]   0.00-10.04  sec  2.25 GBytes  1.92 Gbits/sec                  receiver
+\end{lstlisting}
+{\scriptsize Un ejemplo: tus números serán otros.}
+\vspace{2mm}
+
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{@{}*{5}{>{\raggedright\arraybackslash}p{2.35cm}}@{}}
+\toprule
+\texttt{-s} & \texttt{-c IP} & \texttt{Transfer} & \texttt{Bitrate} & \texttt{Retr}\\
+\midrule
+Arranca el \textbf{servidor}, que espera & Arranca el \textbf{cliente} y mide & Datos que pasaron en total & \textbf{El ancho de banda} & Paquetes reenviados\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% 21
+\begin{frame}{La red en Google Cloud: misma zona y otra región}
+\begin{center}
+\begin{tikzpicture}[font=\small]
+  \node[vm] (cc) at (0,0) {\textbf{cliente-cerca}};
+  \node[vm,fill=okVerde!12,draw=okVerde] (sv) at (3.2,0) {\textbf{servidor}\\\ttfamily iperf3 -s};
+  \node[zona,fit=(cc)(sv),inner sep=7pt,label={[font=\scriptsize,text=utpGris]above:us-central1-a (Iowa)}] (z1) {};
+  \node[vm] (cl) at (10.2,0) {\textbf{cliente-lejos}};
+  \node[zona,fit=(cl),inner sep=7pt,label={[font=\scriptsize,text=utpGris]above:southamerica-west1-a (Santiago)}] (z2) {};
+  \draw[flecha] (cc) -- (sv);
+  \draw[flecha] (cl) -- node[above,font=\scriptsize]{miles de km} (z1.east);
+  \node[zona,fit=(z1)(z2),inner sep=14pt,label={[font=\scriptsize,text=utpGris]below:red \texttt{default}: la regla \texttt{default-allow-internal} deja pasar el \texttt{ping} y el puerto 5201}] {};
+\end{tikzpicture}
+\end{center}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{1.9cm}>{\centering\arraybackslash}p{2.0cm}@{}}
+\toprule
+ & \textbf{Misma zona} & \textbf{Otra región}\\
+\midrule
+Latencia (\texttt{ping}) & 0.3 ms & unos 150 ms\\
+Ancho de banda (iperf3) & 1.93 Gbits/s & unos 300 Mbits/s\\
+\bottomrule
+\end{tabular}
+\vspace{1mm}
+
+{\scriptsize Un ejemplo con VMs \texttt{e2-medium}: tus números serán otros.}
+\column{.44\textwidth}
+\begin{block}{Por qué baja}
+\small Con una sola conexión, el emisor manda un bloque y \textbf{espera la confirmación} antes de mandar más. Si la confirmación tarda 150 ms en volver, pasan menos datos por segundo.
+\end{block}
+{\scriptsize Una \texttt{e2-medium} envía \textbf{hasta 2 Gbits/s}: el tipo de máquina pone el tope.}
+\end{columns}
+\end{frame}
+
+% 22
+\begin{frame}{Performance Dashboard: la red, medida por Google}
+\begin{columns}[T,onlytextwidth]
+\column{.50\textwidth}
+\begin{block}{Qué es}
+\small Un panel de \textbf{Network Intelligence Center}. Google mide todo el tiempo la \textbf{latencia} y la \textbf{pérdida de paquetes} entre sus zonas.
+\end{block}
+\begin{block}{Dos vistas}
+\small \textbf{Google Cloud}: toda la red de Google. No necesitas crear nada.\par\smallskip
+\textbf{Tu proyecto}: solo entre las zonas donde tienes VMs.
+\end{block}
+\begin{exampleblock}{Para qué sirve}
+\small Si tu app va lenta: ¿es tu app o es la red? Si la red está normal, busca en tu app.
+\end{exampleblock}
+\column{.46\textwidth}
+\textbf{\small Cómo verlo}\par\smallskip
+\small
+\num{202} Busca \textbf{Performance Dashboard} en la consola.\par\smallskip
+\num{203} Pestaña \textbf{Google Cloud}.\par\smallskip
+\num{204} \textbf{Cross-zonal} y \textbf{Latency (RTT)}.\par\smallskip
+\num{205} Elige \texttt{us-central1} y \texttt{southamerica-west1}.\par\medskip
+\begin{tikzpicture}[font=\scriptsize]
+  \node[anchor=east,align=right,font=\tiny\ttfamily] at (-.1,0) {us-central1};
+  \node[anchor=east,align=right,font=\tiny\ttfamily] at (-.1,-.7) {southamerica-\\west1};
+  \node[anchor=south,align=center,font=\tiny\ttfamily] at (1,.4) {us-central1};
+  \node[anchor=south,align=center,font=\tiny\ttfamily] at (3,.4) {southamerica-\\west1};
+  \fill[okVerde!25] (0,-.35) rectangle (2,.35); \node at (1,0) {menos de 1 ms};
+  \fill[utpRojo!30] (2,-.35) rectangle (4,.35); \node at (3,0) {150 ms};
+  \fill[utpRojo!30] (0,-1.05) rectangle (2,-.35); \node at (1,-.7) {150 ms};
+  \fill[okVerde!25] (2,-1.05) rectangle (4,-.35); \node at (3,-.7) {menos de 1 ms};
+\end{tikzpicture}\par
+{\scriptsize Un ejemplo simplificado del mapa de calor, entre zonas de cada región. Compáralo con tu \texttt{ping}.}
+\end{columns}
+\end{frame}
+
+% 23
+\begin{frame}{Cierre: preguntas para comprobar}
+\begin{block}{Responde con tus palabras}
+\small
+1. \texttt{curl \$CR/menu} devuelve el menú. ¿Es una prueba funcional o no funcional? ¿Y «95 de cada 100 pedidos en menos de 300 ms con 20 usuarios»?\\\medskip
+2. ¿Qué diferencia hay entre una prueba de carga y una de estrés? ¿Qué es el punto de quiebre?\\\medskip
+3. k6 muestra \texttt{\ding{55} 'p(95)<300' p(95)=820ms} y \texttt{\ding{51} 'rate<0.01' rate=0.00\%}. ¿Pasó la prueba? ¿Qué te dice cada línea?\\\medskip
+4. iperf3 da \texttt{1.9 Gbits/sec} en la misma zona y \texttt{300 Mbits/sec} desde otra región. ¿Dónde esperas más latencia? ¿Cuánto tarda en pasar un archivo de 1 GB a 1 Gbit/s?
+\end{block}
+\end{frame}
+
+% 24
+\begin{frame}{Referencias}
+\scriptsize
+\begin{itemize}\setlength\itemsep{4pt}
+  \item k6: \texttt{grafana.com/docs/k6}. Metas (\textit{thresholds}) y etapas (\textit{stages}) en la misma documentación.
+  \item Apache Bench: \texttt{httpd.apache.org/docs/2.4/programs/ab.html}.
+  \item iperf3: \texttt{software.es.net/iperf} y \texttt{github.com/esnet/iperf}.
+  \item Métricas de Cloud Run: \texttt{cloud.google.com/run/docs/monitoring}. Error 429: \texttt{cloud.google.com/run/docs/troubleshooting}.
+  \item Ancho de banda de las VMs: \texttt{cloud.google.com/compute/docs/network-bandwidth}.
+  \item Performance Dashboard: \texttt{cloud.google.com/network-intelligence-center/docs/performance-dashboard}.
+  \item Material previo del curso: Sesión 19 (VPC, IP interna y firewall), Sesión 25 (Cloud Monitoring) y Sesión 31 (Cloud Run y Apache Bench).
+  \item Las respuestas de las preguntas están en \texttt{../respuestas.md}.
+\end{itemize}
+\end{frame}
+
+\end{document}
