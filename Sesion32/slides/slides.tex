@@ -65,7 +65,7 @@ URL: \texttt{https://cafe-api-....run.app}
 \begin{center}
 \begin{minipage}{.84\textwidth}
 \begin{exampleblock}{Lo que tienen en común: sin servidores}
-\small No administras máquinas. Google crea \textbf{instancias} según los pedidos y, sin visitas, baja a cero. En Cloud Run, \texttt{--max-instances 3} pone un tope: nunca más de 3.
+\small No administras máquinas. Google crea \textbf{instancias} según las peticiones y, sin visitas, baja a cero. En Cloud Run, \texttt{--max-instances 3} pone un tope: nunca más de 3.
 \end{exampleblock}
 \end{minipage}
 \end{center}
@@ -122,10 +122,10 @@ Time per request:       107.90 [ms]
 \small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
 \toprule
-\texttt{-n 200} & Pedidos \textbf{en total}\\
-\texttt{-c 20} & Pedidos \textbf{a la vez}\\
-\texttt{Failed} & Ninguno falló\\
-\texttt{Requests per second} & 185 pedidos por segundo\\
+\texttt{-n 200} & Peticiones \textbf{en total}\\
+\texttt{-c 20} & Peticiones \textbf{a la vez}\\
+\texttt{Failed} & Ninguna falló\\
+\texttt{Requests per second} & 185 peticiones por segundo\\
 \texttt{95\%} & 95 de cada 100 tardaron 139 ms o menos\\
 \bottomrule
 \end{tabular}
@@ -197,7 +197,7 @@ curl $CR/menu
 ¿Solo entra quien debe? & Seguridad\\
 \end{tabular}
 \end{block}
-\small El resultado es \textbf{un número}, que comparas con una \textbf{meta}: «95 de cada 100 pedidos en menos de 300 ms».
+\small El resultado es \textbf{un número}, que comparas con una \textbf{meta}: «95 de cada 100 peticiones en menos de 300 ms».
 \end{columns}
 \vspace{4mm}
 \begin{center}
@@ -245,8 +245,8 @@ curl $CR/menu
 \begin{frame}{Los tres números de una prueba de rendimiento}
 \begin{columns}[T,onlytextwidth]
 \column{.31\textwidth}
-\begin{block}{\num{202} Pedidos por segundo}
-\small Cuántos atiende la API. Mientras más, mejor.
+\begin{block}{\num{202} Peticiones por segundo}
+\small Cuántas atiende la API. Mientras más, mejor.
 \end{block}
 \column{.31\textwidth}
 \begin{block}{\num{203} Tiempo de respuesta}
@@ -254,7 +254,7 @@ curl $CR/menu
 \end{block}
 \column{.31\textwidth}
 \begin{block}{\num{204} Errores}
-\small Qué porcentaje de pedidos falla. Lo ideal: 0\%.
+\small Qué porcentaje de peticiones falla. Lo ideal: 0\%.
 \end{block}
 \end{columns}
 \vspace{3mm}
@@ -262,17 +262,17 @@ curl $CR/menu
 \begin{columns}[T,onlytextwidth]
 \column{.50\textwidth}
 \begin{tikzpicture}[font=\scriptsize]
-  % 20 barras ordenadas: cada una son 5 pedidos
+  % 20 barras ordenadas: cada una son 5 peticiones
   \foreach \i in {1,...,18} \fill[utpGrisMedio] (\i*.3-.3,0) rectangle ++(.22,.16);
   \foreach \i in {19,20} \fill[utpRojo] (\i*.3-.3,0) rectangle ++(.22,1.6);
   \draw[dashed,okVerde,thick] (-.1,.30) -- (6.1,.30) node[right,align=left]{promedio\\190 ms};
   \draw[-latex,thick] (5.51,2.0) node[above]{p95: 1000 ms} -- (5.51,1.65);
-  \node[anchor=north west,text=utpGris] at (-.1,-.05) {100 pedidos ordenados de menor a mayor tiempo};
+  \node[anchor=north west,text=utpGris] at (-.1,-.05) {100 peticiones ordenadas de menor a mayor tiempo};
 \end{tikzpicture}
 \column{.46\textwidth}
-\small 90 pedidos tardan 100 ms y 10 tardan 1000 ms.\par\medskip
+\small 90 peticiones tardan 100 ms y 10 tardan 1000 ms.\par\medskip
 El \textbf{promedio} da 190 ms: parece bien.\par\medskip
-El \textbf{p95} es el pedido número 95: \textbf{1000 ms}. Te dice que 1 de cada 10 usuarios esperó un segundo.
+El \textbf{p95} es la petición número 95: \textbf{1000 ms}. Te dice que 1 de cada 10 usuarios esperó un segundo.
 \end{columns}
 \end{frame}
 
@@ -284,7 +284,7 @@ El \textbf{p95} es el pedido número 95: \textbf{1000 ms}. Te dice que 1 de cada
 \small Esperan unos \textbf{20 usuarios a la vez} pidiendo el menú.
 \end{block}
 \begin{exampleblock}{La meta, escrita antes de probar}
-\small 95 de cada 100 pedidos en menos de \textbf{300 ms}.\\
+\small 95 de cada 100 peticiones en menos de \textbf{300 ms}.\\
 Menos del \textbf{1\%} con error.
 \end{exampleblock}
 \column{.52\textwidth}
@@ -296,7 +296,7 @@ Menos del \textbf{1\%} con error.
 \midrule
 p95 & $<$ 300 ms & 143 ms & \textcolor{okVerde}{\ding{51}}\\
 Errores & $<$ 1\% & 0\% & \textcolor{okVerde}{\ding{51}}\\
-Pedidos por segundo & -- & 18 & \\
+Peticiones por segundo & -- & 18 & \\
 \bottomrule
 \end{tabular}
 \vspace{2mm}
@@ -316,9 +316,10 @@ Pedidos por segundo & -- & 18 & \\
 \column{.50\textwidth}
 \renewcommand{\arraystretch}{1.3}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}cccc@{}}
 \toprule
-\textbf{Usuarios a la vez} & \textbf{Pedidos/s} & \textbf{p95} & \textbf{Errores}\\
+\textbf{Usuarios a la vez} & \textbf{Peticiones/s} & \textbf{p95} & \textbf{Errores}\\
 \midrule
 20 & 310 & 95 ms & 0\%\\
 50 & 760 & 110 ms & 0\%\\
@@ -331,8 +332,8 @@ Pedidos por segundo & -- & 18 & \\
 {\scriptsize Un ejemplo con una sola instancia de Cloud Run: tus números serán otros.}
 \column{.42\textwidth}
 \begin{block}{Qué pasó entre 100 y 200}
-\small Los \textbf{pedidos por segundo} casi no suben: la instancia llegó a su límite.\par\smallskip
-El \textbf{p95} se dispara: los pedidos esperan su turno.\par\smallskip
+\small Las \textbf{peticiones por segundo} casi no suben: la instancia llegó a su límite.\par\smallskip
+El \textbf{p95} se dispara: las peticiones esperan su turno.\par\smallskip
 Aparecen \textbf{errores 429}: Cloud Run ya tiene su máximo de instancias y no tiene dónde atender.
 \end{block}
 \end{columns}
@@ -351,7 +352,7 @@ Aparecen \textbf{errores 429}: Cloud Run ya tiene su máximo de instancias y no 
 \toprule
 \textbf{Herramienta} & \textbf{Qué responde} & \textbf{Cómo se usa}\\
 \midrule
-\textbf{Apache Bench} (\texttt{ab}) & ¿Cuánto aguanta \textbf{una URL} con N pedidos a la vez? & Un comando\\
+\textbf{Apache Bench} (\texttt{ab}) & ¿Cuánto aguanta \textbf{una URL} con N peticiones a la vez? & Un comando\\
 \textbf{k6} & ¿Cumple la API \textbf{mi meta}, con usuarios que suben y bajan? & Un guion en JavaScript\\
 \texttt{ping} & ¿Cuánto tarda un paquete en ir y volver? & Un comando y una IP\\
 \textbf{iperf3} & ¿Cuántos datos por segundo pasan \textbf{entre dos máquinas}? & Un servidor y un cliente\\
@@ -442,7 +443,7 @@ docker run --rm -i grafana/k6 run -e URL=$CR - < carga.js
 \textcolor{okVerde}{\ding{51}} y \textcolor{utpRojo}{\ding{55}} & Si se cumplió cada meta\\
 \texttt{http\_req\_duration} & Tiempo de respuesta: promedio y p95\\
 \texttt{http\_req\_failed} & Porcentaje de errores\\
-\texttt{http\_reqs} & Pedidos en total y \textbf{por segundo}\\
+\texttt{http\_reqs} & Peticiones en total y \textbf{por segundo}\\
 \bottomrule
 \end{tabular}
 \vspace{2mm}
@@ -495,7 +496,7 @@ Sin \texttt{sleep(1)}: cada usuario vuelve a pedir apenas recibe la respuesta.
 \toprule
 \textbf{Medida} & \textbf{\texttt{ab}} & \textbf{k6} & \textbf{Cloud Run > Métricas}\\
 \midrule
-\num{202} Pedidos por segundo & \texttt{Requests per second} & \texttt{http\_reqs} (…/s) & Cantidad de solicitudes\\
+\num{202} Peticiones por segundo & \texttt{Requests per second} & \texttt{http\_reqs} (…/s) & Cantidad de solicitudes\\
 \num{203} Tiempo de respuesta & \texttt{95\%} & \texttt{http\_req\_duration} \texttt{p(95)} & Latencias de solicitudes\\
 \num{204} Errores & \texttt{Failed requests} & \texttt{http\_req\_failed} & Cantidad de solicitudes: la línea \texttt{4xx}\\
 \bottomrule
@@ -663,7 +664,7 @@ Ancho de banda (iperf3) & 1.93 Gbits/s & unos 300 Mbits/s\\
 \begin{frame}{Cierre: preguntas para comprobar}
 \begin{block}{Responde con tus palabras}
 \small
-1. \texttt{curl \$CR/menu} devuelve el menú. ¿Es una prueba funcional o no funcional? ¿Y «95 de cada 100 pedidos en menos de 300 ms con 20 usuarios»?\\\medskip
+1. \texttt{curl \$CR/menu} devuelve el menú. ¿Es una prueba funcional o no funcional? ¿Y «95 de cada 100 peticiones en menos de 300 ms con 20 usuarios»?\\\medskip
 2. ¿Qué diferencia hay entre una prueba de carga y una de estrés? ¿Qué es el punto de quiebre?\\\medskip
 3. k6 muestra \texttt{\ding{55} 'p(95)<300' p(95)=820ms} y \texttt{\ding{51} 'rate<0.01' rate=0.00\%}. ¿Pasó la prueba? ¿Qué te dice cada línea?\\\medskip
 4. iperf3 da \texttt{1.9 Gbits/sec} en la misma zona y \texttt{300 Mbits/sec} desde otra región. ¿Dónde esperas más latencia? ¿Cuánto tarda en pasar un archivo de 1 GB a 1 Gbit/s?

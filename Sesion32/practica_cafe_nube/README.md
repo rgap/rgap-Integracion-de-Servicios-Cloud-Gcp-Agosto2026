@@ -6,7 +6,7 @@
 
 En la Sesión 31 subiste la API de Café Nube a Cloud Run y la mediste con Apache Bench. Hoy respondes tres preguntas con números:
 
-1. **Prueba de carga:** con 20 usuarios a la vez, ¿cumple la meta? La meta: 95 de cada 100 pedidos en menos de **300 ms** y menos del **1 %** con error.
+1. **Prueba de carga:** con 20 usuarios a la vez, ¿cumple la meta? La meta: 95 de cada 100 peticiones en menos de **300 ms** y menos del **1 %** con error.
 2. **Prueba de estrés:** si los usuarios suben hasta 200 a la vez, ¿dónde se rompe?
 3. **Prueba de red:** entre dos máquinas virtuales, ¿cuántos datos pasan por segundo? ¿Cambia si la otra máquina está lejos?
 
@@ -38,8 +38,8 @@ export const options = {
   vus: 20,
   duration: '30s',
   thresholds: {
-    http_req_duration: ['p(95)<300'], // 95 de cada 100 pedidos en menos de 300 ms
-    http_req_failed: ['rate<0.01'],   // menos del 1 % de pedidos con error
+    http_req_duration: ['p(95)<300'], // 95 de cada 100 peticiones en menos de 300 ms
+    http_req_failed: ['rate<0.01'],   // menos del 1 % de peticiones con error
   },
 };
 
@@ -62,7 +62,7 @@ export default function () {
 
 ### `estres.js`
 
-Tiene la misma meta y el mismo pedido. Cambian dos cosas:
+Tiene la misma meta y la misma petición. Cambian dos cosas:
 
 ```javascript
   stages: [
@@ -137,7 +137,7 @@ curl $CR/menu
 
 ## Prueba 2. Prueba de carga: ¿cumple la meta?
 
-Primero, la prueba de la Sesión 31 con Apache Bench: 1000 pedidos, 20 a la vez.
+Primero, la prueba de la Sesión 31 con Apache Bench: 1000 peticiones, 20 a la vez.
 
 ```bash
 ab -n 1000 -c 20 $CR/menu
@@ -185,13 +185,13 @@ La primera vez descarga la imagen. Después, la prueba dura 30 segundos.
 | --- | --- |
 | `✓ 'p(95)<300'` | **Se cumplió** la meta de tiempo: el p95 fue 142.6 ms. Con ✗, no se cumplió. |
 | `✓ 'rate<0.01'` | **Se cumplió** la meta de errores: 0 % falló. |
-| `http_req_duration` | Cuánto tardó cada pedido: promedio (`avg`), el más rápido, el del medio (`med`), el más lento y el p95. |
-| `http_req_failed` | Cuántos pedidos fallaron. |
-| `http_reqs` | Cuántos pedidos hubo en total y **cuántos por segundo**. |
+| `http_req_duration` | Cuánto tardó cada petición: promedio (`avg`), la más rápida, la del medio (`med`), la más lenta y el p95. |
+| `http_req_failed` | Cuántas peticiones fallaron. |
+| `http_reqs` | Cuántas peticiones hubo en total y **cuántas por segundo**. |
 
-**Por qué:** `ab` y k6 miden lo mismo: pedidos por segundo, tiempo de respuesta y errores. k6, además, **compara con tu meta** y te dice si pasó o no. ¿Por qué son casi 18 pedidos por segundo? Cada usuario pide, espera la respuesta y después 1 segundo más: 20 usuarios dan un poco menos de 20 pedidos por segundo.
+**Por qué:** `ab` y k6 miden lo mismo: peticiones por segundo, tiempo de respuesta y errores. k6, además, **compara con tu meta** y te dice si pasó o no. ¿Por qué son casi 18 peticiones por segundo? Cada usuario pide, espera la respuesta y después 1 segundo más: 20 usuarios dan un poco menos de 20 peticiones por segundo.
 
-Si el `max` es de más de un segundo, fue el primer pedido: esperó a que arrancara la instancia.
+Si el `max` es de más de un segundo, fue la primera petición: esperó a que arrancara la instancia.
 
 ---
 
@@ -236,13 +236,13 @@ running (1m05.0s), 052/200 VUs, 41230 complete and 0 interrupted iterations
 level=error msg="thresholds on metrics 'http_req_duration, http_req_failed' have been crossed"
 ```
 
-**Qué significa:** con muchos usuarios, la única instancia ya no da abasto. Los pedidos **esperan más** (el p95 pasó de 300 ms) y algunos **fallan**. Esos fallos suelen ser el error **`429`**: Cloud Run llegó a su máximo de instancias, `1`, y no tiene dónde atender el pedido.
+**Qué significa:** con muchos usuarios, la única instancia ya no da abasto. Las peticiones **esperan más** (el p95 pasó de 300 ms) y algunas **fallan**. Esos fallos suelen ser el error **`429`**: Cloud Run llegó a su máximo de instancias, `1`, y no tiene dónde atender la petición.
 
 Ahora mira **Cloud Run > cafe-api > Métricas**. Puede tardar un par de minutos en aparecer:
 
 | Gráfico | Qué ves |
 | --- | --- |
-| **Cantidad de solicitudes** (*Request count*) | Los pedidos por segundo. Si hubo fallos, aparece una línea de `4xx`. |
+| **Cantidad de solicitudes** (*Request count*) | Las peticiones por segundo. Si hubo fallos, aparece una línea de `4xx`. |
 | **Latencias de solicitudes** (*Request latencies*) | El tiempo de respuesta, que sube con los usuarios. |
 | **Cantidad de instancias de contenedor** (*Container instance count*) | Siempre 1: es el máximo que le diste. |
 | **Uso de CPU del contenedor** (*Container CPU utilization*) | Cerca del 100 %: la instancia está al límite. |
@@ -392,7 +392,7 @@ Si tu consola está en español, esos nombres pueden salir traducidos.
 | --- | --- |
 | `curl`, `ab` o k6 no encuentran la URL | Cloud Shell se reinició y perdió las variables: vuelve a escribir `CR=…` e `IMAGEN=…` |
 | `carga.js: No such file or directory`, o k6 se queda esperando | Estás en otra carpeta o falta el `<`: entra a `Sesion32/practica_cafe_nube` y revisa `- < carga.js` |
-| k6: todos los pedidos fallan | Revisa que `$CR` no termine en `/`: el guion ya agrega `/menu` |
+| k6: todas las peticiones fallan | Revisa que `$CR` no termine en `/`: el guion ya agrega `/menu` |
 | `iperf3: error - unable to connect to server` | El servidor no está corriendo (`iperf3 -s`) o la IP no es la **interna** de `servidor` |
 | `iperf3: error - the server is busy running a test` | Otro cliente está midiendo. Espera a que termine y repite |
 | `ping` e `iperf3` no responden | En **Red de VPC > Firewall**, revisa que exista `default-allow-internal`. Si no está: `gcloud compute firewall-rules create default-allow-internal --network default --allow tcp,udp,icmp --source-ranges 10.128.0.0/9` |

@@ -12,9 +12,9 @@ Los saberes previos preguntan definiciones (prueba de carga, instancia, IP inter
 
 1. **Funcionales y no funcionales.** `curl $CR/menu` responde «¿hace lo que debe?» con sí o no. Las no funcionales responden «¿qué tan bien lo hace?» con un número y una meta: rendimiento, disponibilidad y seguridad. Hoy, rendimiento.
 2. **Carga y estrés.** Dos gráficos de usuarios en el tiempo: la carga que se espera y una carga que sube hasta romper.
-3. **Los tres números.** Pedidos por segundo, tiempo de respuesta y errores. Por qué el p95 y no el promedio, con 100 pedidos ordenados.
+3. **Los tres números.** Peticiones por segundo, tiempo de respuesta y errores. Por qué el p95 y no el promedio, con 100 peticiones ordenadas.
 4. **Prueba de carga: primero, la meta.** Café Nube con 20 usuarios; la meta y una tabla con ✓.
-5. **Prueba de estrés: el punto de quiebre.** Una tabla de 20 a 200 usuarios: los pedidos por segundo dejan de subir, el p95 se dispara y aparecen errores 429.
+5. **Prueba de estrés: el punto de quiebre.** Una tabla de 20 a 200 usuarios: las peticiones por segundo dejan de subir, el p95 se dispara y aparecen errores 429.
 6. **Cuatro herramientas.** `ab`, k6, `ping` e iperf3: qué pregunta responde cada una y cuáles miden la aplicación o la red.
 7. **k6.** El guion de carga (`vus`, `duration`, `thresholds`, `check`, `sleep`), cómo correrlo con Docker y leer ✓ y ✗, y el guion de estrés con `stages`.
 8. **Los mismos números en `ab`, k6 y Cloud Run > Métricas.** Desde afuera y desde adentro, con Cloud Monitoring.

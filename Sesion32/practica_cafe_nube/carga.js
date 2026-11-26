@@ -8,8 +8,8 @@ export const options = {
   duration: '30s',
   // La meta: si no se cumple, k6 marca la prueba como fallida.
   thresholds: {
-    http_req_duration: ['p(95)<300'], // 95 de cada 100 pedidos en menos de 300 ms
-    http_req_failed: ['rate<0.01'],   // menos del 1 % de pedidos con error
+    http_req_duration: ['p(95)<300'], // 95 de cada 100 peticiones en menos de 300 ms
+    http_req_failed: ['rate<0.01'],   // menos del 1 % de peticiones con error
   },
 };
 
